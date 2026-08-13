@@ -47,6 +47,7 @@
 | [ADR-003](./adr/ADR-003-database-migration-rollback.md) | Migration / Rollback | Expand/Migrate/Contract；image rollback vs forward-fix vs restore 決策矩陣 |
 | [ADR-004](./adr/ADR-004-secret-management.md) | Secret 管理 | Control Plane 只存 secret **reference**；真值在 Secret Manager |
 | [ADR-005](./adr/ADR-005-audit-reliability.md) | Audit 可靠性 | 狀態變更=transactional；DENIED/FAILURE=out-of-band + fallback chain |
+| [ADR-006](./adr/ADR-006-deployment-hosting.md) | 部署位置 | 架構不變；Vercel(Web) + Render(API+Worker) + Managed Redis + Managed PostgreSQL |
 
 ## 十二條開發鐵則 (Master Prompt §29)
 

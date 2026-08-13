@@ -1,0 +1,87 @@
+# ============================================================
+# Sproutin — Render Blueprint（後端部署，ADR-006 / AQ-1 決策）
+# 前端 Web 在 Vercel（不在此檔）。此檔部署：API（web service）+ Worker（background）
+# + Key Value（Redis 相容）+ PostgreSQL（test/dev）。
+#
+# 架構不變（Modular Monolith + Web/API/Worker/Redis/PostgreSQL），此檔只定「部署位置」。
+# API 與 Worker 共用同一 Docker image（ops/deploy/Dockerfile.api），靠 CMD 區分 (§20)。
+#
+# ⚠ Human Owner 注意：plan 名稱 / region / 費率會隨 Render 調整，部署前於 Render dashboard 確認。
+#   - free Postgres 通常有期限（test/dev 用）；background worker 需付費方案。
+# ============================================================
+
+services:
+  # ---------- 後端 API（NestJS，web service）----------
+  - type: web
+    name: sproutin-api
+    runtime: docker
+    dockerfilePath: ops/deploy/Dockerfile.api
+    dockerContext: .
+    plan: starter
+    region: singapore
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SCHOOL_SLUG
+        value: dev
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sproutin-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: sproutin-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Render 自動產生，不落地 repo
+      # LINE 相關（Phase 6 再填；先留白，由 Render dashboard 設定）
+      - key: LINE_CHANNEL_ID
+        sync: false
+      - key: LINE_CHANNEL_SECRET
+        sync: false
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: LIFF_ID
+        sync: false
+
+  # ---------- 背景 Worker（BullMQ，background worker）----------
+  - type: worker
+    name: sproutin-worker
+    runtime: docker
+    dockerfilePath: ops/deploy/Dockerfile.api
+    dockerContext: .
+    dockerCommand: pnpm --filter @sproutin/api start:worker
+    plan: starter # background worker 需付費方案
+    region: singapore
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sproutin-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: sproutin-redis
+          property: connectionString
+
+  # ---------- Redis（Render Key Value，Redis 相容）----------
+  - type: keyvalue
+    name: sproutin-redis
+    plan: free
+    region: singapore
+    ipAllowList: [] # 只允許 Render 內部連線（不對公網開放）
+    maxmemoryPolicy: noeviction # BullMQ 相容性要求（不可淘汰 key）
+
+# ---------- PostgreSQL（test/dev；正式環境 DB-per-School 另建）----------
+databases:
+  - name: sproutin-db
+    plan: free
+    region: singapore

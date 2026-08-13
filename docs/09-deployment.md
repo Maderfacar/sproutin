@@ -3,6 +3,22 @@
 > 已確認：**Docker，每校獨立 Instance，同一 Build Artifact 部署到不同 School Instance。**
 > Web / API / **Worker** 形成一個 container set。**PostgreSQL 優先採 Managed / 獨立 DB deployment，不與 app container 綁定。**
 
+## 0. 部署位置（ADR-006，已定案）
+
+架構不變，僅定部署位置：
+
+```text
+Vercel   └── Web (Next.js)
+Render   ├── API (NestJS, web service, /health)
+         └── Worker (BullMQ, background worker, start:worker)
+Managed Redis      └── Queue / Background Jobs（優先 Render Key Value，maxmemory-policy=noeviction）
+Managed PostgreSQL └── Source of Truth（test/dev 先一個；正式 DB-per-School 後續逐校建立）
+```
+
+- API 與 Worker 共用同一 Docker image（`ops/deploy/Dockerfile.api`），CMD 區分。
+- 後端部署設定：`render.yaml`（Blueprint）。
+- 詳見 [adr/ADR-006](./adr/ADR-006-deployment-hosting.md)。
+
 ## 1. 每校 Container Set
 
 ```text

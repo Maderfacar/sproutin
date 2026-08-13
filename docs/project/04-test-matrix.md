@@ -27,7 +27,7 @@ CI（`.github/workflows/ci.yml`）至少負責：
 | # | 測項 | 首次適用 Phase/Release | 狀態 |
 |---|------|------------------------|------|
 | 1 | Web availability | P5 / R1 | ✅ VERIFIED（2026-08-14, Vercel web） |
-| 2 | API health `/health` | P5 / R1 | PENDING（API 未部署，AQ-2） |
+| 2 | API health `/health` | P5 / R1 | PENDING（待 Render 部署；設定已備 render.yaml healthCheckPath） |
 | 3 | Runtime Config（web `/api/public-config`；無 secret / 無 internal URL） | P5 / R1 | ✅ VERIFIED（2026-08-14） |
 | 4 | Authentication（LINE Login → JWT） | P6 / R2 | NOT_STARTED |
 | 5 | LIFF（init、WebView） | P6 / R2 | NOT_STARTED |
@@ -57,6 +57,23 @@ CI（`.github/workflows/ci.yml`）至少負責：
 - **Vercel Preview**：每次 push 產生 Preview，供 Online 驗證。
 - **Online manual acceptance**：Human Owner 依上表逐項。
 
-## 4. 現況（Phase 5 / R1）
-- 測項 #1–3、#22 為本階段目標，狀態 **PENDING**（尚未 push → 尚無 CI/Preview）。
+## 3b. 後端部署驗證（Phase 5 Backend / Render，ADR-006）
+
+> Human Owner 於 Render 以 `render.yaml` 部署後，與 Claude 一起線上驗證：
+
+| 項目 | 驗證方式 | 狀態 |
+|------|----------|------|
+| API 可啟動（Render web Live） | Render dashboard / `/health` 200 | PENDING |
+| `/health` 可訪問 | 打 API 網址 /health | PENDING |
+| `/config/public` 可正常工作 | 打 API 網址 /config/public（無 secret） | PENDING |
+| Web → API communication | web 設 `API_INTERNAL_URL` 後 /api/public-config 走 API | PENDING |
+| API → PostgreSQL | API 啟動即 `$connect`（啟動成功=連線成功） | PENDING |
+| Worker → Redis | Render worker log「ready — connected to Redis」 | PENDING |
+| Worker 處理 test job | worker log「self-test OK — job ping completed」 | PENDING |
+| Secret 未暴露 client | /config/public、bundle 無 secret / 無 API_INTERNAL_URL | PENDING |
+| Render deployment 正常 | Render dashboard Live | PENDING |
+
+## 4. 現況
+- **前端（web）**：#1 Web availability、#3 Runtime Config、#22 Secret exposure、CI green → ✅ VERIFIED / Frontend ACCEPTED。
+- **後端（Render）**：#2 及 §3b 各項 → PENDING（設定已備，待 Human Owner 部署）。
 - 其餘 NOT_STARTED，隨對應 Phase 展開。

@@ -2,45 +2,55 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-11
+> Last updated: 2026-08-14
 
 ---
 
 ## Current Position
 
 **Phase:**
-Phase 5 — Project Skeleton
+Phase 5 — Backend Deployment Preparation / Verification
 
 **Milestone:**
-Phase 5 Verification
+Backend（API + Worker）deployment config + verification
 
 **Status:**
-🟡 VERIFICATION_PENDING
+```text
+Frontend: ACCEPTED（2026-08-14, Human Owner）
+Backend:  IN_PROGRESS（Render 部署設定已備，待部署驗證）
+Worker:   IN_PROGRESS（BullMQ 自我測試已備，待部署驗證）
+Phase 6:  NOT_STARTED
+```
 
 ---
 
 ## Current Objective
 
-驗證 Project Skeleton 可以經由 **Git → CI → Vercel Preview → Online environment** 正常運作。
-（只針對 Phase 5，不含後續 roadmap。）
+完成後端（NestJS API + BullMQ Worker）在 Render 的部署設定與驗證：
+Web(Vercel) + API/Worker(Render) + Redis + PostgreSQL 全鏈路可線上驗證。
+（Phase 5 收尾；**不含** LINE Login / RBAC / 任何 business feature。）
 
 ---
 
 ## Current Task
 
+前端（Frontend）已 ACCEPTED；本階段聚焦後端部署設定：
+
 ```text
-[~] Git initialization       — IMPLEMENTED（已 init + commit + push 至 Maderfacar/sproutin）
-[~] First commit             — IMPLEMENTED
-[~] Push                     — IMPLEMENTED（含 pnpm-lock.yaml）
-[~] Vercel Web 部署（apps/web, Next.js）— IMPLEMENTED（Production 上線）
-[~] Web availability          — VERIFIED（首頁載入）
-[~] Runtime Config /api/public-config — VERIFIED（回傳正確 PublicConfig）
-[~] Secret exposure（web）     — VERIFIED（無 API_INTERNAL_URL / secret）
-[ ] /health、/config/public   — BLOCKED：屬後端 API，尚未部署（見 AQ-2）
-[ ] Human Owner acceptance
+[x] Render Web Service 設定（API）        — IMPLEMENTED（render.yaml）
+[x] Render Background Worker 設定          — IMPLEMENTED（render.yaml, start:worker）
+[x] Docker / build 設定確認（+openssl）     — IMPLEMENTED
+[x] API 埠綁定 PORT + 0.0.0.0              — IMPLEMENTED（main.ts）
+[x] Worker Redis 連線 + 自我測試 ping job   — IMPLEMENTED（worker.ts；非業務邏輯）
+[x] Redis 設定（Key Value, noeviction）    — IMPLEMENTED（render.yaml）
+[x] PostgreSQL 設定（test/dev）            — IMPLEMENTED（render.yaml databases）
+[x] Health check 設定（/health）           — IMPLEMENTED（render.yaml healthCheckPath）
+[x] 環境變數清單                            — IMPLEMENTED（05-human-preparation）
+[x] 部署文件（ADR-006 / docs/09）           — IMPLEMENTED
+[ ] Human Owner：Render 部署 + 線上驗證     — 待 Human Owner
 ```
 
-Web（前端）線上驗證通過；`/health`、`/config/public` 屬後端 API，需先決定 API 部署目標（AQ-2）。
+以上為 Claude 的部署**設定**（IMPLEMENTED）；實際部署與線上驗證由 Human Owner 執行。
 
 ---
 
@@ -50,8 +60,11 @@ Web（前端）線上驗證通過；`/health`、`/config/public` 屬後端 API�
 [x] Phase 0–4（Product / Stack / Architecture / Domain-DB-RBAC-Event-API / Architecture Gate）— ACCEPTED
 [x] Architecture v1.1 clarifications ×3 — ACCEPTED
 [x] ADR-001 ~ ADR-005 — ACCEPTED
-[x] Project Control Documentation（docs/project/00-07）— ACCEPTED
-[~] Project Skeleton（Phase 5）— IMPLEMENTED / VERIFICATION_PENDING
+[x] Project Control Documentation（docs/project/00-08）— ACCEPTED
+[x] Project Skeleton — Frontend（Vercel web）— ACCEPTED（2026-08-14）
+[x] CI green（install/db:generate/typecheck/test/build）— VERIFIED
+[~] Project Skeleton — Backend deployment config（Render）— IMPLEMENTED（待 Human Owner 部署驗證）
+[x] AQ-1 / AQ-2 部署決策 — DECIDED（ADR-006：Vercel + Render）
 ```
 
 > `[~] IMPLEMENTED` 代表 code 已寫，**不等於 Human Acceptance**。
@@ -83,27 +96,26 @@ Web（前端）線上驗證通過；`/health`、`/config/public` 屬後端 API�
 
 ## In Progress
 
-None.
-（目前無主動進行中項目；等待 Human Owner 接 GitHub/Vercel 後啟動 Phase 5 Verification。）
+- Backend deployment（Render）：Claude 設定已完成（IMPLEMENTED）；等 Human Owner 於 Render 以 `render.yaml` Blueprint 部署 → 一起線上驗證。
 
 ---
 
 ## Blocked
 
 ```text
-BLOCKED: (soft) Phase 5 Online 驗證尚未能開始
+BLOCKED: (soft) 後端線上驗證尚未能開始
 
 Reason:
-git 已上線（已 push）；尚待 Vercel 連接與 CI 首次執行。
+Render 部署設定（render.yaml / Dockerfile / main.ts / worker.ts）已備；尚待 Human Owner 於 Render 部署。
 
 Waiting for:
-Human Owner（Vercel import repo + 設 Root Directory = apps/web）
+Human Owner（建 Render 帳號 + 連接 GitHub + Blueprint 部署）
 
 Required decision:
-無（純環境接線）。
+無（決策已於 ADR-006 定案）。
 ```
 
-（git 初始化/commit/push 已完成；非架構性硬阻塞。）
+（非架構性硬阻塞；純平台部署接線。）
 
 ---
 
@@ -122,68 +134,14 @@ Required decision:
 ## Architecture Questions
 
 ```text
-AQ-1 — Worker / BullMQ Production Hosting vs Vercel
+AQ-1 — Worker / BullMQ Production Hosting   → DECIDED（2026-08-14, ADR-006）
+AQ-2 — API (NestJS) Production Hosting      → DECIDED（2026-08-14, ADR-006）
 
-Question:
-Worker/BullMQ 的 production hosting 該放哪？是否與 Human Owner 的 Vercel 偏好衝突？
+決策：架構不變，僅定部署位置——
+  Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL
+詳見 docs/adr/ADR-006-deployment-hosting.md。
 
-Existing Decision:
-部署 = Docker container set（Web / API / Worker / Redis），每校一組；
-Worker 為長駐 BullMQ processor（ADR-005 / docs/04 / docs/09）。
-
-Problem:
-Human Owner 部署偏好為 Vercel（Git→Push→CI→Vercel→Online）。
-Vercel serverless 不適合託管長駐 Worker 進程與持續性 BullMQ consumer。
-
-Evidence:
-BullMQ 需常駐 Node 進程消費 Redis 佇列（Outbox dispatch、LINE push、out-of-band audit）；
-Vercel Functions 短生命、無常駐 worker；Cron 非佇列消費者。
-
-Alternatives:
-(a) Web(+可能 API) 置 Vercel，Worker + Redis 置長駐平台（Railway/Render/Fly/managed container）
-(b) Web/API/Worker 全置容器平台（放棄 Vercel Preview DX）
-(c) 改用 serverless 佇列取代 BullMQ（屬變更既有決策 ADR-005，不得自行決定）
-
-Trade-offs:
-(a) 保留 Vercel 前端 DX，但雙平台/雙部署目標
-(b) 部署一致但失去 Vercel Preview
-(c) 架構大改，未經審查不採
-
-Recommendation:
-保留 Worker + BullMQ + Redis 抽象不變；production 將 Worker + Redis 置長駐平台、Web 置 Vercel、API 擇一。不改佇列技術。
-
-Decision Status:
-DEFERRED — 等待 Human Owner / Architecture Review。Claude 不自行改。
-```
-
-```text
-AQ-2 — API（NestJS）Production Hosting
-
-Question:
-後端 API 要部署到哪？（驗證 /health、/config/public 的前提）
-
-Existing Decision:
-docs/09：Docker container set（Web/API/Worker），API 為 NestJS。
-
-Problem:
-本次僅前端 web 上了 Vercel；API 尚未部署，故 /health、/config/public 無法線上驗證。
-Human Owner 偏好 Vercel；NestJS modular monolith + 常駐 Prisma 連線在 Vercel serverless 上非最佳。
-
-Alternatives:
-(a) API 與 Worker 一起放長駐平台（Railway/Render/Fly/container），Web 留 Vercel
-(b) API 以 serverless adapter 塞進 Vercel（Worker 仍需長駐，另放）
-(c) 全部放容器平台
-
-Trade-offs:
-(a) 乾淨、與 docs/09 一致；雙平台。
-(b) 省一個平台，但 NestJS on serverless 有冷啟動/連線池問題。
-(c) 一致但失去 Vercel 前端 DX。
-
-Recommendation:
-與 AQ-1 一起決定：API + Worker + Redis 放同一長駐平台，Web 留 Vercel。等 Architecture Review。
-
-Decision Status:
-DEFERRED — 等待 Human Owner。
+目前無待決 Architecture Question（None open）。
 ```
 
 ---
@@ -192,19 +150,18 @@ DEFERRED — 等待 Human Owner。
 
 ```text
 DONE
-- Git repo / GitHub / Vercel（web）已完成並上線
+- Git repo / GitHub / Vercel（web）已上線並驗證；AQ-1/AQ-2 已決策（ADR-006）
 
 NOW
-1. 決定 API + Worker 的部署平台（AQ-1 + AQ-2）— 這是 /health、/config/public 能否線上驗證的前提
-   （Claude 建議：API+Worker+Redis 放長駐平台，Web 留 Vercel）
+1. 建 Render 帳號 + 連接 GitHub
+2. 以 render.yaml Blueprint 部署（Render 自動建 Postgres + Key Value）
 
 NEXT
-2. 依決定部署 API → 線上驗證 /health、/config/public → Human Owner acceptance（Phase 5 收尾）
+3. 與 Claude 一起線上驗證後端（/health、/config/public、API→PG、Worker→Redis）
+4. Human Owner acceptance（Phase 5 收尾）
 
 LATER
-3. LINE Developers / LINE OA setup
-4. Managed PostgreSQL setup
-5. Redis provider setup
+5. LINE Developers / LINE OA / LIFF（Phase 6）
 6. 準備 demo data / online test accounts（見 05-human-preparation）
 ```
 
@@ -213,31 +170,39 @@ LATER
 ## Next Task
 
 ```text
-Phase 5 Verification
+Backend deployment verification（Human Owner 於 Render 部署 → Claude 協助線上驗證）
 ```
 
-（不列 DB Migration / LINE Login / RBAC / Leave / Attendance —— 那些是未來 Task。）
+（不列 LINE Login / RBAC / Leave / Attendance —— 那些是 Phase 6 之後。）
 
 ---
 
 ## Next Acceptance Gate
 
 ```text
-Phase 5 Acceptance
+Phase 5 Backend Acceptance Gate
 
-[x] Git repository initialized
-[x] Push successful
-[x] CI green
-[x] Vercel（web）deployed
-[x] Web loads
-[ ] /health works           ← 待 API 部署（AQ-2）
-[ ] /config/public works     ← 待 API 部署（AQ-2）
-[x] Runtime Config verified（web /api/public-config）
+Frontend（已達成）
+[x] Vercel Web deployed / loads
+[x] Runtime Config verified（/api/public-config）
 [x] No secret exposure（web）
+[x] CI green
+
+Backend（待 Render 部署後驗證）
+[ ] API 可啟動（Render web service Live）
+[ ] /health 可訪問
+[ ] /config/public 可正常工作
+[ ] Web → API communication 正常
+[ ] API → PostgreSQL 正常（API 啟動即代表已 $connect）
+[ ] Worker → Redis 正常
+[ ] Worker 可取得並處理測試 job（self-test ping）
+[ ] Secret 未暴露給 client
+[ ] Render deployment 正常
+[ ] Online verification 通過
 [ ] Human Owner acceptance
 ```
 
-前端（web）骨架已達驗收條件；剩 `/health`、`/config/public`（後端 API 部署，AQ-2）+ Human Owner 正式驗收。全部符合後 `Phase 5` 才可標 `ACCEPTED`。
+前端已 ACCEPTED；後端各項待 Render 部署後線上驗證，全部符合 + Human Owner acceptance 後，`Phase 5` 整體才標 `ACCEPTED`，才進 Phase 6。
 
 ---
 
@@ -259,7 +224,7 @@ Note:    僅 Node 20 deprecation 警告（非致命）
 Deployment:  https://sproutin-kb91-theta.vercel.app （apps/web, Production）
 Status:      Ready — Web availability / Runtime Config / Secret-exposure VERIFIED
 Date:        2026-08-14
-Note:        僅前端 web；後端 API 未部署（/health、/config/public 待 AQ-2）
+Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待部署驗證
 ```
 
 ---
@@ -267,15 +232,40 @@ Note:        僅前端 web；後端 API 未部署（/health、/config/public 待
 ## Latest Accepted Commit
 
 ```text
-Commit:     1b7b552（HEAD, main）— 尚未 Human Acceptance
-Date:       2026-08-14
-Purpose:    initial commit + pnpm-lock.yaml
-Acceptance: None（等 Phase 5 Acceptance Gate）
+Frontend acceptance: Phase 5 Frontend — ACCEPTED（2026-08-14, Human Owner）
+                     Vercel web deployed + online verified（首頁 / runtime config / 無 secret）+ CI green
+Backend:             尚未 acceptance（待 Render 部署驗證）
+Phase 5 (整體):       尚未 ACCEPTED
 ```
 
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 / 後端部署決策 + Render 設定（ADR-006）
+
+Completed:
+- Human Owner 正式決策 AQ-1/AQ-2 → ADR-006（Vercel: Web｜Render: API+Worker｜Managed Redis｜Managed PostgreSQL）；架構不變
+- Frontend Phase 5 = ACCEPTED（Human Owner）
+- 部署設定：`render.yaml`（api web service + worker + Key Value + Postgres）
+- Docker：Dockerfile.api 加 openssl（Prisma on Alpine）
+- 部署必要修正：main.ts 綁 PORT/0.0.0.0；worker.ts 加 Redis 連線 + self-test ping job（非業務邏輯）
+- 文件：ADR-006、docs/09 部署位置、05-human-preparation（env 清單 + 部署分工 + PG/Redis 說明）
+
+Verification:
+- 待 CI（本次程式變更需 typecheck/build 綠）；後端線上驗證待 Human Owner 於 Render 部署
+
+Issues:
+- Problem: Render web service 需綁 $PORT/0.0.0.0；Prisma on Alpine 需 openssl。Solution: main.ts + Dockerfile 修正。
+
+Architecture:
+- 無變更（僅定部署位置，ADR-006）。AQ-1/AQ-2 關閉。
+
+Human Owner:
+- NOW：建 Render 帳號 + 連 GitHub + Blueprint 部署
+
+Next:
+- Render 部署 → 後端線上驗證 → Phase 5 acceptance
 
 ### 2026-08-14 — Phase 5 / CI 綠燈
 

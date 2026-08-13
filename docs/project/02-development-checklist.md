@@ -65,8 +65,22 @@
     - [x] jest.config + `health.controller.spec.ts`
   - **Acceptance Criteria**：CI test 綠燈。 **Status**：`VERIFICATION_PENDING`
 
-- [ ] **Phase 5 Acceptance（Human Owner）**
-  - Push → CI 綠燈 → Vercel Preview → Online 驗證 → **Human Acceptance**。 **Status**：`NOT_STARTED`
+- [x] **Frontend（Vercel web）** — CI 綠 + Vercel Production + online 驗證（首頁/runtime config/無 secret） **Status**：`ACCEPTED`（2026-08-14, Human Owner）
+
+### Phase 5 — Backend Deployment（ADR-006：Render）
+
+- [~] **部署決策** — AQ-1/AQ-2 → ADR-006（Vercel + Render） **Status**：`ACCEPTED`（Human Owner）
+- [~] **Render 部署設定**
+    - [x] `render.yaml`：api（web, /health）+ worker（start:worker）+ Key Value（noeviction）+ Postgres
+    - [x] Dockerfile.api：加 openssl（Prisma on Alpine）
+    - [x] main.ts：綁 `PORT` / `0.0.0.0`
+    - [x] worker.ts：Redis 連線 + self-test ping job（非業務邏輯）
+  - **Acceptance Criteria**：Render 部署 Live；/health、/config/public 可訪問；Worker→Redis 處理 test job。
+  - **Deliverables**：`render.yaml`、`ops/deploy/Dockerfile.api`、`apps/api/src/{main,worker}.ts`、`docs/adr/ADR-006`。
+  - **Owner**：Claude(config) / Human(deploy+accept)。 **Status**：`IMPLEMENTED / VERIFICATION_PENDING`
+- [ ] **環境變數清單** — `docs/project/05-human-preparation.md` **Status**：`IMPLEMENTED`
+- [ ] **Phase 5 Backend Acceptance（Human Owner）**
+  - Render 部署 → /health、/config/public、API→PG、Worker→Redis、無 secret 外洩、online 驗證 → **Human Acceptance**。 **Status**：`NOT_STARTED`
 
 ### Technical Debt（Phase 5 引入）
 - [ ] **ESLint flat config** — `DEFERRED`；MVP Release Candidate（Phase 8）前必須完成，不得永久忽略。

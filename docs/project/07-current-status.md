@@ -1,21 +1,22 @@
 # Current Status
 
-> 唯一要求「持續更新」的進度文件。每次完成並**通過驗收**後更新。
-> Last updated: 2026-08-11
+> 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
+> Last updated: 2026-08-14
 
 Current Phase:
-Phase 5 — Project Skeleton（＝先前非正式「Step 11」）
+Phase 5 — Backend Deployment Preparation / Verification
 
 Current Milestone:
-R1 — Foundation（skeleton 可部署/可驗證）
+Backend（API + Worker）on Render — 設定完成，待部署驗證
 
 Status:
 ```text
-Implementation:   IMPLEMENTED
-Verification:     PENDING
-Human Acceptance: PENDING
+Frontend: ACCEPTED（2026-08-14, Human Owner；Vercel web + CI green + online verified）
+Backend:  IMPLEMENTED（Render 部署設定 render.yaml）/ VERIFICATION_PENDING
+Worker:   IMPLEMENTED（BullMQ self-test）/ VERIFICATION_PENDING
+Human Acceptance（Phase 5 整體）: PENDING
 ```
-（Claude 已明確表示尚未完成 compile / runtime verification，故不得標 ACCEPTED。）
+（部署決策 AQ-1/AQ-2 已定案 → ADR-006。CI 已綠：install/db:generate/typecheck/test/build。）
 
 Completed（已建立，未驗收）:
 - 三項 Architecture clarification 同步（Runtime Config server-only / Leave-Attendance dual SoT rule / Audit durable path）
@@ -49,43 +50,26 @@ Technical Debt:
 - **ESLint flat config 未建** → CI 暫略 `lint`。列為 DEFERRED；**MVP Release Candidate（Phase 8）前必須完成**，不得永久忽略。
 
 Architecture Questions:
-- **AQ-1 — Worker / BullMQ Production Hosting vs Vercel 偏好**（待 Architecture Review；Claude 不自行改）
-  ```text
-  Existing Decision : 部署 = Docker container set（Web / API / Worker / Redis），每校一組；
-                      Worker 為長駐 BullMQ processor（ADR-005 / docs/04 / docs/09）。
-  Problem           : Human Owner 部署偏好為 Vercel（Git→Push→CI→Vercel→Online）。
-                      Vercel serverless 不適合託管長駐 Worker 進程與持續性 BullMQ consumer。
-  Evidence          : BullMQ 需常駐 Node 進程消費 Redis 佇列（Outbox dispatch、LINE push、
-                      out-of-band audit）；Vercel Functions 短生命/無常駐 worker；Cron 非佇列消費者。
-  Alternative       : (a) Web(+可能 API) 置 Vercel，Worker + Redis 置長駐平台（如 Railway/Render/Fly/
-                          managed container）；
-                      (b) Web/API/Worker 全置容器平台（放棄 Vercel Preview DX）；
-                      (c) 改用 serverless 佇列取代 BullMQ —— 屬變更既有決策（ADR-005），不得自行決定。
-  Trade-off         : (a) 保留 Vercel 前端 DX，但雙平台/雙部署目標；
-                      (b) 部署一致但失去 Vercel Preview；
-                      (c) 架構大改，未經審查不採。
-  Recommendation    : **保留 Worker + BullMQ + Redis 抽象不變**；production 將 Worker + Redis 置於
-                      長駐平台、Web 置 Vercel、API 擇一。不改佇列技術。**決策 deferred 至 Architecture Review。**
-  ```
+- **AQ-1 / AQ-2 — DECIDED（2026-08-14, ADR-006）**：架構不變，僅定部署位置 → Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL。
+- 目前無待決 Architecture Question（None open）。
 
 Human Owner Actions:
-- 建 GitHub repo、接 Vercel、啟用 CI（Phase 5 驗收前提）
-- 決定 git 初始化 / 首次 commit 方式（目前 repo 未 init）
-- 回覆 **AQ-1（Worker hosting）**
-- 準備 LINE Developers / OA、Managed PostgreSQL、Redis provider（Phase 6 前）
+- **NOW**：建 Render 帳號 + 連接 GitHub + 以 `render.yaml` Blueprint 部署（自動建 Postgres + Key Value）
+- **NEXT**：與 Claude 一起後端線上驗證（/health、/config/public、API→PG、Worker→Redis）→ Human Acceptance
+- **LATER**：LINE Developers / OA / LIFF（Phase 6）；demo data / test accounts
 
 Next Task:
-- **Phase 5 驗收**：Push → CI 綠燈 → Vercel Preview → Online 驗證（`/health`、`/config/public`、web）→ Human Acceptance。
-- 通過後**才**進 Phase 6 — Vertical Slice（DB migration → LINE/LIFF 登入骨架 → RBAC 骨架 → 端到端切片）。Claude 不自行進入。
+- **Backend deployment verification**：Human Owner 於 Render 部署 → Claude 協助線上驗證 → Phase 5 acceptance。
+- 通過後**才**進 Phase 6 — Vertical Slice。Claude 不自行進入。
 
 Last Commit:
-- — （git 尚未初始化）
+- （見 08-development-progress「Latest Accepted Commit」；本檔不重複維護 commit hash）
 
 Last CI:
-- — （尚無 CI run）
+- ✅ SUCCESS（run 31732797734；install/db:generate/typecheck/test/build）
 
 Last Vercel Preview:
-- — （尚未建立）
+- https://sproutin-kb91-theta.vercel.app （apps/web, Production, Ready）
 
 Last Accepted Release:
-- None
+- None（R1 Foundation 部分驗收：前端 ACCEPTED；整體待後端）

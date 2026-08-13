@@ -1,5 +1,8 @@
-# Sproutin API (NestJS) — 同一 image 部署到所有學校，靠 env 區分 (§20)
+# Sproutin API / Worker (NestJS) — 同一 image、不同 CMD (§20)
+# api → start:prod（web service）；worker → start:worker（background worker，見 render.yaml）
 FROM node:20-alpine AS base
+# Prisma 在 Alpine 需 openssl；libc6-compat 提高相容性
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable
 WORKDIR /app
 

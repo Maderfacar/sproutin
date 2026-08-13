@@ -1,61 +1,87 @@
 # 05 — Human Owner Preparation
 
 > **嚴禁把真正 secret 寫入 repository。** 本文件只列「需要哪些變數 / 帳號 / 資料」，不含任何真值。
+> 部署位置已定案（ADR-006）：Vercel（Web）+ Render（API、Worker）+ Managed Redis + Managed PostgreSQL。
 
-## 1. Accounts（需申請 / 準備）
+## 0. Deployment Boundary（部署分工，正式納入）
 
-| 帳號 | 用途 | 何時需要 |
-|------|------|----------|
-| **GitHub** | repo、CI（Actions） | 現在（Phase 5 驗收） |
-| **Vercel** | Web（+可能 API）部署、Preview | 現在（Phase 5 驗收） |
-| **LINE Developers** | LINE Login channel、LIFF app | Phase 6（登入切片） |
-| **LINE Official Account** | OA、push、entry point | Phase 6–7 |
-| **PostgreSQL provider（Managed）** | 每校獨立 DB | Phase 6（首次 migration） |
-| **Redis provider** | cache / BullMQ | Phase 6–7（Worker） |
+| 角色 | 負責 |
+|------|------|
+| **Human Owner** | 建立帳號、服務、Provider、Secrets；在平台上實際部署；線上驗證與**正式接受（Acceptance）** |
+| **Claude** | deployment configuration、Dockerfile、環境變數清單、CI/CD 設定、部署文件 |
+| **ChatGPT / Architecture Review** | 重大 deployment architecture review 與風險判斷 |
+| **Human Owner Acceptance** | 實際線上驗證後的正式接受（`ACCEPTED` 只有此步能給） |
 
-> Worker 的 production hosting 尚待 Architecture Review（見 [07](./07-current-status.md)）——選 Redis/Worker provider 前先看該決議。
+## 1. Accounts
 
-## 2. Environment / Secrets（只列變數名，不寫真值）
+### NOW — Phase 5 後端部署
+| 帳號 | 用途 |
+|------|------|
+| **Render** | 部署 API（web service）+ Worker（background worker） |
+| **Render → 連接 GitHub** | 讓 Render 讀 `render.yaml` 藍圖自動部署 |
+| **Managed PostgreSQL** | 後端資料庫（test/dev）。**最簡：用 Render Blueprint 內建的 Render Postgres**；或用外部 Managed PG（填 `DATABASE_URL`） |
+| **Managed Redis** | 佇列 / 背景工作。**最簡：用 Blueprint 內建的 Render Key Value**；或外部 Redis 相容服務（填 `REDIS_URL`） |
 
-| 變數 | Purpose | Server-only / Client-visible | 存放位置 | 現在/稍後 |
-|------|---------|------------------------------|----------|-----------|
-| `DATABASE_URL` | 該校 PostgreSQL 連線 | **Server-only（secret）** | Secret Manager（Control Plane 存 `databaseSecretRef`） | Phase 6 |
-| `REDIS_URL` | Redis / BullMQ | **Server-only** | Secret Manager / 平台 env | Phase 6 |
-| `LINE_CHANNEL_ID` | LINE channel 識別 | Server-only（非高敏） | 平台 env | Phase 6 |
-| `LINE_CHANNEL_SECRET` | LINE 驗證 | **Server-only（secret）** | Secret Manager（`lineSecretRef`） | Phase 6 |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE push | **Server-only（secret）** | Secret Manager（`lineSecretRef`） | Phase 7 |
-| `LIFF_ID` | LIFF app id（**公開**） | Client-visible（runtime，非 build-time） | 該校 DB `SchoolConfig` → `/config/public` | Phase 6 |
-| `JWT_SECRET` | JWT 簽章 | **Server-only（secret）** | Secret Manager（`jwtSecretRef`） | Phase 6 |
-| `SCHOOL_SLUG` | 本 instance 識別 | Server-only | 平台 env | Phase 5–6 |
-| `API_INTERNAL_URL` | web server → api 內部連線 | **Server-only（不得進 bundle / public config）** | 平台 env | Phase 5–6 |
+> 走 `render.yaml` Blueprint 時，Render 會**自動建立** Postgres 與 Key Value 並自動接上連線字串——Human Owner 只需 **Render 帳號 + 連接 GitHub** 即可。外部 Provider 為選項（多用於正式環境）。
 
-> 原則（ADR-001 / ADR-004）：public 值（如 `LIFF_ID`、branding）走 runtime `/config/public`；機密走 Secret Manager，Control Plane 只存 reference。
+### LATER — Phase 6
+- LINE Developers account
+- LINE Official Account
+- LIFF application
+- LINE Channel configuration
 
-## 3. Demo Data（未來準備，優先 synthetic）
+## 2. Environment Variable Inventory（只列名稱與說明，無真值）
+
+| 變數 | Purpose | Server-only / Client-visible | Required | Where to configure |
+|------|---------|------------------------------|----------|--------------------|
+| `DATABASE_URL` | 後端連 PostgreSQL | **Server-only（secret）** | **Now** | Render：Blueprint `fromDatabase` 自動；或外部 PG 手填 |
+| `REDIS_URL` | 佇列 / BullMQ | **Server-only（secret）** | **Now** | Render：Blueprint `fromService`（Key Value）自動；或外部 Redis 手填 |
+| `JWT_SECRET` | JWT 簽章 | **Server-only（secret）** | **Now** | Render：`generateValue` 自動產生 |
+| `SCHOOL_SLUG` | 本 instance 識別 | Server-only | **Now** | Render env（api，預設 `dev`） |
+| `PORT` | 服務監聽埠 | Server-only | **Now** | Render 自動注入（API 已讀取） |
+| `API_INTERNAL_URL` | web server → api 內部連線 | **Server-only（不得進 bundle / public config）** | **Now（web 端）** | Vercel env（server-only） |
+| `LINE_CHANNEL_ID` | LINE channel 識別 | Server-only（非高敏） | **Later** | Render env（`sync:false`） |
+| `LINE_CHANNEL_SECRET` | LINE 驗證 | **Server-only（secret）** | **Later** | Render env（`sync:false`） |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE push | **Server-only（secret）** | **Later** | Render env（`sync:false`） |
+| `LIFF_ID` | LIFF app id（**公開**） | Client-visible（runtime，非 build-time） | **Later** | 該校 DB `SchoolConfig` → `/config/public` |
+
+> 原則（ADR-001 / ADR-004）：public 值走 runtime `/config/public`；機密走平台 env / Secret Manager，**永不進 repo**。`API_INTERNAL_URL` 永不出現在 public config。
+
+## 3. PostgreSQL（本階段需求）
+
+- Project Skeleton 對 PostgreSQL 的需求：API 啟動時 `PrismaService` 會 `$connect()`；**只需能連線的空資料庫即可**（尚未跑 migration、不需任何 table）。故 `/health` 可訪問即代表 **API → PostgreSQL 連線成功**。
+- Human Owner 現階段**只需準備一個 Managed PostgreSQL（test/dev）**。
+- **不要現在建立大量 School production databases。** 正式的 Multi-Instance / DB-per-School 於後續 School Provisioning 階段依架構逐校建立。
+
+## 4. Redis（本階段需求）
+
+準備一個 **Managed Redis / Redis 相容服務**，確認：
+- **connection URL**（`REDIS_URL`）
+- **authentication**（密碼 / ACL）
+- **TLS**（Render Key Value 內部連線通常免 TLS；外部服務可能需 `rediss://`）
+- **BullMQ 相容性**：`maxmemory-policy = noeviction`（`render.yaml` 已設定），且 worker 連線已設 `maxRetriesPerRequest=null`。
+
+> 選 Render **不會**改動既有 Queue 架構（仍是 BullMQ + Redis）。
+
+## 5. Demo Data（未來準備，優先 synthetic）
 
 > **MVP / development / online verification 優先使用 synthetic / demo data，不使用不必要的真實兒童資料。**
 
 - [ ] Demo School（1 間）
 - [ ] Demo Class（≥2 班，測 class isolation）
-- [ ] Demo Admin（行政）
-- [ ] Demo Teacher（班導 + 隨車）
-- [ ] Demo Parent（含一位家長對多小孩）
-- [ ] Demo Student（多名，跨班）
-- [ ] **Multiple Guardianship scenario**（一生多監護人：父/母/祖父母）
-- [ ] **Multiple Class scenario**（老師跨班 / 學生分班）
-- [ ] **Permission test scenario**（家長只見自己小孩、老師只見自班）
-- [ ] **Leave / Attendance test scenario**（含 override 衝突情境，ADR-002）
+- [ ] Demo Admin / Teacher（班導 + 隨車）/ Parent（含一位家長對多小孩）/ Student（多名，跨班）
+- [ ] Multiple Guardianship scenario（父/母/祖父母）
+- [ ] Multiple Class scenario
+- [ ] Permission test scenario（家長只見自己小孩、老師只見自班）
+- [ ] Leave / Attendance test scenario（含 override 衝突，ADR-002）
 
-## 4. Online Testing Accounts / Devices
+## 6. Online Testing Accounts / Devices（Phase 6）
 
-- [ ] Parent test account（真實 LINE）
-- [ ] Teacher test account（真實 LINE）
-- [ ] Admin test account
+- [ ] Parent / Teacher / Admin test accounts（真實 LINE）
 - [ ] LINE test accounts（≥2，測隔離）
-- [ ] Mobile device（LIFF WebView 實測）
-- [ ] Desktop browser（一般 Web）
+- [ ] Mobile device（LIFF WebView）+ Desktop browser
 
-## 5. 目前（Phase 5）Human Owner 最小行動
-1. 建 GitHub repo、接 Vercel、啟用 CI。
-2. （Claude 尚未初始化 git）決定 repo 初始化 / 首次 commit 方式。
-3. 閱讀並回覆 **Worker hosting Architecture Question**（[07](./07-current-status.md)）。
+## 7. 目前（Phase 5 後端）Human Owner 最小行動
+1. 建 Render 帳號、連接 GitHub。
+2. 以 `render.yaml` Blueprint 部署（Render 自動建 Postgres + Key Value）。
+3. 部署後與 Claude 一起做線上驗證（見 [04-test-matrix](./04-test-matrix.md) / [08-development-progress](./08-development-progress.md) 的 Acceptance Gate）。

@@ -15,7 +15,7 @@
 7. **Functional Tests**：health spec（CI）。
 8. **Online Acceptance**：Preview 首頁、`/health`、`/config/public`。
 9. **Rollback**：無 DB 變更 → image rollback 即可。
-10. **Acceptance Criteria**：CI 綠燈 + Online 三項通過 + Human Acceptance。 **Status**：VERIFICATION_PENDING。
+10. **Acceptance Criteria**：CI 綠燈 + Online 通過 + Human Acceptance。 **Deployment（ADR-006）**：Web→Vercel（✅ Frontend ACCEPTED, CI green）；API+Worker→Render、Redis/PostgreSQL→Managed（🟡 設定完成，待部署驗證）。 **Status**：Frontend ACCEPTED / Backend VERIFICATION_PENDING。
 
 ## R2 — Identity / Authorization（對應 Phase 6）
 1. **Objective**：LINE Login → User → Student → 權限 → LIFF Dashboard 端到端。

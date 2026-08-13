@@ -20,11 +20,12 @@
 ## 4. 目前在哪
 ```text
 Current Phase:
-Phase 5 — Project Skeleton
-（= 先前非正式命名的「Step 11」）
+Phase 5 — Backend Deployment Preparation / Verification
 
 Current Status:
-Implementation created / verification pending
+Frontend: ACCEPTED（Vercel web）
+Backend / Worker: 部署設定完成（Render），待 Human Owner 部署驗證
+部署決策 AQ-1/AQ-2: DECIDED（ADR-006）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）
@@ -57,11 +58,12 @@ Claude **不自行**進入下一 Phase，等 Human Owner 指令。
 | 項目 | 狀態 |
 |------|------|
 | Architecture Gate (v1.1) | ✅ Passed |
-| Phase 5 Skeleton | 🟡 IMPLEMENTED / VERIFICATION_PENDING / HUMAN ACCEPTANCE PENDING |
-| Last Commit | — （git 未初始化） |
-| Last CI | — |
-| Last Vercel Preview | — |
-| Last Accepted Release | None |
+| Phase 5 — Frontend | ✅ ACCEPTED（Vercel web） |
+| Phase 5 — Backend/Worker | 🟡 IMPLEMENTED（Render 設定）/ 待部署驗證 |
+| CI | ✅ green（run 31732797734） |
+| Vercel（web） | ✅ Ready — https://sproutin-kb91-theta.vercel.app |
+| 部署決策 | ✅ ADR-006（Vercel + Render） |
+| Last Accepted Release | None（R1 前端部分驗收） |
 
-### 待審 Architecture Question（摘要）
-**Worker/BullMQ Production hosting vs Vercel 偏好** — Vercel 無法託管長駐 BullMQ Worker。Claude **不自行改**；保留 Worker 抽象，建議 Worker+Redis 置於長駐平台、Web 置 Vercel。詳見 [07-current-status](./07-current-status.md)。**等 Architecture Review。**
+### Architecture Question（摘要）
+AQ-1/AQ-2（部署位置）已定案 → **ADR-006**（Vercel: Web｜Render: API+Worker｜Managed Redis｜Managed PostgreSQL），架構不變。目前**無待決** Architecture Question。
