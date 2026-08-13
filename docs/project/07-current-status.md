@@ -71,4 +71,5 @@ Last Vercel Preview:
 - https://sproutin-kb91-theta.vercel.app （apps/web, Production, Ready）
 
 Last Accepted Release:
-- None（R1 Foundation 部分驗收：前端 ACCEPTED；整體待後端）
+- **Phase 5（R1 Foundation + 後端部署）— ACCEPTED（2026-08-14, Human Owner）**：Frontend(Vercel) + Backend API/Worker(Render) + Redis + PostgreSQL + CI + Web→API 全數線上驗證通過。
+- Next: Phase 6 — Vertical Slice（於新 session 啟動）。

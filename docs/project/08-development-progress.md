@@ -9,19 +9,17 @@
 ## Current Position
 
 **Phase:**
-Phase 5 — Backend Deployment Preparation / Verification
+Phase 5 — Project Skeleton + Backend Deployment → **ACCEPTED**（2026-08-14, Human Owner）
+下一階段：Phase 6 — Vertical Slice（於新 session 啟動）
 
 **Milestone:**
-Backend（API + Worker）deployment config + verification
+Phase 5 完成並驗收；Phase 6 待啟動
 
 **Status:**
 ```text
-Frontend: ACCEPTED（2026-08-14, Human Owner）
-Backend:  DEPLOYED & VERIFIED（Render sproutin-api Live；/health、/config/public、API→PG 通過）
-Worker:   DEPLOYED & VERIFIED（Render sproutin-worker；Redis 連線 + self-test job 通過）
-Web→API:  VERIFIED（Vercel API_INTERNAL_URL → Render API；schoolSlug 回傳 "dev"）
-剩餘:     僅 Human Acceptance（技術項目全數通過）
-Phase 6:  NOT_STARTED
+Phase 5:  ✅ ACCEPTED（2026-08-14, Human Owner）
+  Frontend / Backend API / Worker / Redis / PostgreSQL / CI / Web→API — 全數線上驗證通過
+Phase 6:  NOT_STARTED（LINE Login → User → Student → 權限 → LIFF Dashboard）
 ```
 
 ---
@@ -204,7 +202,7 @@ Backend（Render 部署 2026-08-14，已驗證）
 [x] Secret 未暴露給 client
 [x] Render deployment 正常（4 resource 全綠）
 [x] Online verification 通過（/health、/config/public）
-[ ] Human Owner acceptance
+[x] Human Owner acceptance ✅（2026-08-14）— Phase 5 ACCEPTED
 ```
 
 前端已 ACCEPTED；後端各項待 Render 部署後線上驗證，全部符合 + Human Owner acceptance 後，`Phase 5` 整體才標 `ACCEPTED`，才進 Phase 6。
@@ -237,15 +235,25 @@ Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待�
 ## Latest Accepted Commit
 
 ```text
-Frontend acceptance: Phase 5 Frontend — ACCEPTED（2026-08-14, Human Owner）
-                     Vercel web deployed + online verified（首頁 / runtime config / 無 secret）+ CI green
-Backend:             尚未 acceptance（待 Render 部署驗證）
-Phase 5 (整體):       尚未 ACCEPTED
+Phase 5 — ACCEPTED（2026-08-14, Human Owner）
+  含：Frontend(Vercel) + Backend API/Worker(Render) + Redis + PostgreSQL + CI + Web→API
+  全數線上驗證通過。ref commit ~6ba52a9（main）。
+Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ```
 
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 ACCEPTED（Human Owner 驗收通過）
+
+Completed:
+- Human Owner 正式驗收 Phase 5：Frontend + Backend API + Worker + Redis + PostgreSQL + CI + Web→API 全數通過
+- Phase 5 標記為 ACCEPTED
+
+Next:
+- Phase 6 — Vertical Slice（LINE Login → User → Student → 權限 → LIFF Dashboard），於新 session 啟動
+- 序列：DB migration + seed → LINE/LIFF 登入骨架 → RBAC 骨架 → 端到端讀取切片
 
 ### 2026-08-14 — Phase 5 / Web→API 接通驗證通過
 

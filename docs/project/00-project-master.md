@@ -20,11 +20,10 @@
 ## 4. 目前在哪
 ```text
 Current Phase:
-Phase 5 — Backend Deployment Preparation / Verification
+Phase 5 — ACCEPTED（2026-08-14）；下一階段 Phase 6 — Vertical Slice（新 session 啟動）
 
 Current Status:
-Frontend: ACCEPTED（Vercel web）
-Backend / Worker: 部署設定完成（Render），待 Human Owner 部署驗證
+Phase 5 全數線上驗證通過並經 Human Owner 驗收（前端+後端+Worker+Redis+PG+CI+Web→API）
 部署決策 AQ-1/AQ-2: DECIDED（ADR-006）
 ```
 
@@ -58,8 +57,9 @@ Claude **不自行**進入下一 Phase，等 Human Owner 指令。
 | 項目 | 狀態 |
 |------|------|
 | Architecture Gate (v1.1) | ✅ Passed |
-| Phase 5 — Frontend | ✅ ACCEPTED（Vercel web） |
-| Phase 5 — Backend/Worker | ✅ DEPLOYED & VERIFIED（Render；/health、/config/public、Worker→Redis）/ 待 Human Acceptance |
+| **Phase 5（整體）** | ✅ **ACCEPTED**（2026-08-14, Human Owner）— 前端+後端+Worker+Redis+PG+CI+Web→API 全綠 |
+| Live URLs | Web: sproutin-kb91-theta.vercel.app ｜ API: sproutin-api.onrender.com |
+| Next | Phase 6 — Vertical Slice（新 session 啟動） |
 | CI | ✅ green（run 31732797734） |
 | Vercel（web） | ✅ Ready — https://sproutin-kb91-theta.vercel.app |
 | 部署決策 | ✅ ADR-006（Vercel + Render） |

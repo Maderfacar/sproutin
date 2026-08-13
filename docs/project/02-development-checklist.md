@@ -80,8 +80,8 @@
   - **Deliverables**：`render.yaml`、`ops/deploy/Dockerfile.api`、`apps/api/src/{main,worker}.ts`、`docs/adr/ADR-006`。
   - **Owner**：Claude(config) / Human(deploy+accept)。 **Status**：`IMPLEMENTED / VERIFICATION_PENDING`
 - [ ] **環境變數清單** — `docs/project/05-human-preparation.md` **Status**：`IMPLEMENTED`
-- [ ] **Phase 5 Backend Acceptance（Human Owner）**
-  - Render 部署 → /health、/config/public、API→PG、Worker→Redis、無 secret 外洩、online 驗證 → **Human Acceptance**。 **Status**：`NOT_STARTED`
+- [x] **Phase 5 Backend Acceptance（Human Owner）** — Render 部署 + /health + /config/public + API→PG + Worker→Redis + Web→API + 無 secret 外洩，全數線上驗證 **Status**：`ACCEPTED`（2026-08-14）
+- [x] **Phase 5 整體** — Frontend + Backend + CI + Deployment + Online Verification **Status**：`ACCEPTED`（2026-08-14, Human Owner）
 
 ### Technical Debt（Phase 5 引入）
 - [ ] **ESLint flat config** — `DEFERRED`；MVP Release Candidate（Phase 8）前必須完成，不得永久忽略。
