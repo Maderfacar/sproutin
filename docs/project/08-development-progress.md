@@ -17,8 +17,9 @@ Backend（API + Worker）deployment config + verification
 **Status:**
 ```text
 Frontend: ACCEPTED（2026-08-14, Human Owner）
-Backend:  IN_PROGRESS（Render 部署設定已備，待部署驗證）
-Worker:   IN_PROGRESS（BullMQ 自我測試已備，待部署驗證）
+Backend:  DEPLOYED & VERIFIED（Render sproutin-api Live；/health、/config/public、API→PG 通過）
+Worker:   DEPLOYED & VERIFIED（Render sproutin-worker；Redis 連線 + self-test job 通過）
+剩餘:     Web→API 佈線（Vercel 設 API_INTERNAL_URL）+ Human Acceptance
 Phase 6:  NOT_STARTED
 ```
 
@@ -191,17 +192,17 @@ Frontend（已達成）
 [x] No secret exposure（web）
 [x] CI green
 
-Backend（待 Render 部署後驗證）
-[ ] API 可啟動（Render web service Live）
-[ ] /health 可訪問
-[ ] /config/public 可正常工作
-[ ] Web → API communication 正常
-[ ] API → PostgreSQL 正常（API 啟動即代表已 $connect）
-[ ] Worker → Redis 正常
-[ ] Worker 可取得並處理測試 job（self-test ping）
-[ ] Secret 未暴露給 client
-[ ] Render deployment 正常
-[ ] Online verification 通過
+Backend（Render 部署 2026-08-14，已驗證）
+[x] API 可啟動（sproutin-api Live, https://sproutin-api.onrender.com）
+[x] /health 可訪問（{"status":"ok"}）
+[x] /config/public 可正常工作（無 secret）
+[ ] Web → API communication（待 Vercel 設 API_INTERNAL_URL）
+[x] API → PostgreSQL 正常（app 啟動 = $connect 成功）
+[x] Worker → Redis 正常（log: ready — connected to Redis）
+[x] Worker 可取得並處理測試 job（log: self-test OK — job ping completed）
+[x] Secret 未暴露給 client
+[x] Render deployment 正常（4 resource 全綠）
+[x] Online verification 通過（/health、/config/public）
 [ ] Human Owner acceptance
 ```
 
@@ -244,6 +245,32 @@ Phase 5 (整體):       尚未 ACCEPTED
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 / Render 後端部署上線 + 驗證通過
+
+Completed:
+- Human Owner 於 Render Apply Blueprint「sproutin」（Claude 以瀏覽器協助導航，Human 綁卡 + 按 Deploy）
+- 建立 4 resource（全 Singapore）：sproutin-db、sproutin-redis、sproutin-api(Starter)、sproutin-worker(Starter)；估價 US$14/月
+- API Live：https://sproutin-api.onrender.com
+
+Verification（線上，實測）:
+- /health → {"status":"ok"} ✅
+- /config/public → 正確 PublicConfig，無 secret / 無 API_INTERNAL_URL ✅
+- API → PostgreSQL：app 成功啟動（Prisma $connect 成功）✅
+- Worker log：ready — connected to Redis；processed job ping；self-test OK ✅
+- Render deployment：4 resource 全綠 ✅
+
+Issues:
+- Blueprint 需付費（worker Starter 必付費）→ Human Owner 綁卡。Prisma on Alpine 正常（openssl 生效）。
+
+Architecture:
+- 無變更（部署位置 ADR-006）。
+
+Human Owner:
+- NEXT：於 Vercel 設 API_INTERNAL_URL=https://sproutin-api.onrender.com（Web→API）；給 Phase 5 正式 Acceptance
+
+Next:
+- Web→API 佈線 + Human Acceptance → Phase 5 完成 → Phase 6
 
 ### 2026-08-14 — Phase 5 / render.yaml TEST/DEV 標記 + 結構性驗證 PASS
 

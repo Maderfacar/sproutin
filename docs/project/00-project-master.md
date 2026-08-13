@@ -59,7 +59,7 @@ Claude **不自行**進入下一 Phase，等 Human Owner 指令。
 |------|------|
 | Architecture Gate (v1.1) | ✅ Passed |
 | Phase 5 — Frontend | ✅ ACCEPTED（Vercel web） |
-| Phase 5 — Backend/Worker | 🟡 IMPLEMENTED（Render 設定）/ 待部署驗證 |
+| Phase 5 — Backend/Worker | ✅ DEPLOYED & VERIFIED（Render；/health、/config/public、Worker→Redis）/ 待 Human Acceptance |
 | CI | ✅ green（run 31732797734） |
 | Vercel（web） | ✅ Ready — https://sproutin-kb91-theta.vercel.app |
 | 部署決策 | ✅ ADR-006（Vercel + Render） |

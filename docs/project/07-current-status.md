@@ -12,9 +12,9 @@ Backend（API + Worker）on Render — 設定完成，待部署驗證
 Status:
 ```text
 Frontend: ACCEPTED（2026-08-14, Human Owner；Vercel web + CI green + online verified）
-Backend:  IMPLEMENTED（Render 部署設定 render.yaml）/ VERIFICATION_PENDING
-Worker:   IMPLEMENTED（BullMQ self-test）/ VERIFICATION_PENDING
-Human Acceptance（Phase 5 整體）: PENDING
+Backend:  DEPLOYED & VERIFIED（Render sproutin-api Live；/health、/config/public、API→PG）
+Worker:   DEPLOYED & VERIFIED（Render sproutin-worker；Redis + self-test job）
+剩餘: Web→API 佈線（Vercel API_INTERNAL_URL）+ Human Acceptance（Phase 5 整體）: PENDING
 ```
 （部署決策 AQ-1/AQ-2 已定案 → ADR-006。CI 已綠：install/db:generate/typecheck/test/build。）
 

@@ -63,15 +63,15 @@ CI（`.github/workflows/ci.yml`）至少負責：
 
 | 項目 | 驗證方式 | 狀態 |
 |------|----------|------|
-| API 可啟動（Render web Live） | Render dashboard / `/health` 200 | PENDING |
-| `/health` 可訪問 | 打 API 網址 /health | PENDING |
-| `/config/public` 可正常工作 | 打 API 網址 /config/public（無 secret） | PENDING |
-| Web → API communication | web 設 `API_INTERNAL_URL` 後 /api/public-config 走 API | PENDING |
-| API → PostgreSQL | API 啟動即 `$connect`（啟動成功=連線成功） | PENDING |
-| Worker → Redis | Render worker log「ready — connected to Redis」 | PENDING |
-| Worker 處理 test job | worker log「self-test OK — job ping completed」 | PENDING |
-| Secret 未暴露 client | /config/public、bundle 無 secret / 無 API_INTERNAL_URL | PENDING |
-| Render deployment 正常 | Render dashboard Live | PENDING |
+| API 可啟動（Render web Live） | https://sproutin-api.onrender.com Live | ✅ VERIFIED (2026-08-14) |
+| `/health` 可訪問 | `{"status":"ok"}` | ✅ VERIFIED |
+| `/config/public` 可正常工作 | 正確回傳，無 secret | ✅ VERIFIED |
+| Web → API communication | web 設 `API_INTERNAL_URL` 後 /api/public-config 走 API | PENDING（待 Vercel 設 env） |
+| API → PostgreSQL | app 成功啟動（$connect 成功） | ✅ VERIFIED |
+| Worker → Redis | worker log「ready — connected to Redis」 | ✅ VERIFIED |
+| Worker 處理 test job | worker log「self-test OK — job ping completed」 | ✅ VERIFIED |
+| Secret 未暴露 client | /config/public 無 secret / 無 API_INTERNAL_URL | ✅ VERIFIED |
+| Render deployment 正常 | 4 resource 全綠 | ✅ VERIFIED |
 
 ## 4. 現況
 - **前端（web）**：#1 Web availability、#3 Runtime Config、#22 Secret exposure、CI green → ✅ VERIFIED / Frontend ACCEPTED。
