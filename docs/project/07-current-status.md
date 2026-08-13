@@ -1,22 +1,21 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-14
+> Last updated: 2026-08-14（Phase 6 Step 1 IMPLEMENTED）
 
 Current Phase:
-Phase 5 — Backend Deployment Preparation / Verification
+Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Milestone:
-Backend（API + Worker）on Render — 設定完成，待部署驗證
+Phase 6 / Step 1 — DB migration + seed：`IMPLEMENTED / VERIFICATION_PENDING`
 
 Status:
 ```text
-Frontend: ACCEPTED（2026-08-14, Human Owner；Vercel web + CI green + online verified）
-Backend:  DEPLOYED & VERIFIED（Render sproutin-api Live；/health、/config/public、API→PG）
-Worker:   DEPLOYED & VERIFIED（Render sproutin-worker；Redis + self-test job）
-剩餘: Web→API 佈線（Vercel API_INTERNAL_URL）+ Human Acceptance（Phase 5 整體）: PENDING
+Phase 5: ACCEPTED（Frontend + Backend API/Worker + Redis + PG + CI + Web→API 全綠）
+Step 1:  baseline migration 0001_init + idempotent synthetic seed + CI DB job + render preDeploy migrate
+         本機 drift/validate/typecheck ✓；待 CI db job 綠燈 + Render 線上 migrate/seed + Human Acceptance
 ```
-（部署決策 AQ-1/AQ-2 已定案 → ADR-006。CI 已綠：install/db:generate/typecheck/test/build。）
+（新增部署機制 Render preDeploy `migrate:deploy` 屬 ADR-006 邊界內。AuditLog append-only REVOKE 延至 Phase 7。）
 
 Completed（已建立，未驗收）:
 - 三項 Architecture clarification 同步（Runtime Config server-only / Leave-Attendance dual SoT rule / Audit durable path）
@@ -58,8 +57,8 @@ Architecture Questions:
 - **LATER**：LINE Developers / OA / LIFF（Phase 6）；demo data / test accounts
 
 Next Task:
-- **Backend deployment verification**：Human Owner 於 Render 部署 → Claude 協助線上驗證 → Phase 5 acceptance。
-- 通過後**才**進 Phase 6 — Vertical Slice。Claude 不自行進入。
+- **Phase 6 Step 1 收尾**：CI `db` job 綠燈 → Render 線上 migrate（preDeploy 自動）+ seed one-off job → Human Acceptance（Step 1）。
+- 通過後**才**進 Step 2（LINE / LIFF 登入骨架，卡 Human Owner LINE 憑證）。Claude 不自行跳步。
 
 Last Commit:
 - （見 08-development-progress「Latest Accepted Commit」；本檔不重複維護 commit hash）

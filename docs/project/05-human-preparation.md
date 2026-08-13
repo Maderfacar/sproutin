@@ -94,3 +94,21 @@
 5. 與 Claude 一起做後端線上驗證（見 [04-test-matrix §3b](./04-test-matrix.md)）。
 
 > Postgres / Key Value 的連線字串、Key Value 的 `noeviction`、JWT_SECRET 皆由 Blueprint 自動處理，**無需手動貼連線字串**。
+
+## 8. Phase 6 Step 1 — DB migration + seed（線上落地步驟）
+
+> §5 的 synthetic demo data 由 `packages/db/prisma/seed.ts` 提供，並經 **CI 斷言**（家長只見自己小孩 / 老師只見自班 / ADR-002 override）。
+> Human Owner 只需在 Render 執行以下兩件事（migration 自動、seed 一次性）。
+
+1. **Migration（自動）**：`render.yaml` 的 `sproutin-api` 已設 `preDeployCommand: pnpm --filter @sproutin/db migrate:deploy`。
+   下一次部署會**自動**把 baseline `0001_init` 套進 `sproutin-db`。於部署日誌確認「1 migration applied」。
+2. **Seed（一次性，只需跑一次）**：於 `sproutin-api` 服務開 **Shell** 或建一次性 **Job**，執行：
+   - 指令：`pnpm db:seed`
+   - 環境變數：`SEED_DEMO=true`（`DATABASE_URL` 由 Blueprint 已注入）
+   - 於日誌確認：`[seed] OK — Demo School 已就緒（idempotent）。counts=...`
+   - 可重跑，不會重複（固定 id upsert）。
+
+> ⚠ Seed 僅在 `SEED_DEMO=true` 或 `SCHOOL_SLUG=dev` 時執行（避免誤植正式學校 DB）。正式學校 provisioning 於後續階段另行處理，**不使用**此 demo seed。
+
+> §5 覆蓋情況：Demo School / ≥2 Class / 多名跨班 Student / Admin・Teacher・Parent(多小孩)・Guardian / multiple guardianship / permission scenario / Leave-Attendance override **皆由 seed 提供**。
+> `BUS_TEACHER`（隨車）+ 乘車名單於 MVP schema 尚未建模（YAGNI），故 seed 未含；未來 Bus domain 再補。真實 LINE 測試帳號（§6）仍需 Human Owner 於 Step 2 準備。

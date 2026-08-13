@@ -34,6 +34,10 @@ services:
     branch: main
     autoDeploy: true
     healthCheckPath: /health
+    # 每次部署「前」自動套用 DB migration（ADR-003）。
+    # 僅 api 跑（單一入口、Prisma 自帶 advisory lock，避免與 worker 競態）。
+    # migrate deploy 只套用已存在的 migration 檔（不會產生新 migration），Expand-only 安全。
+    preDeployCommand: pnpm --filter @sproutin/db migrate:deploy
     envVars:
       - key: NODE_ENV
         value: production

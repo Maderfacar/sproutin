@@ -31,3 +31,63 @@ jobs:
       - run: pnpm build
 
       # TODO(next step): 加入 pnpm lint（待 ESLint flat config 建置後）
+
+  # ----------------------------------------------------------------
+  # DB job（Phase 6 / Step 1）：於拋棄式 Postgres 驗證 migration + seed。
+  # 證明：① migration 可套用 ② seed 可重入 ③ 資料圖符合 RBAC / ADR-002
+  #       ④ migration 與 schema 無漂移（drift）。全程無需 localhost。
+  # ----------------------------------------------------------------
+  db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sproutin_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sproutin_test?schema=public
+      SEED_DEMO: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm db:generate
+
+      # ① 套用 baseline migration（migrate deploy = 只套用既有 migration 檔）
+      - name: Apply migrations
+        run: pnpm --filter @sproutin/db migrate:deploy
+
+      # ② 灌入 synthetic demo seed（idempotent；此處同時測「重跑不重複」）
+      - name: Seed demo data (run twice for idempotency)
+        run: |
+          pnpm db:seed
+          pnpm db:seed
+
+      # ③ 資料圖語意斷言（家長只見自己小孩 / 老師只見自班 / ADR-002 override）
+      - name: Verify seed graph
+        run: pnpm db:verify
+
+      # ④ Drift 檢查：套用後的 DB 必須與 schema.prisma 完全一致（否則 exit 2）
+      - name: Migration drift check
+        run: >-
+          pnpm --filter @sproutin/db exec prisma migrate diff
+          --from-database
+          --to-schema-datamodel prisma/schema.prisma
+          --exit-code

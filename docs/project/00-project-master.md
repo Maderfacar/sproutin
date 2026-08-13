@@ -20,11 +20,13 @@
 ## 4. 目前在哪
 ```text
 Current Phase:
-Phase 5 — ACCEPTED（2026-08-14）；下一階段 Phase 6 — Vertical Slice（新 session 啟動）
+Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Status:
-Phase 5 全數線上驗證通過並經 Human Owner 驗收（前端+後端+Worker+Redis+PG+CI+Web→API）
-部署決策 AQ-1/AQ-2: DECIDED（ADR-006）
+Phase 6 / Step 1（DB migration + seed）= IMPLEMENTED / VERIFICATION_PENDING
+  baseline 0001_init + idempotent synthetic seed + CI DB job + render preDeploy migrate 已就緒
+  待：CI db job 綠燈 → Render 線上 migrate（preDeploy 自動）+ seed one-off job → Human Acceptance
+Step 2（LINE/LIFF 登入）尚未開始，卡 Human Owner LINE 憑證。
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）
