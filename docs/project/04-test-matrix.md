@@ -66,7 +66,7 @@ CI（`.github/workflows/ci.yml`）至少負責：
 | API 可啟動（Render web Live） | https://sproutin-api.onrender.com Live | ✅ VERIFIED (2026-08-14) |
 | `/health` 可訪問 | `{"status":"ok"}` | ✅ VERIFIED |
 | `/config/public` 可正常工作 | 正確回傳，無 secret | ✅ VERIFIED |
-| Web → API communication | web 設 `API_INTERNAL_URL` 後 /api/public-config 走 API | PENDING（待 Vercel 設 env） |
+| Web → API communication | web 設 `API_INTERNAL_URL` 後 /api/public-config 走 API | ✅ VERIFIED（schoolSlug="dev" 來自 Render API, 2026-08-14） |
 | API → PostgreSQL | app 成功啟動（$connect 成功） | ✅ VERIFIED |
 | Worker → Redis | worker log「ready — connected to Redis」 | ✅ VERIFIED |
 | Worker 處理 test job | worker log「self-test OK — job ping completed」 | ✅ VERIFIED |

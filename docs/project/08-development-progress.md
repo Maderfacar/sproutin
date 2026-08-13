@@ -19,7 +19,8 @@ Backend（API + Worker）deployment config + verification
 Frontend: ACCEPTED（2026-08-14, Human Owner）
 Backend:  DEPLOYED & VERIFIED（Render sproutin-api Live；/health、/config/public、API→PG 通過）
 Worker:   DEPLOYED & VERIFIED（Render sproutin-worker；Redis 連線 + self-test job 通過）
-剩餘:     Web→API 佈線（Vercel 設 API_INTERNAL_URL）+ Human Acceptance
+Web→API:  VERIFIED（Vercel API_INTERNAL_URL → Render API；schoolSlug 回傳 "dev"）
+剩餘:     僅 Human Acceptance（技術項目全數通過）
 Phase 6:  NOT_STARTED
 ```
 
@@ -196,7 +197,7 @@ Backend（Render 部署 2026-08-14，已驗證）
 [x] API 可啟動（sproutin-api Live, https://sproutin-api.onrender.com）
 [x] /health 可訪問（{"status":"ok"}）
 [x] /config/public 可正常工作（無 secret）
-[ ] Web → API communication（待 Vercel 設 API_INTERNAL_URL）
+[x] Web → API communication（Vercel API_INTERNAL_URL → Render；schoolSlug="dev" 來自後端）
 [x] API → PostgreSQL 正常（app 啟動 = $connect 成功）
 [x] Worker → Redis 正常（log: ready — connected to Redis）
 [x] Worker 可取得並處理測試 job（log: self-test OK — job ping completed）
@@ -245,6 +246,28 @@ Phase 5 (整體):       尚未 ACCEPTED
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 / Web→API 接通驗證通過
+
+Completed:
+- Human Owner 於 Vercel 設 API_INTERNAL_URL=https://sproutin-api.onrender.com + SCHOOL_SLUG=vercel-fallback(標記) + Redeploy
+- （Claude 無法操作 Vercel：瀏覽器政策擋 vercel.com；改由 Human Owner 執行，Claude 給步驟 + 驗證）
+
+Verification:
+- GET web /api/public-config → schoolSlug="dev"（後端值，非 fallback）→ Web→API 溝通 VERIFIED ✅
+- Phase 5 技術項目全數通過；僅剩 Human Owner Acceptance
+
+Issues:
+- Problem: claude-in-chrome 無法導航 vercel.com（政策）。Solution: 提供精確步驟由 Human Owner 執行，Claude 負責結果驗證。
+
+Architecture:
+- 無變更。
+
+Human Owner:
+- NOW：給 Phase 5 正式 Acceptance（技術全綠）
+
+Next:
+- Human Acceptance → Phase 5 完成 → Phase 6（Claude 不自行進入）
 
 ### 2026-08-14 — Phase 5 / Render 後端部署上線 + 驗證通過
 
