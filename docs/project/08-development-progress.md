@@ -63,19 +63,21 @@ Web（前端）線上驗證通過；`/health`、`/config/public` 屬後端 API�
 > Human Owner 不使用本機開發環境；以下由 **CI / Vercel Preview / Online** 自動或線上驗證，**不要求 Human Owner 跑 localhost**。
 
 ```text
-[ ] pnpm install / dependency installation      → CI
-[ ] Prisma generate                              → CI
-[ ] Typecheck                                    → CI
-[ ] Automated tests                              → CI
-[ ] Build                                         → CI
-[ ] CI green                                       → CI
-[ ] Vercel Preview deployed                        → Vercel
-[ ] Web loads                                       → Online
-[ ] /health                                          → Online
-[ ] /config/public                                   → Online
-[ ] Runtime Config（per-school 值 runtime 取得）      → Online
-[ ] Secret exposure（bundle / public config / logs 無 secret、無 API_INTERNAL_URL） → Online + review
+[x] pnpm install / dependency installation      → CI ✅ VERIFIED
+[x] Prisma generate                              → CI ✅
+[x] Typecheck                                    → CI ✅
+[x] Automated tests                              → CI ✅
+[x] Build（api nest build + web next build）      → CI ✅
+[x] CI green                                       → CI ✅（run 31732797734）
+[x] Vercel（web）Production deployed               → Vercel ✅
+[x] Web loads                                       → Online ✅
+[x] Runtime Config（web /api/public-config）        → Online ✅
+[x] Secret exposure（web，無 API_INTERNAL_URL/secret）→ Online ✅
+[ ] /health                                          → BLOCKED：API 未部署（AQ-2）
+[ ] /config/public（後端 API）                        → BLOCKED：API 未部署（AQ-2）
 ```
+
+剩餘僅 `/health`、`/config/public`（後端 API 端點）+ Human Owner 正式驗收。
 
 ---
 
@@ -223,26 +225,30 @@ Phase 5 Verification
 ```text
 Phase 5 Acceptance
 
-[ ] Git repository initialized
-[ ] Push successful
-[ ] CI green
-[ ] Vercel Preview deployed
-[ ] Web loads
-[ ] /health works
-[ ] /config/public works
-[ ] Runtime Config verified
-[ ] No secret exposure
+[x] Git repository initialized
+[x] Push successful
+[x] CI green
+[x] Vercel（web）deployed
+[x] Web loads
+[ ] /health works           ← 待 API 部署（AQ-2）
+[ ] /config/public works     ← 待 API 部署（AQ-2）
+[x] Runtime Config verified（web /api/public-config）
+[x] No secret exposure（web）
 [ ] Human Owner acceptance
 ```
 
-全部符合後，`Phase 5` 才可標記為 `ACCEPTED`，並進入 Phase 6 — Vertical Slice。
+前端（web）骨架已達驗收條件；剩 `/health`、`/config/public`（後端 API 部署，AQ-2）+ Human Owner 正式驗收。全部符合後 `Phase 5` 才可標 `ACCEPTED`。
 
 ---
 
 ## Latest CI
 
 ```text
-Not yet available
+Commit:  37a60da（ci: fix pnpm version conflict）
+Run:     31732797734
+Status:  ✅ SUCCESS（install / db:generate / typecheck / test / build 全綠）
+Date:    2026-08-14
+Note:    僅 Node 20 deprecation 警告（非致命）
 ```
 
 ---
@@ -270,6 +276,27 @@ Acceptance: None（等 Phase 5 Acceptance Gate）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 / CI 綠燈
+
+Completed:
+- 修正 CI pnpm 版本衝突（移除 workflow 重複的 version，改讀 packageManager）
+- CI run 31732797734 全綠：install / db:generate / typecheck / test / build
+
+Verification:
+- ✅ 骨架程式碼實際可編譯 / 可建置 / 測試通過（解決先前「未驗證」疑慮）
+
+Issues:
+- Problem: 首三次 CI 於 pnpm setup 即失敗（版本重複指定）。Solution: workflow 移除 `version: 9`。
+
+Architecture:
+- 無變更。
+
+Human Owner:
+- NOW：決定 API+Worker 部署平台（AQ-1+AQ-2）以完成 /health、/config/public 驗證
+
+Next:
+- （待決定後）部署 API → 驗證 /health、/config/public → Phase 5 acceptance
 
 ### 2026-08-14 — Phase 5 / Vercel Web 上線 + 線上驗證（前端）
 

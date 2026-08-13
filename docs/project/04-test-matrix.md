@@ -20,6 +20,8 @@ CI（`.github/workflows/ci.yml`）至少負責：
 | build | `pnpm build` | ✅ |
 | **lint** | `pnpm lint` | ❌ **Technical Debt**（ESLint flat config 未建；MVP RC 前補；不得永久忽略） |
 
+> **CI 首次綠燈：2026-08-14，run 31732797734**（install/db:generate/typecheck/test/build 全過）。
+
 ## 2. Online Testing 覆蓋（隨 Phase 漸增）
 
 | # | 測項 | 首次適用 Phase/Release | 狀態 |
