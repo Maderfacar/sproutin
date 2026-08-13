@@ -1,0 +1,289 @@
+// ============================================================
+// Sproutin — 各校 DB schema (§14-16) — Revised (修正 A/B/C/D/E)
+// 單一 schema，部署到 N 個獨立 PostgreSQL (§19)。變更透過 migration (Rule 9)。
+// SoT / Derived 見 docs/03-database-schema.md。
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- 租戶 / 組織（SoT）----------
+model School {
+  id        String        @id @default(cuid())
+  name      String
+  classes   Class[]
+  config    SchoolConfig?
+  createdAt DateTime      @default(now())
+}
+
+model SchoolConfig {
+  id                    String  @id @default(cuid())
+  schoolId              String  @unique
+  school                School  @relation(fields: [schoolId], references: [id])
+  brandName             String
+  logoUrl               String?
+  primaryColor          String  @default("#2E7D32")
+  secondaryColor        String  @default("#A5D6A7")
+  bannerUrl             String?
+  cardOrder             Json // Dashboard card 排序 (§25)
+  featureFlags          Json // { ai:false, health:false, bus:false, ... } (§26)
+  leaveRequiresApproval Boolean @default(true) // 修正 A
+  // --- 公開 runtime config（非機密，供 /config/public，ADR-001）---
+  liffId                String? // 該校 LIFF ID（公開）
+  lineOaChannelId       String? // LINE OA 公開 channel id
+  lineOaBasicId         String? // LINE OA @basic id（公開）
+  apiBaseUrl            String? // 瀏覽器面 API base（公開；預設 same-origin）
+  // 機密（channel secret / token / JWT）不在此，由 secret manager 注入 env (ADR-004)
+}
+
+model Class {
+  id       String              @id @default(cuid())
+  schoolId String
+  school   School              @relation(fields: [schoolId], references: [id])
+  name     String
+  students Student[]
+  teachers TeacherAssignment[]
+}
+
+// ---------- 學生（核心聚合根，SoT）----------
+model Student {
+  id            String         @id @default(cuid())
+  classId       String
+  class         Class          @relation(fields: [classId], references: [id])
+  name          String
+  status        StudentStatus  @default(ACTIVE)
+  guardianships Guardianship[]
+  attendances   Attendance[]
+  leaves        Leave[]
+  messages      Message[]
+  createdAt     DateTime       @default(now())
+}
+
+// ---------- 身分 / 使用者（SoT；LINE ID 僅認證，修正 D）----------
+model User {
+  id           String              @id @default(cuid())
+  displayName  String
+  lineIdentity LineIdentity?
+  roles        UserRole[]
+  guardianOf   Guardianship[]
+  teaching     TeacherAssignment[]
+  createdAt    DateTime            @default(now())
+}
+
+model LineIdentity {
+  id         String @id @default(cuid())
+  lineUserId String @unique // 僅供認證；不得作為業務外鍵 (修正 D)
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id])
+}
+
+model UserRole {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  role      Role
+  scopeType ScopeType @default(SCHOOL)
+  scopeId   String?
+  @@unique([userId, role, scopeType, scopeId])
+}
+
+model Guardianship {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  relation  GuardianRelation
+  isPrimary Boolean          @default(false)
+  @@unique([userId, studentId])
+}
+
+model TeacherAssignment {
+  id      String      @id @default(cuid())
+  userId  String
+  user    User        @relation(fields: [userId], references: [id])
+  classId String
+  class   Class       @relation(fields: [classId], references: [id])
+  role    TeacherRole @default(HOMEROOM)
+  @@unique([userId, classId, role])
+}
+
+// ---------- Leave（SoT）+ 狀態機（修正 A）----------
+model Leave {
+  id         String      @id @default(cuid())
+  studentId  String
+  student    Student     @relation(fields: [studentId], references: [id])
+  dateFrom   DateTime
+  dateTo     DateTime
+  reason     String
+  status     LeaveStatus @default(PENDING) // PENDING/APPROVED/REJECTED/CANCELLED
+  reviewedBy String? // 審核者 userId
+  reviewNote String?
+  createdBy  String // 申請者 userId
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// ---------- Attendance（混合 SoT/Derived + override 政策，ADR-002）----------
+model Attendance {
+  id           String           @id @default(cuid())
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id])
+  date         DateTime
+  status       AttendanceStatus
+  source       AttendanceSource @default(MANUAL) // 當前擁有者
+  sourceRef    String? // source=LEAVE_EVENT 時的 active 來源 Leave.id
+  derivedFrom  String? // 原始 Leave 血緣；override 後仍保留
+  overriddenAt DateTime? // 由 Derived 被人工覆寫的時間
+  overriddenBy String? // 覆寫者 userId
+  @@unique([studentId, date])
+}
+
+// ---------- 溝通（Student-centered，修正 D；SoT）----------
+model Message {
+  id        String          @id @default(cuid())
+  studentId String // 業務關聯以 Student 為核心，非 LINE ID
+  student   Student         @relation(fields: [studentId], references: [id])
+  classId   String
+  senderId  String // userId
+  category  MessageCategory @default(GENERAL)
+  body      String
+  reads     MessageRead[]
+  createdAt DateTime        @default(now())
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id])
+  userId    String
+  readAt    DateTime @default(now())
+  @@unique([messageId, userId])
+}
+
+model Announcement {
+  id        String            @id @default(cuid())
+  schoolId  String
+  classId   String? // null = 全校
+  scope     AnnouncementScope
+  title     String
+  body      String
+  createdBy String
+  createdAt DateTime          @default(now())
+}
+
+// ---------- Notification（Derived）----------
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ---------- Audit Log（SoT, append-only，修正 C）----------
+model AuditLog {
+  id           String      @id @default(cuid())
+  actorUserId  String? // 誰（system 為 null）
+  actorRole    String?
+  action       String // 什麼 Action，如 "leave.approve"
+  resourceType String // 對哪個資源，如 "Student"/"Leave"/"Message"
+  resourceId   String?
+  result       AuditResult // 結果
+  scopeType    String?
+  scopeId      String?
+  metadata     Json? // 摘要/IP；不存敏感明文（健康、訊息內容）
+  createdAt    DateTime    @default(now()) // 何時
+  @@index([resourceType, resourceId])
+  @@index([actorUserId])
+  @@index([createdAt])
+}
+
+// ---------- Transactional Outbox（§4）----------
+model OutboxEvent {
+  id           String    @id @default(cuid())
+  eventType    String
+  payload      Json
+  status       String    @default("PENDING") // PENDING / DISPATCHED / FAILED
+  createdAt    DateTime  @default(now())
+  dispatchedAt DateTime?
+}
+
+// 註：Health/Bus 等未來 model 不預建（修正 B），需要時再以 migration 加入。
+
+// ---------- Enums ----------
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  TEACHER
+  BUS_TEACHER
+  PARENT
+  GUARDIAN
+}
+
+enum ScopeType {
+  SCHOOL
+  CLASS
+}
+
+enum GuardianRelation {
+  FATHER
+  MOTHER
+  GRANDPARENT
+  GUARDIAN
+}
+
+enum TeacherRole {
+  HOMEROOM
+  BUS
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LEAVE
+  LATE
+}
+
+enum AttendanceSource {
+  MANUAL
+  LEAVE_EVENT
+}
+
+enum MessageCategory {
+  GENERAL
+  HEALTH
+  BEHAVIOR
+  ADMIN
+}
+
+enum AnnouncementScope {
+  SCHOOL
+  CLASS
+}
+
+enum AuditResult {
+  SUCCESS
+  FAILURE
+  DENIED
+}

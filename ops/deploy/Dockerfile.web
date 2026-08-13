@@ -1,0 +1,19 @@
+# Sproutin Web (Next.js) — 同一 image 部署到所有學校，靠 env 區分 (§20)
+FROM node:20-alpine AS base
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY packages ./packages
+COPY apps/web ./apps/web
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS build
+RUN pnpm --filter @sproutin/web build
+
+FROM base AS runtime
+ENV NODE_ENV=production
+COPY --from=build /app ./
+EXPOSE 3000
+CMD ["pnpm", "--filter", "@sproutin/web", "start"]

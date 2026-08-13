@@ -1,0 +1,94 @@
+# 02 — Development Checklist
+
+> **Status 值**：`NOT_STARTED` · `IN_PROGRESS` · `IMPLEMENTED` · `VERIFICATION_PENDING` · `ACCEPTED` · `BLOCKED` · `DEFERRED`
+>
+> **鐵則**：`[x]` / `ACCEPTED` 只代表 **Human Owner / Architecture Review 要求的驗收條件已滿足**。
+> Claude 自己寫完 code **不得**把 Task 標成 ACCEPTED —— 最多標 `IMPLEMENTED` 或 `VERIFICATION_PENDING`。
+
+---
+
+## Phase 0–4（歷史階段）
+- [x] Product Definition — **ACCEPTED**
+- [x] Technology Stack — **ACCEPTED**
+- [x] Architecture v1.1 — **ACCEPTED**
+- [x] Domain/DB/RBAC/Event/API 文件 — **ACCEPTED**
+- [x] Architecture Gate + ADR-001~005 — **ACCEPTED**
+
+---
+
+## Phase 5 — Project Skeleton  🟡
+
+- [~] **Monorepo baseline**
+    - [x] pnpm workspace + Turborepo
+    - [x] packages/db · packages/shared · ops/control-plane · ops/deploy
+  - **Acceptance Criteria**：CI `pnpm install` 綠燈。
+  - **Deliverables**：`package.json`、`pnpm-workspace.yaml`、`turbo.json`、`tsconfig.base.json`。
+  - **Testing**：CI install。 **Owner**：Claude(impl) / Human(accept)。 **Status**：`VERIFICATION_PENDING`
+
+- [~] **NestJS API skeleton**
+    - [x] main / app.module / PrismaService / PrismaModule
+    - [x] `GET /health`
+    - [x] `GET /config/public`（server-only runtime config，ADR-001）
+  - **Acceptance Criteria**：typecheck/build 綠燈；Online `/health`、`/config/public` 回應正確。
+  - **Deliverables**：`apps/api/src/**`、`tsconfig.json`、`nest-cli.json`。
+  - **Testing**：CI typecheck/build；Online health/config。 **Status**：`VERIFICATION_PENDING`
+
+- [~] **Next.js Web skeleton**
+    - [x] layout / page / lib/config
+    - [x] same-origin `/api/public-config` route handler（不暴露 API_INTERNAL_URL）
+  - **Acceptance Criteria**：build 綠燈；Vercel Preview 首頁顯示 runtime public config。
+  - **Deliverables**：`apps/web/src/**`、`next.config.mjs`、`tsconfig.json`。
+  - **Testing**：CI build；Preview online。 **Status**：`VERIFICATION_PENDING`
+
+- [~] **Prisma schema baseline**
+    - [x] 各校 schema（Student/User/Leave/Attendance/Audit/Outbox…）
+    - [x] Control Plane schema（secret refs + schemaVersion）
+    - [ ] 首次 `prisma migrate`（**Phase 6**，需 DB）
+  - **Acceptance Criteria**：`pnpm db:generate` 成功；schema 對齊 [../03](../03-database-schema.md)。
+  - **Testing**：CI db:generate。 **Status**：`VERIFICATION_PENDING`
+
+- [~] **Worker / BullMQ entrypoint**
+    - [x] `apps/api/src/worker.ts`（骨架 + `start:worker` script）
+    - [ ] Outbox dispatcher / processors（**Phase 6+**）
+  - **Note**：Production hosting 為 **Architecture Question**（見 [07](./07-current-status.md)）。 **Status**：`IMPLEMENTED`
+
+- [~] **Docker baseline**
+    - [x] Dockerfile.api / Dockerfile.web / docker-compose.school.yml（web/api/worker/redis；PG 為 Managed 外部）
+  - **Status**：`IMPLEMENTED`（未於平台驗證）
+
+- [~] **CI baseline**
+    - [x] `.github/workflows/ci.yml`：install → db:generate → typecheck → test → build
+    - [ ] lint（**Technical Debt**，見下）
+  - **Acceptance Criteria**：CI 綠燈。 **Status**：`VERIFICATION_PENDING`
+
+- [~] **Test baseline**
+    - [x] jest.config + `health.controller.spec.ts`
+  - **Acceptance Criteria**：CI test 綠燈。 **Status**：`VERIFICATION_PENDING`
+
+- [ ] **Phase 5 Acceptance（Human Owner）**
+  - Push → CI 綠燈 → Vercel Preview → Online 驗證 → **Human Acceptance**。 **Status**：`NOT_STARTED`
+
+### Technical Debt（Phase 5 引入）
+- [ ] **ESLint flat config** — `DEFERRED`；MVP Release Candidate（Phase 8）前必須完成，不得永久忽略。
+
+---
+
+## Phase 6 — Vertical Slice  ⬜（尚未開始）
+- [ ] DB migration + seed（Demo School）— `NOT_STARTED`
+- [ ] LINE / LIFF 登入骨架 — `NOT_STARTED`
+- [ ] RBAC 骨架（RolesGuard + ScopeGuard）— `NOT_STARTED`
+- [ ] 端到端讀取切片：LINE Login → User → Student → 權限 → LIFF Dashboard — `NOT_STARTED`
+- **Acceptance**：Online 可驗證 + Human Acceptance。
+
+## Phase 7 — Core MVP  ⬜
+- [ ] Leave 狀態機 · Attendance · Leave/Attendance 衝突規則（ADR-002）— `NOT_STARTED`
+- [ ] Message Center · Announcement · Notification / LINE Push — `NOT_STARTED`
+- [ ] Audit（transactional + out-of-band durable path）— `NOT_STARTED`
+- [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
+
+## Phase 8 — Integration / Hardening  ⬜
+- [ ] 多校隔離 / secret exposure / 錯誤處理 / 效能 — `NOT_STARTED`
+- [ ] **ESLint（清 Technical Debt）** — `NOT_STARTED`
+
+## Phase 9–10 — Pilot / Production  ⬜  `NOT_STARTED`
+## Phase 11+ — Future domains  ⬜  `DEFERRED`（需明確批准）

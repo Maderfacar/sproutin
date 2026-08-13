@@ -1,0 +1,65 @@
+// ============================================================
+// Sproutin — Control Plane schema (跨校中繼) — v1.1
+// 只存 infra metadata 與 secret REFERENCE，絕不存業務資料或明文憑證 (ADR-004)。
+// 與各校 DB 完全分離；使用獨立的 CONTROL_PLANE_DATABASE_URL。
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/control-plane-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CONTROL_PLANE_DATABASE_URL")
+}
+
+model SchoolInstance {
+  id                String             @id @default(cuid())
+  slug              String             @unique // 對外識別，如 "happy-kids"
+  displayName       String
+  // --- Secret references（ADR-004）：存 Secret Manager 的 key，不存真值 ---
+  databaseSecretRef String // 解析後得完整 DATABASE_URL（含密碼）
+  lineSecretRef     String // LINE channel secret / access token
+  jwtSecretRef      String // JWT signing secret
+  // --- 版本追蹤（ADR-003）---
+  currentVersion    String // app image 版本
+  schemaVersion     String // DB schema 版本
+  status            InstanceStatus     @default(ACTIVE)
+  deployments       DeploymentRecord[]
+  createdAt         DateTime           @default(now())
+}
+
+model DeploymentRecord {
+  id             String         @id @default(cuid())
+  instanceId     String
+  instance       SchoolInstance @relation(fields: [instanceId], references: [id])
+  fromVersion    String
+  toVersion      String
+  migrationPhase MigrationPhase? // EXPAND / MIGRATE / CONTRACT (ADR-003)
+  status         DeployStatus    @default(PENDING)
+  startedAt      DateTime        @default(now())
+  finishedAt     DateTime?
+}
+
+enum InstanceStatus {
+  ACTIVE
+  MAINTENANCE
+  MIGRATING
+  SUSPENDED
+}
+
+enum DeployStatus {
+  PENDING
+  MIGRATING
+  DEPLOYED
+  ROLLED_BACK
+  FORWARD_FIXED
+  FAILED
+}
+
+enum MigrationPhase {
+  EXPAND
+  MIGRATE
+  CONTRACT
+}

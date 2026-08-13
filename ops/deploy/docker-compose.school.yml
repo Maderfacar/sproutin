@@ -1,0 +1,80 @@
+# 單一學校 Instance 的 container set (§19，每校一組)
+# Web / API / Worker 共用同一份 image，靠注入不同 .env 區分 (§20)。
+# ★ 正式環境：PostgreSQL 採 Managed / 獨立 DB（不放在此 compose）；
+#   下方 postgres service 僅供「本機開發」使用，勿用於 production。
+#   用法：docker compose --env-file ./schools/schoolA.env -p sproutin-schoolA up -d
+services:
+  # --- 僅本機開發用；production 改用 Managed PG，透過 DATABASE_URL 連入 ---
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["local"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sproutin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sproutin}
+      POSTGRES_DB: ${POSTGRES_DB:-sproutin}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sproutin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+  api:
+    image: sproutin-api:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: ops/deploy/Dockerfile.api
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      LINE_CHANNEL_ID: ${LINE_CHANNEL_ID}
+      LINE_CHANNEL_SECRET: ${LINE_CHANNEL_SECRET}
+      LIFF_ID: ${LIFF_ID}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on: [redis]
+    ports:
+      - "${API_PORT:-3001}:3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # Worker：同一 image、不同 entrypoint，消費 Outbox / BullMQ（通知、LINE push）
+  worker:
+    image: sproutin-api:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: ops/deploy/Dockerfile.api
+    command: ["pnpm", "--filter", "@sproutin/api", "start:worker"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      LINE_CHANNEL_ID: ${LINE_CHANNEL_ID}
+      LINE_CHANNEL_SECRET: ${LINE_CHANNEL_SECRET}
+    depends_on: [redis]
+
+  web:
+    image: sproutin-web:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: ops/deploy/Dockerfile.web
+    # 不使用 NEXT_PUBLIC_* 承載 per-school 值 (ADR-001)。
+    # 瀏覽器打 same-origin /api/public-config；per-school 值 runtime 取得。
+    environment:
+      SCHOOL_SLUG: ${SCHOOL_SLUG}
+      API_INTERNAL_URL: ${API_INTERNAL_URL}
+    depends_on: [api]
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+volumes:
+  pgdata:
