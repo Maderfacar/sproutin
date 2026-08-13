@@ -42,8 +42,8 @@ Web(Vercel) + API/Worker(Render) + Redis + PostgreSQL 全鏈路可線上驗證�
 [x] Docker / build 設定確認（+openssl）     — IMPLEMENTED
 [x] API 埠綁定 PORT + 0.0.0.0              — IMPLEMENTED（main.ts）
 [x] Worker Redis 連線 + 自我測試 ping job   — IMPLEMENTED（worker.ts；非業務邏輯）
-[x] Redis 設定（Key Value, noeviction）    — IMPLEMENTED（render.yaml）
-[x] PostgreSQL 設定（test/dev）            — IMPLEMENTED（render.yaml databases）
+[x] 既有資源引用（不重複建立）             — IMPLEMENTED（render.yaml 只建 api+worker，用 Environment Group 引用既有 PG/Key Value）
+[~] Redis noeviction / DB·Redis 連線字串    — Human Owner 於 Render 後台設定（既有資源）
 [x] Health check 設定（/health）           — IMPLEMENTED（render.yaml healthCheckPath）
 [x] 環境變數清單                            — IMPLEMENTED（05-human-preparation）
 [x] 部署文件（ADR-006 / docs/09）           — IMPLEMENTED
@@ -152,13 +152,15 @@ AQ-2 — API (NestJS) Production Hosting      → DECIDED（2026-08-14, ADR-006�
 DONE
 - Git repo / GitHub / Vercel（web）已上線並驗證；AQ-1/AQ-2 已決策（ADR-006）
 
-NOW
-1. 建 Render 帳號 + 連接 GitHub
-2. 以 render.yaml Blueprint 部署（Render 自動建 Postgres + Key Value）
+NOW（既有資源引用版；Apply 前先與 Claude 確認）
+1. 既有 Key Value 設 maxmemory-policy=noeviction
+2. 取得既有 Postgres / Key Value 的 Internal 連線字串；確認 render.yaml region 與其一致
+3. Apply Blueprint（只建 api + worker + 空 Environment Group sproutin-backend）
+4. 於 Environment Group 填入 DATABASE_URL / REDIS_URL（既有資源 Internal URL）
 
 NEXT
-3. 與 Claude 一起線上驗證後端（/health、/config/public、API→PG、Worker→Redis）
-4. Human Owner acceptance（Phase 5 收尾）
+5. 與 Claude 一起線上驗證後端（/health、/config/public、API→PG、Worker→Redis）
+6. Human Owner acceptance（Phase 5 收尾）
 
 LATER
 5. LINE Developers / LINE OA / LIFF（Phase 6）
@@ -241,6 +243,32 @@ Phase 5 (整體):       尚未 ACCEPTED
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 / render.yaml 改為引用既有 Render 資源
+
+Completed:
+- Human Owner 已手動建立 Postgres + Key Value；為避免重複建立，`render.yaml` 改為：
+  只宣告 api + worker，移除 databases: 與 keyvalue:；DATABASE_URL/REDIS_URL 走
+  Environment Group `sproutin-backend`（sync:false，Human Owner 後台填既有資源 Internal URL）
+- 文件同步：ADR-006（既有資源引用註記）、05（步驟改寫）、02、07、08
+
+Verification:
+- 無 code 變更（僅 render.yaml + 文件）；CI 不受影響。**未 Apply / Deploy**（依 Human Owner 指示）。
+
+Issues:
+- Problem: 原 render.yaml 宣告 databases/keyvalue → Apply 會重複建立既有資源。
+  Cause: Render fromDatabase/fromService 僅能引用同 Blueprint 內資源。
+  Solution: 移除資源宣告，改用 Environment Group（sync:false）引用既有資源。
+  Trade-off: Human Owner 需於後台填 2 個連線字串一次（安全、無重複）。
+
+Architecture:
+- 無變更（仍 API+Worker+Redis+PostgreSQL）。ADR-006 補既有資源引用註記。
+
+Human Owner:
+- NOW：設 noeviction、確認 region、Apply（確認後）、填 Environment Group 連線字串
+
+Next:
+- 確認 render.yaml → Apply → 後端線上驗證
 
 ### 2026-08-14 — Phase 5 / 後端部署決策 + Render 設定（ADR-006）
 

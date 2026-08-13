@@ -19,10 +19,10 @@
 |------|------|
 | **Render** | 部署 API（web service）+ Worker（background worker） |
 | **Render → 連接 GitHub** | 讓 Render 讀 `render.yaml` 藍圖自動部署 |
-| **Managed PostgreSQL** | 後端資料庫（test/dev）。**最簡：用 Render Blueprint 內建的 Render Postgres**；或用外部 Managed PG（填 `DATABASE_URL`） |
-| **Managed Redis** | 佇列 / 背景工作。**最簡：用 Blueprint 內建的 Render Key Value**；或外部 Redis 相容服務（填 `REDIS_URL`） |
+| **PostgreSQL（已手動建立）** | 後端資料庫（test/dev）。**已由 Human Owner 手動建立**；透過 Environment Group 提供 `DATABASE_URL`（Internal URL） |
+| **Key Value / Redis（已手動建立）** | 佇列 / 背景工作。**已由 Human Owner 手動建立**；透過 Environment Group 提供 `REDIS_URL`（Internal URL）；需設 `maxmemory-policy=noeviction` |
 
-> 走 `render.yaml` Blueprint 時，Render 會**自動建立** Postgres 與 Key Value 並自動接上連線字串——Human Owner 只需 **Render 帳號 + 連接 GitHub** 即可。外部 Provider 為選項（多用於正式環境）。
+> ⚠ **既有資源引用**：`render.yaml` **只建 api + worker**，**不建** DB/Redis（避免重複）。DB/Redis 連線字串由 Human Owner 於 Render 後台填入 Environment Group `sproutin-backend`。詳見 §7 與 ADR-006。
 
 ### LATER — Phase 6
 - LINE Developers account
@@ -34,8 +34,8 @@
 
 | 變數 | Purpose | Server-only / Client-visible | Required | Where to configure |
 |------|---------|------------------------------|----------|--------------------|
-| `DATABASE_URL` | 後端連 PostgreSQL | **Server-only（secret）** | **Now** | Render：Blueprint `fromDatabase` 自動；或外部 PG 手填 |
-| `REDIS_URL` | 佇列 / BullMQ | **Server-only（secret）** | **Now** | Render：Blueprint `fromService`（Key Value）自動；或外部 Redis 手填 |
+| `DATABASE_URL` | 後端連 PostgreSQL | **Server-only（secret）** | **Now** | Render **Environment Group `sproutin-backend`**（貼既有 Postgres Internal URL） |
+| `REDIS_URL` | 佇列 / BullMQ | **Server-only（secret）** | **Now** | Render **Environment Group `sproutin-backend`**（貼既有 Key Value Internal URL） |
 | `JWT_SECRET` | JWT 簽章 | **Server-only（secret）** | **Now** | Render：`generateValue` 自動產生 |
 | `SCHOOL_SLUG` | 本 instance 識別 | Server-only | **Now** | Render env（api，預設 `dev`） |
 | `PORT` | 服務監聽埠 | Server-only | **Now** | Render 自動注入（API 已讀取） |
@@ -59,7 +59,7 @@
 - **connection URL**（`REDIS_URL`）
 - **authentication**（密碼 / ACL）
 - **TLS**（Render Key Value 內部連線通常免 TLS；外部服務可能需 `rediss://`）
-- **BullMQ 相容性**：`maxmemory-policy = noeviction`（`render.yaml` 已設定），且 worker 連線已設 `maxRetriesPerRequest=null`。
+- **BullMQ 相容性**：`maxmemory-policy = noeviction` —— 因採「既有資源引用」，`render.yaml` 不再管理此設定，**請於 Render 後台在既有 Key Value 上手動設定**；worker 連線已設 `maxRetriesPerRequest=null`。
 
 > 選 Render **不會**改動既有 Queue 架構（仍是 BullMQ + Redis）。
 
@@ -81,7 +81,19 @@
 - [ ] LINE test accounts（≥2，測隔離）
 - [ ] Mobile device（LIFF WebView）+ Desktop browser
 
-## 7. 目前（Phase 5 後端）Human Owner 最小行動
-1. 建 Render 帳號、連接 GitHub。
-2. 以 `render.yaml` Blueprint 部署（Render 自動建 Postgres + Key Value）。
-3. 部署後與 Claude 一起做線上驗證（見 [04-test-matrix](./04-test-matrix.md) / [08-development-progress](./08-development-progress.md) 的 Acceptance Gate）。
+## 7. 目前（Phase 5 後端）Human Owner 步驟 —（既有資源引用版）
+
+> Human Owner 已手動建立 PostgreSQL + Key Value。`render.yaml` **只建 api + worker**，
+> **不會**再建 DB/Redis；DATABASE_URL / REDIS_URL 走 Environment Group「sproutin-backend」。
+
+1. **確認既有 Key Value 設定**：`maxmemory-policy = noeviction`（BullMQ 需求；Blueprint 不再管理此設定）。
+2. **取得既有資源的 Internal 連線字串**：
+   - Postgres → **Internal Database URL**
+   - Key Value → **Internal URL**（`redis://...`）
+3. **確認 region 一致**：`render.yaml` 的 api/worker region 需與既有 Postgres/Key Value 相同（預設 `singapore`，不同請先改 render.yaml）。
+4. **Apply Blueprint**（建立 api + worker + 空的 Environment Group `sproutin-backend`）。
+   - ⚠ 但**在 Claude 與你確認前，先不要 Apply**（依你的指示）。
+5. **填入 Environment Group `sproutin-backend`**：`DATABASE_URL`=既有 Postgres Internal URL、`REDIS_URL`=既有 Key Value Internal URL。
+6. 與 Claude 一起做後端線上驗證（見 [04-test-matrix §3b](./04-test-matrix.md)）。
+
+**絕不**：刪除既有 Postgres / Key Value；建立第二套；改動 API+Worker+Redis+PostgreSQL 架構。

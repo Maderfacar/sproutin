@@ -54,7 +54,7 @@ Architecture Questions:
 - 目前無待決 Architecture Question（None open）。
 
 Human Owner Actions:
-- **NOW**：建 Render 帳號 + 連接 GitHub + 以 `render.yaml` Blueprint 部署（自動建 Postgres + Key Value）
+- **NOW**：既有資源引用版 —— 設既有 Key Value `noeviction`、確認 region 一致、（確認後）Apply Blueprint（只建 api+worker）、於 Environment Group `sproutin-backend` 填既有 Postgres/Key Value 的 Internal 連線字串。**render.yaml 已不建立第二套 DB/Redis。**
 - **NEXT**：與 Claude 一起後端線上驗證（/health、/config/public、API→PG、Worker→Redis）→ Human Acceptance
 - **LATER**：LINE Developers / OA / LIFF（Phase 6）；demo data / test accounts
 

@@ -45,4 +45,5 @@ Managed PostgreSQL └── Source of Truth
 - (+) API+Worker 同 image，維持單一 build artifact。
 - (−) 雙平台維運（Vercel + Render）；Render background worker 需付費方案。
 - **DB / Redis 範圍**：本階段僅 **test/dev** 各一（Render Postgres + Key Value）；正式 **DB-per-School** 於後續 Provisioning 階段依架構逐校建立，不在此階段大量建立。
+- **既有資源引用（2026-08-14 更新）**：Human Owner 已手動建立 Postgres 與 Key Value。故 `render.yaml` **只宣告 api + worker**，**不宣告 databases/keyvalue**（避免 Apply 重複建立）；`DATABASE_URL`/`REDIS_URL` 經 **Environment Group `sproutin-backend`（sync:false）** 提供，值由 Human Owner 於 Render 後台填入既有資源的 Internal 連線字串。理由：Render 的 `fromDatabase`/`fromService` 僅能引用同一 Blueprint 內宣告的資源，無法安全引用 Blueprint 外手動建立者。Key Value 的 `maxmemory-policy=noeviction`（BullMQ 需求）改由 Human Owner 於後台設定。
 - 影響檔案：`render.yaml`、`ops/deploy/Dockerfile.api`、`apps/api/src/main.ts`（PORT 綁定）、`apps/api/src/worker.ts`（Redis 自我測試）、`docs/09-deployment.md`、`docs/project/05`。
