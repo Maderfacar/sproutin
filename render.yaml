@@ -85,15 +85,19 @@ services:
           property: connectionString
 
   # ---------- Redis（Render Key Value，Redis 相容）----------
+  # ⚠ TEST/DEV ONLY：plan=free 僅供測試/開發，**不代表 Production configuration**。
+  #   正式環境請改用付費/持久化方案（容量、持久性、HA 依需求評估）。
   - type: keyvalue
     name: sproutin-redis
-    plan: free
+    plan: free # TEST/DEV ONLY — 非 production 設定
     region: singapore
     ipAllowList: [] # 只允許 Render 內部連線（不對公網開放）
     maxmemoryPolicy: noeviction # BullMQ 相容性要求（不可淘汰 key）
 
-# ---------- PostgreSQL（Blueprint 建立；test/dev）----------
+# ---------- PostgreSQL（Blueprint 建立）----------
+# ⚠ TEST/DEV ONLY：plan=free 僅供測試/開發，**不代表 Production configuration**。
+#   free Postgres 有容量/期限限制；正式環境與 DB-per-School 於後續 Provisioning 另行規劃。
 databases:
   - name: sproutin-db
-    plan: free # test/dev（正式 DB-per-School 於後續 Provisioning 逐校建立）
+    plan: free # TEST/DEV ONLY — 非 production 設定
     region: singapore

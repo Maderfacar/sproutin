@@ -45,6 +45,7 @@ Managed PostgreSQL └── Source of Truth
 - (+) API+Worker 同 image，維持單一 build artifact。
 - (−) 雙平台維運（Vercel + Render）；Render background worker 需付費方案。
 - **DB / Redis 範圍**：本階段僅 **test/dev** 各一（Render Postgres + Key Value）；正式 **DB-per-School** 於後續 Provisioning 階段依架構逐校建立，不在此階段大量建立。
+- **TEST/DEV ONLY（明確標記）**：`render.yaml` 中 `sproutin-redis` 與 `sproutin-db` 的 `plan: free` **僅供測試/開發，不代表 Production configuration**；正式環境的容量、持久性、HA、DB-per-School 另行規劃。已於 render.yaml 內以註解明確標記。
 - **Blueprint 統一管理（2026-08-14 最終）**：Human Owner 決定刪除先前手動建立、無資料的 Postgres/Key Value，改由 `render.yaml` **統一建立** 四個 resource：`sproutin-api`、`sproutin-worker`、`sproutin-redis`（keyvalue，`maxmemoryPolicy=noeviction`）、`sproutin-db`（postgres）。全部 `region=singapore`。api/worker 以 `fromDatabase`/`fromService` 自動取得 `DATABASE_URL`/`REDIS_URL`（server-only，不暴露 client）。`JWT_SECRET` 由 Render `generateValue` 產生；LINE 變數 `sync:false`（Phase 6 填）。
   > 註：本專案曾短暫評估「引用既有手動資源」（Environment Group + sync:false），因 Human Owner 選擇由 Blueprint 統一管理而回到此方案；Render 的 `fromDatabase`/`fromService` 僅能引用同一 Blueprint 內資源，統一管理下即可直接使用。
 - 影響檔案：`render.yaml`、`ops/deploy/Dockerfile.api`、`apps/api/src/main.ts`（PORT 綁定）、`apps/api/src/worker.ts`（Redis 自我測試）、`docs/09-deployment.md`、`docs/project/05`。

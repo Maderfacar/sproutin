@@ -245,6 +245,29 @@ Phase 5 (整體):       尚未 ACCEPTED
 
 ## Recent Work Log
 
+### 2026-08-14 — Phase 5 / render.yaml TEST/DEV 標記 + 結構性驗證 PASS
+
+Completed:
+- `sproutin-redis` / `sproutin-db` 的 `plan: free` 明確標記 **TEST/DEV ONLY，非 production**（render.yaml 註解 + ADR-006）
+- 結構性驗證（pyyaml + Render Blueprint schema 檢查）：**PASS，0 error / 0 warning**
+  - services: web(sproutin-api) / worker(sproutin-worker) / keyvalue(sproutin-redis)；databases: sproutin-db
+  - region 全 singapore；fromDatabase→sproutin-db、fromService→sproutin-redis 交叉引用正確；keyvalue noeviction；web healthCheckPath；worker dockerCommand
+
+Verification:
+- YAML 語法 + 結構 schema：PASS（本地）。**注意**：機器無 Render 官方 CLI，最終權威驗證為 Render Apply 前的 Blueprint preview。**未 Apply / Deploy。**
+
+Issues:
+- Problem: 無法在本地跑 Render 官方 validator。Solution: 以 pyyaml 解析 + 依 Blueprint 規格逐項檢查 + 交叉引用；並提示以 Render Blueprint preview 做最終確認。
+
+Architecture:
+- 無變更。
+
+Human Owner:
+- NOW：刪除手動空 DB/Redis → Apply（Render preview 為最終驗證）
+
+Next:
+- Apply → 後端線上驗證
+
 ### 2026-08-14 — Phase 5 / render.yaml 改為 Blueprint 統一建立全部資源
 
 Completed:
