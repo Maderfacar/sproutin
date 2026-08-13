@@ -71,12 +71,12 @@
 
 - [~] **部署決策** — AQ-1/AQ-2 → ADR-006（Vercel + Render） **Status**：`ACCEPTED`（Human Owner）
 - [~] **Render 部署設定**
-    - [x] `render.yaml`：**只建 api + worker**；**引用既有** Postgres/Key Value（Environment Group `sproutin-backend`, sync:false）——不重複建立資源
+    - [x] `render.yaml`：**Blueprint 統一建立** api + worker + Key Value（noeviction）+ Postgres，全部 Singapore；api/worker 用 `fromDatabase`/`fromService` 自動取得 DATABASE_URL/REDIS_URL
     - [x] Dockerfile.api：加 openssl（Prisma on Alpine）
     - [x] main.ts：綁 `PORT` / `0.0.0.0`
     - [x] worker.ts：Redis 連線 + self-test ping job（非業務邏輯）
   - **Acceptance Criteria**：Render 部署 Live；/health、/config/public 可訪問；Worker→Redis 處理 test job。
-  - **Note**：既有資源引用（Human Owner 已手動建 PG+Key Value）；noeviction 由 Human Owner 於後台設定。
+  - **Note**：Human Owner 先刪除手動建立的空 DB/Redis，之後全由 Blueprint 建立（ADR-006）。
   - **Deliverables**：`render.yaml`、`ops/deploy/Dockerfile.api`、`apps/api/src/{main,worker}.ts`、`docs/adr/ADR-006`。
   - **Owner**：Claude(config) / Human(deploy+accept)。 **Status**：`IMPLEMENTED / VERIFICATION_PENDING`
 - [ ] **環境變數清單** — `docs/project/05-human-preparation.md` **Status**：`IMPLEMENTED`

@@ -42,8 +42,9 @@ Web(Vercel) + API/Worker(Render) + Redis + PostgreSQL 全鏈路可線上驗證�
 [x] Docker / build 設定確認（+openssl）     — IMPLEMENTED
 [x] API 埠綁定 PORT + 0.0.0.0              — IMPLEMENTED（main.ts）
 [x] Worker Redis 連線 + 自我測試 ping job   — IMPLEMENTED（worker.ts；非業務邏輯）
-[x] 既有資源引用（不重複建立）             — IMPLEMENTED（render.yaml 只建 api+worker，用 Environment Group 引用既有 PG/Key Value）
-[~] Redis noeviction / DB·Redis 連線字串    — Human Owner 於 Render 後台設定（既有資源）
+[x] Redis 設定（Key Value, noeviction）    — IMPLEMENTED（render.yaml keyvalue）
+[x] PostgreSQL 設定（test/dev）            — IMPLEMENTED（render.yaml databases）
+[x] Blueprint 統一建立 4 resource（全 Singapore）— IMPLEMENTED（api/worker/keyvalue/db；fromDatabase/fromService 自動注入）
 [x] Health check 設定（/health）           — IMPLEMENTED（render.yaml healthCheckPath）
 [x] 環境變數清單                            — IMPLEMENTED（05-human-preparation）
 [x] 部署文件（ADR-006 / docs/09）           — IMPLEMENTED
@@ -152,15 +153,15 @@ AQ-2 — API (NestJS) Production Hosting      → DECIDED（2026-08-14, ADR-006�
 DONE
 - Git repo / GitHub / Vercel（web）已上線並驗證；AQ-1/AQ-2 已決策（ADR-006）
 
-NOW（既有資源引用版；Apply 前先與 Claude 確認）
-1. 既有 Key Value 設 maxmemory-policy=noeviction
-2. 取得既有 Postgres / Key Value 的 Internal 連線字串；確認 render.yaml region 與其一致
-3. Apply Blueprint（只建 api + worker + 空 Environment Group sproutin-backend）
-4. 於 Environment Group 填入 DATABASE_URL / REDIS_URL（既有資源 Internal URL）
+NOW（Blueprint 統一建立版；Apply 前先與 Claude 確認）
+1. 刪除先前手動建立、無資料的 Postgres 與 Key Value（之後不再手動建立）
+2. Render 帳號 + 連接 GitHub（若尚未）
+3. Apply Blueprint（一次建立 api+worker+Key Value+Postgres，全部 Singapore，連線字串自動注入）
 
 NEXT
-5. 與 Claude 一起線上驗證後端（/health、/config/public、API→PG、Worker→Redis）
-6. Human Owner acceptance（Phase 5 收尾）
+4. 與 Claude 一起線上驗證後端（/health、/config/public、API→PG、Worker→Redis）
+5. Human Owner acceptance（Phase 5 收尾）
+LATER: LINE 變數（Phase 6）於 Render 後台填入
 
 LATER
 5. LINE Developers / LINE OA / LIFF（Phase 6）
@@ -243,6 +244,31 @@ Phase 5 (整體):       尚未 ACCEPTED
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 5 / render.yaml 改為 Blueprint 統一建立全部資源
+
+Completed:
+- Human Owner 決定刪除手動建立、無資料的 Postgres/Key Value，改由 Blueprint 統一管理
+- `render.yaml` 重寫：建立 4 個 resource（api / worker / keyvalue `noeviction` / postgres），全部 region=singapore；
+  api+worker 以 fromDatabase / fromService 自動取得 DATABASE_URL / REDIS_URL（server-only，不暴露 client）
+- 文件同步：ADR-006（改為統一管理）、05（步驟）、02、07、08
+
+Verification:
+- 無 code 變更（僅 render.yaml + 文件）；CI 不受影響。**未 Apply / Deploy**（依 Human Owner 指示）。
+
+Issues:
+- Problem: 上一版為「引用既有資源」；Human Owner 改為由 Blueprint 統一建立。
+  Solution: 移除 Environment Group、恢復 databases:/keyvalue: 宣告 + fromDatabase/fromService。
+  Trade-off: Human Owner 需先刪除手動空資源；換得單一來源、Apply 即全自動接線。
+
+Architecture:
+- 無變更。ADR-006 更新為「Blueprint 統一管理」。
+
+Human Owner:
+- NOW：刪除手動空 DB/Redis → 確認 render.yaml → Apply
+
+Next:
+- Apply → 後端線上驗證 → Phase 5 acceptance
 
 ### 2026-08-14 — Phase 5 / render.yaml 改為引用既有 Render 資源
 

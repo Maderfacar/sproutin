@@ -19,10 +19,10 @@
 |------|------|
 | **Render** | 部署 API（web service）+ Worker（background worker） |
 | **Render → 連接 GitHub** | 讓 Render 讀 `render.yaml` 藍圖自動部署 |
-| **PostgreSQL（已手動建立）** | 後端資料庫（test/dev）。**已由 Human Owner 手動建立**；透過 Environment Group 提供 `DATABASE_URL`（Internal URL） |
-| **Key Value / Redis（已手動建立）** | 佇列 / 背景工作。**已由 Human Owner 手動建立**；透過 Environment Group 提供 `REDIS_URL`（Internal URL）；需設 `maxmemory-policy=noeviction` |
+| **PostgreSQL（Blueprint 建立）** | 後端資料庫（test/dev）。由 `render.yaml` 的 `databases: sproutin-db` 建立；`DATABASE_URL` 自動注入 api/worker |
+| **Key Value / Redis（Blueprint 建立）** | 佇列 / 背景工作。由 `render.yaml` 的 `keyvalue: sproutin-redis`（`noeviction`）建立；`REDIS_URL` 自動注入 |
 
-> ⚠ **既有資源引用**：`render.yaml` **只建 api + worker**，**不建** DB/Redis（避免重複）。DB/Redis 連線字串由 Human Owner 於 Render 後台填入 Environment Group `sproutin-backend`。詳見 §7 與 ADR-006。
+> ⚠ **Blueprint 統一管理**：4 個 resource 全由 `render.yaml` 建立（全部 Singapore）。Human Owner 先刪除手動建立的空 DB/Redis，之後不再手動建立。詳見 §7 與 ADR-006。
 
 ### LATER — Phase 6
 - LINE Developers account
@@ -34,8 +34,8 @@
 
 | 變數 | Purpose | Server-only / Client-visible | Required | Where to configure |
 |------|---------|------------------------------|----------|--------------------|
-| `DATABASE_URL` | 後端連 PostgreSQL | **Server-only（secret）** | **Now** | Render **Environment Group `sproutin-backend`**（貼既有 Postgres Internal URL） |
-| `REDIS_URL` | 佇列 / BullMQ | **Server-only（secret）** | **Now** | Render **Environment Group `sproutin-backend`**（貼既有 Key Value Internal URL） |
+| `DATABASE_URL` | 後端連 PostgreSQL | **Server-only（secret）** | **Now** | Render `fromDatabase`（Blueprint 自動注入，無需手填） |
+| `REDIS_URL` | 佇列 / BullMQ | **Server-only（secret）** | **Now** | Render `fromService`（keyvalue，Blueprint 自動注入，無需手填） |
 | `JWT_SECRET` | JWT 簽章 | **Server-only（secret）** | **Now** | Render：`generateValue` 自動產生 |
 | `SCHOOL_SLUG` | 本 instance 識別 | Server-only | **Now** | Render env（api，預設 `dev`） |
 | `PORT` | 服務監聽埠 | Server-only | **Now** | Render 自動注入（API 已讀取） |
@@ -59,7 +59,7 @@
 - **connection URL**（`REDIS_URL`）
 - **authentication**（密碼 / ACL）
 - **TLS**（Render Key Value 內部連線通常免 TLS；外部服務可能需 `rediss://`）
-- **BullMQ 相容性**：`maxmemory-policy = noeviction` —— 因採「既有資源引用」，`render.yaml` 不再管理此設定，**請於 Render 後台在既有 Key Value 上手動設定**；worker 連線已設 `maxRetriesPerRequest=null`。
+- **BullMQ 相容性**：`maxmemory-policy = noeviction`（`render.yaml` 的 `maxmemoryPolicy: noeviction` 已設定，Blueprint 自動套用）；worker 連線已設 `maxRetriesPerRequest=null`。
 
 > 選 Render **不會**改動既有 Queue 架構（仍是 BullMQ + Redis）。
 
@@ -81,19 +81,16 @@
 - [ ] LINE test accounts（≥2，測隔離）
 - [ ] Mobile device（LIFF WebView）+ Desktop browser
 
-## 7. 目前（Phase 5 後端）Human Owner 步驟 —（既有資源引用版）
+## 7. 目前（Phase 5 後端）Human Owner 步驟 —（Blueprint 統一建立）
 
-> Human Owner 已手動建立 PostgreSQL + Key Value。`render.yaml` **只建 api + worker**，
-> **不會**再建 DB/Redis；DATABASE_URL / REDIS_URL 走 Environment Group「sproutin-backend」。
+> `render.yaml` **統一建立** api + worker + Key Value + Postgres（全部 Singapore）。
+> Human Owner **不再手動建立** DB/Redis。
 
-1. **確認既有 Key Value 設定**：`maxmemory-policy = noeviction`（BullMQ 需求；Blueprint 不再管理此設定）。
-2. **取得既有資源的 Internal 連線字串**：
-   - Postgres → **Internal Database URL**
-   - Key Value → **Internal URL**（`redis://...`）
-3. **確認 region 一致**：`render.yaml` 的 api/worker region 需與既有 Postgres/Key Value 相同（預設 `singapore`，不同請先改 render.yaml）。
-4. **Apply Blueprint**（建立 api + worker + 空的 Environment Group `sproutin-backend`）。
+1. **刪除**先前手動建立、無資料的 Postgres 與 Key Value（確認皆無資料後刪除）。刪除後**不要**再手動建立。
+2. 建 Render 帳號、連接 GitHub（若尚未）。
+3. **Apply Blueprint**（Render 讀 `render.yaml`，一次建立 4 個 resource + 自動接好連線字串）。
    - ⚠ 但**在 Claude 與你確認前，先不要 Apply**（依你的指示）。
-5. **填入 Environment Group `sproutin-backend`**：`DATABASE_URL`=既有 Postgres Internal URL、`REDIS_URL`=既有 Key Value Internal URL。
-6. 與 Claude 一起做後端線上驗證（見 [04-test-matrix §3b](./04-test-matrix.md)）。
+4. LINE 相關變數（`LINE_CHANNEL_*`、`LIFF_ID`）Phase 6 再於 Render 後台填入（現階段留白）。
+5. 與 Claude 一起做後端線上驗證（見 [04-test-matrix §3b](./04-test-matrix.md)）。
 
-**絕不**：刪除既有 Postgres / Key Value；建立第二套；改動 API+Worker+Redis+PostgreSQL 架構。
+> Postgres / Key Value 的連線字串、Key Value 的 `noeviction`、JWT_SECRET 皆由 Blueprint 自動處理，**無需手動貼連線字串**。

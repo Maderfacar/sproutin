@@ -53,8 +53,7 @@ Architecture Questions:
 - **AQ-1 / AQ-2 — DECIDED（2026-08-14, ADR-006）**：架構不變，僅定部署位置 → Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL。
 - 目前無待決 Architecture Question（None open）。
 
-Human Owner Actions:
-- **NOW**：既有資源引用版 —— 設既有 Key Value `noeviction`、確認 region 一致、（確認後）Apply Blueprint（只建 api+worker）、於 Environment Group `sproutin-backend` 填既有 Postgres/Key Value 的 Internal 連線字串。**render.yaml 已不建立第二套 DB/Redis。**
+- **NOW**：Blueprint 統一建立版 —— 刪除先前手動建立、無資料的 Postgres/Key Value；（確認後）Apply Blueprint，一次建立 api+worker+Key Value+Postgres（全部 Singapore），連線字串由 `fromDatabase`/`fromService` 自動注入。**render.yaml 已改為統一建立全部資源。**
 - **NEXT**：與 Claude 一起後端線上驗證（/health、/config/public、API→PG、Worker→Redis）→ Human Acceptance
 - **LATER**：LINE Developers / OA / LIFF（Phase 6）；demo data / test accounts
 

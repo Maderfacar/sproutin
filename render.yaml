@@ -1,25 +1,25 @@
 # ============================================================
 # Sproutin — Render Blueprint（後端部署，ADR-006 / AQ-1 決策）
 #
-# ⚠ 重要（既有資源引用）：
-#   Human Owner 已「手動」在 Render 建立 PostgreSQL 與 Key Value。
-#   因此本 Blueprint **只宣告 API 與 Worker**，**不宣告 databases / keyvalue**，
-#   以免 Apply 時再建立第二套資源。
+# 由 Blueprint 統一建立整個 Render Backend Environment：
+#   sproutin-api（NestJS web service）
+#   sproutin-worker（BullMQ background worker）
+#   sproutin-redis（Key Value / Redis 相容）
+#   sproutin-db（PostgreSQL）
+# 全部 region = Singapore。
 #
-#   DATABASE_URL / REDIS_URL 透過 Environment Group「sproutin-backend」提供，
-#   值為 sync:false（不寫入 repo）。Apply 後由 Human Owner 於 Render 後台，將
-#   **既有** Postgres / Key Value 的「Internal 連線字串」貼入該群組一次，api+worker 共用。
+# Human Owner 將刪除先前手動建立、且無資料的 Postgres / Key Value，之後不再手動建立，
+# 一律由本檔統一管理。
 #
-#   Render 的 fromDatabase / fromService 只能引用「同一 Blueprint 內」宣告的資源，
-#   無法安全引用 Blueprint 外手動建立的資源；故採 Environment Group 方式。
-#
-# ⚠ Region：api / worker 的 region 必須與你既有 Postgres / Key Value **相同**，
-#   否則 Internal 連線不通。若你的資源不在 singapore，請改下方 region。
-#
-# ⚠ Key Value（BullMQ 相容）：請於 Render 後台將你既有 Key Value 的
-#   maxmemory-policy 設為 **noeviction**（本 Blueprint 不再管理該設定）。
+# 連線：api / worker 透過 fromDatabase / fromService 於部署時自動取得
+#   DATABASE_URL（Postgres connectionString）與 REDIS_URL（Key Value connectionString）。
+#   皆為 server-only env，不會暴露給 client。
 #
 # 架構不變（Modular Monolith + Web/API/Worker/Redis/PostgreSQL）。
+#
+# ⚠ plan / region 名稱與費率會隨 Render 調整，Apply 前於 dashboard 確認：
+#   - Postgres / Key Value free 方案為 test/dev（可能有容量/期限限制）
+#   - background worker 需付費方案
 # ============================================================
 
 services:
@@ -30,16 +30,24 @@ services:
     dockerfilePath: ops/deploy/Dockerfile.api
     dockerContext: .
     plan: starter
-    region: singapore # ⚠ 必須與既有 Postgres / Key Value 同 region
+    region: singapore
     branch: main
     autoDeploy: true
     healthCheckPath: /health
     envVars:
-      - fromGroup: sproutin-backend # DATABASE_URL, REDIS_URL（指向既有資源）
       - key: NODE_ENV
         value: production
       - key: SCHOOL_SLUG
         value: dev
+      - key: DATABASE_URL # server-only；Blueprint 自動注入 Postgres 連線字串
+        fromDatabase:
+          name: sproutin-db
+          property: connectionString
+      - key: REDIS_URL # server-only；Blueprint 自動注入 Key Value 連線字串
+        fromService:
+          type: keyvalue
+          name: sproutin-redis
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true # Render 自動產生，不落地 repo
       # LINE 相關（Phase 6 再填；先留白，由 Render 後台設定）
@@ -60,21 +68,32 @@ services:
     dockerContext: .
     dockerCommand: pnpm --filter @sproutin/api start:worker
     plan: starter # background worker 需付費方案
-    region: singapore # ⚠ 必須與既有資源同 region
+    region: singapore
     branch: main
     autoDeploy: true
     envVars:
-      - fromGroup: sproutin-backend # DATABASE_URL, REDIS_URL（指向既有資源）
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL # server-only
+        fromDatabase:
+          name: sproutin-db
+          property: connectionString
+      - key: REDIS_URL # server-only
+        fromService:
+          type: keyvalue
+          name: sproutin-redis
+          property: connectionString
 
-# ---------- Environment Group：指向「既有」資源，不建立新資源 ----------
-# Apply 後於 Render 後台將值填入（既有資源的 Internal 連線字串）。
-envVarGroups:
-  - name: sproutin-backend
-    envVars:
-      - key: DATABASE_URL
-        sync: false # 貼入「既有 PostgreSQL」的 Internal Database URL
-      - key: REDIS_URL
-        sync: false # 貼入「既有 Key Value」的 Internal URL（redis://...）
-# 註：本 Blueprint 刻意「不」宣告 databases: / keyvalue:，避免重複建立既有資源。
+  # ---------- Redis（Render Key Value，Redis 相容）----------
+  - type: keyvalue
+    name: sproutin-redis
+    plan: free
+    region: singapore
+    ipAllowList: [] # 只允許 Render 內部連線（不對公網開放）
+    maxmemoryPolicy: noeviction # BullMQ 相容性要求（不可淘汰 key）
+
+# ---------- PostgreSQL（Blueprint 建立；test/dev）----------
+databases:
+  - name: sproutin-db
+    plan: free # test/dev（正式 DB-per-School 於後續 Provisioning 逐校建立）
+    region: singapore
