@@ -24,9 +24,9 @@ CI（`.github/workflows/ci.yml`）至少負責：
 
 | # | 測項 | 首次適用 Phase/Release | 狀態 |
 |---|------|------------------------|------|
-| 1 | Web availability | P5 / R1 | PENDING |
-| 2 | API health `/health` | P5 / R1 | PENDING |
-| 3 | Runtime Config `/config/public`（無 secret / 無 internal URL） | P5 / R1 | PENDING |
+| 1 | Web availability | P5 / R1 | ✅ VERIFIED（2026-08-14, Vercel web） |
+| 2 | API health `/health` | P5 / R1 | PENDING（API 未部署，AQ-2） |
+| 3 | Runtime Config（web `/api/public-config`；無 secret / 無 internal URL） | P5 / R1 | ✅ VERIFIED（2026-08-14） |
 | 4 | Authentication（LINE Login → JWT） | P6 / R2 | NOT_STARTED |
 | 5 | LIFF（init、WebView） | P6 / R2 | NOT_STARTED |
 | 6 | User identity（LINE ID ≠ User ≠ Student） | P6 / R2 | NOT_STARTED |
@@ -45,7 +45,7 @@ CI（`.github/workflows/ci.yml`）至少負責：
 | 19 | Audit（transactional + out-of-band + DENIED + 敏感 READ 白名單） | P7 / R6 | NOT_STARTED |
 | 20 | Error handling（信封格式、不洩敏感） | P7+ | NOT_STARTED |
 | 21 | Multi-school isolation | P8 / R7 | NOT_STARTED |
-| 22 | Secret exposure（bundle / public config / logs 無 secret） | P5+（持續） | PENDING |
+| 22 | Secret exposure（bundle / public config / logs 無 secret） | P5+（持續） | ✅ VERIFIED（web /api/public-config 無 secret / 無 API_INTERNAL_URL, 2026-08-14）；API 部署後再複查 |
 | 23 | Mobile UI（LIFF WebView + 手機瀏覽器） | P6+ | NOT_STARTED |
 
 ## 3. 測試層級對應
