@@ -10,10 +10,21 @@ export async function GET(): Promise<NextResponse> {
   const apiInternalUrl = process.env.API_INTERNAL_URL;
   const schoolSlug = process.env.SCHOOL_SLUG ?? 'dev';
 
-  // 骨架：DB migration + seed 後改為 fetch(`${apiInternalUrl}/config/public`)。
-  // 目前回傳最小 public config，不含任何 secret / internal URL。
-  void apiInternalUrl;
+  // 若已設定 API_INTERNAL_URL → 向後端取該校 public config（Web → API 溝通）。
+  // 後端不可用時落回下方最小設定，不阻斷前端。
+  if (apiInternalUrl) {
+    try {
+      const res = await fetch(`${apiInternalUrl}/config/public`, { cache: 'no-store' });
+      if (res.ok) {
+        const upstream = (await res.json()) as PublicConfig;
+        return NextResponse.json(upstream);
+      }
+    } catch {
+      // fall through to minimal config
+    }
+  }
 
+  // Fallback：最小 public config，不含任何 secret / internal URL。
   const config: PublicConfig = {
     schoolSlug,
     brandName: 'Sproutin',
