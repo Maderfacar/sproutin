@@ -306,14 +306,16 @@ Completed:
 
 Verification:
 - 本機：typecheck ✓;jest **68 tests** ✓（e2e 9 / attendance 10 / 既有 49）;nest build ✓;`node dist/main.js` DI boot ✓（AttendanceModule + `/attendance` 3 routes;LeavesModule 4 routes）
-- 待：push → CI 綠 → Render 線上 → Human Acceptance
+- push（commit f503fc5 + Dockerfile fix 7493f67）→ **CI 綠**（run 31840973966;build + db）→ **Render 部署成功上線**（先前 build 失敗已修）
+- **線上驗證**：`GET /leaves`、`POST /attendance`、`PATCH /leaves/:id/cancel` 無 token 皆回 **401 missing_token**（路由已部署 + guard 生效）。帶登入的完整流程（201/403/409/override）由 CI 的 API 級 e2e（真實 JWT）自動覆蓋。
+- 待：Human Acceptance（Step 1 + Step 2）
 
 Architecture:
 - 無變更。無新 migration（Attendance + override 欄位/enum 已在 `0001_init`）。新增 devDep `supertest`/`@types/supertest`（僅測試）。
 - 範圍界定：Step 2 = 手動 SoT + override-on-edit;`LeaveApproved`→投影 Attendance 與回滾屬 Step 3（需 Worker 消費 Outbox）。
 
 Human Owner:
-- NOW：確認是否 push Step 2 + Dockerfile 修正（同一 commit 觸發全新部署;會一併帶入 Step 1 code + 修正 → build 應轉綠、`/leaves` 上線回 401）。
+- ✅ 已 push + 部署成功。**NOW：Step 1 + Step 2 的 Human Acceptance**（線上 401 已驗、CI e2e 覆蓋帶登入流程;若要親自驗帶 token 流程需 JWT，後端優先下暫無 UI → 可依賴 CI e2e）。
 
 Tech Debt（本次暴露）:
 - **CI 未建置 Docker image** → Docker build context 與 CI（完整 repo、turbo）分歧的錯誤（如缺 `tsconfig.base.json`）會逃過 CI，只在 Render 才爆。建議 CI 加一個 `docker build -f ops/deploy/Dockerfile.api .` job 作為真實建置把關（比照 Step 3 之後補 app.module DI smoke test 的作法）。
