@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）**：`IMPLEMENTED / VERIFICATION_PENDING`（本機 typecheck/test(21)/build 綠;待 CI + Human Acceptance）。Step 1、Step 2 已 ACCEPTED。
+Phase 6 / **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）**：`VERIFICATION_PENDING`（本機 + CI 綠,run 31779660605）→ **只差 Human Acceptance**。Step 1、Step 2 已 ACCEPTED。
 
 **Status:**
 ```text
@@ -43,11 +43,11 @@ Phase 6 / Step 3 — RBAC 骨架：
 [x] 示範端點 GET /students/:id（JwtAuthGuard → RolesGuard → ScopeGuard）
 [x] 測試矩陣：scope-resolver(7：老師自班/他班、家長自己/他人、OWNER/ADMIN 全通)、roles.guard(3)、scope.guard(3)
 [x] 本機：typecheck ✓ / test 21 綠 ✓ / build ✓
-[ ] push → CI 綠燈                          — 待 push 後 run
+[x] CI 綠燈（run 31779660605）：build（21 tests）+ db job
 [ ] Human Owner acceptance（Step 3）         — 待 Human Owner
 ```
 
-以上為 Claude 的 **IMPLEMENTED**（本機全綠）;DENIED 的 out-of-band audit 留 Phase 7(ADR-005,已標 TODO)。
+Step 3 技術項目全數綠（本機 + CI）;**僅剩 Human Owner Acceptance**。DENIED out-of-band audit 留 Phase 7(ADR-005 TODO)。
 
 ---
 
@@ -182,7 +182,7 @@ Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）
 [x] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ ScopeResolver（student）
 [x] 測試矩陣：老師自班 allow/他班 deny;家長自己小孩 allow/他人 deny;OWNER/ADMIN 全校（本機 21 tests 綠）
 [x] 套用到示範讀取端點 GET /students/:id（前端不決定授權）
-[ ] CI 綠燈（build 21 tests + db job）
+[x] CI 綠燈（run 31779660605；build 21 tests + db job）
 [ ] Human Owner acceptance（Step 3）
 ```
 
