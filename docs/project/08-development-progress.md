@@ -180,6 +180,7 @@ NOW（Phase 7 前置；可並行準備）
 Step 3 — Event 串接：Worker Outbox dispatcher（BullMQ）消費 OutboxEvent →
   LeaveApproved 投影 Attendance(source=LEAVE_EVENT, override 感知) + LeaveRejected/Cancelled 回滾 +
   各事件 Notification;idempotent（Attendance @@unique upsert、回滾以 sourceRef 定位）。
+  併入：CI 加 docker build job（清 tech debt「CI 未建置 Docker image」，一起做）。
 先計畫 → Human Owner 確認 → 實作。可於新 session 執行（handoff prompt 已備）。
 ```
 

@@ -85,7 +85,7 @@
 
 ### Technical Debt（Phase 5 引入）
 - [ ] **ESLint flat config** — `DEFERRED`；MVP Release Candidate（Phase 8）前必須完成，不得永久忽略。
-- [ ] **CI 未建置 Docker image**（Phase 7 Step 1 暴露）— Docker build context 與 CI 分歧的錯誤會逃過 CI（本次：Dockerfile 缺 `tsconfig.base.json` → 失去 strict → zod 推導 TS2345，只在 Render build 爆）。建議 CI 加 `docker build -f ops/deploy/Dockerfile.api .` job。`Priority: Medium`。
+- [ ] **CI 未建置 Docker image**（Phase 7 Step 1 暴露）— Docker build context 與 CI 分歧的錯誤會逃過 CI（本次：Dockerfile 缺 `tsconfig.base.json` → 失去 strict → zod 推導 TS2345，只在 Render build 爆）。CI 加 `docker build -f ops/deploy/Dockerfile.api .` job。**已排入 Phase 7 Step 3（一起做）**。`Priority: Medium`。
 
 ---
 
@@ -145,6 +145,7 @@
   - **無新 migration**;**無架構變更**。新增 devDep `supertest`/`@types/supertest`（僅測試用）。
   - **Deliverables**：`apps/api/src/attendance/**`、`apps/api/src/e2e/api.e2e.spec.ts`、`apps/api/src/app.module.ts`、`apps/api/package.json`+lockfile。
 - [ ] Step 3 — Event 串接（Outbox → Worker dispatch;LeaveApproved 投影 Attendance + 回滾 + Notification）— `NOT_STARTED`
+    - [ ] 併入：CI 加 `docker build -f ops/deploy/Dockerfile.api .` job（清 technical debt「CI 未建置 Docker image」;Step 3 一起做）
 - [ ] Message Center · Announcement · Notification / LINE Push — `NOT_STARTED`
 - [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
