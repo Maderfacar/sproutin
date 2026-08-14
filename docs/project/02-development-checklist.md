@@ -90,7 +90,7 @@
 
 ## Phase 6 — Vertical Slice  🟡（進行中）
 
-- [~] **Step 1 — DB migration + seed（Demo School）** — `IMPLEMENTED / VERIFICATION_PENDING`
+- [x] **Step 1 — DB migration + seed（Demo School）** — `ACCEPTED`（2026-08-14, Human Owner）
     - [x] Baseline migration `0001_init`（17 tables / 11 enums / 13 FK / 11 index；純 Expand，ADR-003）
     - [x] Idempotent synthetic seed（`seed.ts`）：身分/就學圖（1 School+Config、2 Class、5 Student、6 User+LineIdentity、UserRole、Guardianship 多小孩跨班+多監護人、TeacherAssignment）+ demo 業務資料（Leave×2 含 ADR-002 override、Attendance×3、Announcement×2）；`SEED_DEMO` guard
     - [x] 線上 migration 機制：`render.yaml` `sproutin-api` `preDeployCommand: migrate:deploy`

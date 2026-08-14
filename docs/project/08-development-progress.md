@@ -12,13 +12,13 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 1 — DB migration + seed**：`VERIFICATION_PENDING`（CI 綠 + 線上已套用 + 線上 seed 成功）→ **只差 Human Acceptance**
+Phase 6 / **Step 1 — DB migration + seed**：✅ **ACCEPTED**（2026-08-14, Human Owner）。下一步：Step 2 — LINE / LIFF 登入骨架（卡 Human Owner LINE 憑證）。
 
 **Status:**
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）— Frontend / API / Worker / Redis / PostgreSQL / CI / Web→API 全綠
 Phase 6:  🟡 IN PROGRESS
-  Step 1 DB migration + seed         → IMPLEMENTED（待 CI + 線上 + 驗收）
+  Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
   Step 2 LINE / LIFF 登入骨架         → NOT_STARTED（卡 Human Owner LINE 憑證）
   Step 3 RBAC 骨架                    → NOT_STARTED
   Step 4 端到端讀取切片                → NOT_STARTED
@@ -48,10 +48,10 @@ Phase 6 / Step 1 — DB migration + seed：
 [x] CI DB job 綠燈（run 31772685822）：migrate → seed×2 → verify（12 斷言全過）→ drift ✓
 [x] Render 線上 migrate（preDeploy 自動）：0001_init applied ✓
 [x] Render 線上 seed one-off job：counts 全數符合（school1/class2/student5/user6/…/attendance3/announcement2）✓
-[ ] Human Owner acceptance（Step 1）              — 待 Human Owner
+[x] Human Owner acceptance（Step 1）              — ✅ 2026-08-14
 ```
 
-Step 1 技術項目全數綠（CI + 線上）；**僅剩 Human Owner Acceptance**。
+Step 1 **ACCEPTED**（2026-08-14, Human Owner）。下一個 milestone：Step 2 — LINE / LIFF 登入骨架。
 
 ---
 
@@ -66,6 +66,8 @@ Step 1 技術項目全數綠（CI + 線上）；**僅剩 Human Owner Acceptance*
 [x] CI green（install/db:generate/typecheck/test/build）— VERIFIED
 [~] Project Skeleton — Backend deployment config（Render）— IMPLEMENTED（待 Human Owner 部署驗證）
 [x] AQ-1 / AQ-2 部署決策 — DECIDED（ADR-006：Vercel + Render）
+[x] Phase 5（整體）— ACCEPTED（2026-08-14, Human Owner）
+[x] Phase 6 Step 1 — DB migration + seed — ACCEPTED（2026-08-14, Human Owner）
 ```
 
 > `[~] IMPLEMENTED` 代表 code 已寫，**不等於 Human Acceptance**。
@@ -153,13 +155,16 @@ AQ-2 — API (NestJS) Production Hosting      → DECIDED（2026-08-14, ADR-006�
 DONE
 - Phase 5 全綠並驗收（Vercel + Render + CI + Web→API）；AQ-1/AQ-2 → ADR-006
 
-NOW（Step 1 技術全綠，只差驗收）
-- ✅ CI db job 綠（run 31772685822）｜✅ 線上 migrate 0001_init applied｜✅ 線上 seed counts 正確
-- 👉 **給 Phase 6 Step 1 正式 Acceptance**（唯一待辦）
+DONE
+- ✅ Phase 6 Step 1 — ACCEPTED（2026-08-14）
 
-LATER（Step 2 才需要）
-- LINE Developers / LINE OA / LIFF application / Channel 設定；於 Render/Vercel 填 LINE env
+NOW（Step 2 前置；可並行準備）
+- LINE Developers 帳號 → LINE Login channel + LIFF app（拿 `LIFF_ID`）
+- Messaging API channel（LINE OA）→ `LINE_CHANNEL_ID / SECRET / ACCESS_TOKEN`
+- 機密由 Human Owner 填 Render（`sync:false`）；公開 `LIFF_ID` 走 `SchoolConfig`→`/config/public`
 - online test accounts（真實 LINE，見 05-human-preparation §6）
+
+> Claude NEXT：待 Human Owner 準備 LINE 憑證後，提 **Step 2 具體計畫**（先計畫→確認→再實作）。
 ```
 
 ---
@@ -167,26 +172,31 @@ LATER（Step 2 才需要）
 ## Next Task
 
 ```text
-Phase 6 Step 1 收尾：CI DB job 綠燈 → Render 線上 migrate（preDeploy 自動）+ seed one-off job
-→ Human Acceptance（Step 1）。通過後才進 Step 2（LINE / LIFF 登入骨架，卡 Human Owner LINE 憑證）。
+Step 2 — LINE / LIFF 登入骨架（換發 JWT；LINE User ID 僅認證）。
+前置：Human Owner 準備 LINE 憑證（Login/LIFF/Messaging API channel）。
+流程：Human Owner 備妥 → Claude 提 Step 2 計畫 → Human Owner 確認 → 再實作。
 ```
 
-（Claude 不自行跳 Step 2；Step 2 本身也需 Human Owner 備妥 LINE 憑證。）
+（Claude 不自行開始 Step 2；先等 LINE 憑證 + 計畫確認。）
 
 ---
 
 ## Next Acceptance Gate
 
 ```text
-Phase 6 — Step 1 Acceptance Gate（DB migration + seed）
-[x] Baseline migration 0001_init 產出且與 schema 無 drift（本機驗證）
-[x] seed.ts idempotent + SEED_DEMO guard；verify.ts 斷言（RBAC / ADR-002）
-[x] render.yaml preDeploy migrate:deploy；CI DB job（postgres:16）
-[x] CI「db」job 綠燈（migrate → seed×2 → verify → drift）— run 31772685822
-[x] Render：preDeploy migrate 套用（部署日誌「0001_init applied」）
-[x] Render：seed one-off job 完成（counts 全數符合）
-[ ] Human Owner acceptance（Step 1）
-→ 驗收通過後 Step 1 標 ACCEPTED，才進 Step 2。
+Phase 6 — Step 2 Acceptance Gate（LINE / LIFF 登入骨架）— 尚未開始
+[ ] Human Owner：LINE Login / LIFF / Messaging API channel 備妥，憑證填入 Render
+[ ] Claude：Step 2 計畫經 Human Owner 確認
+[ ] LINE/LIFF 登入 → 換發 JWT 骨架（LINE User ID 僅認證，不作業務外鍵）
+[ ] 線上可驗證 + Human Acceptance（Step 2）
+```
+
+```text
+Phase 6 — Step 1 Acceptance Gate（DB migration + seed）— ✅ 通過（保留紀錄）
+[x] Baseline migration 0001_init 無 drift；seed idempotent + guard；verify 斷言（RBAC/ADR-002）
+[x] CI「db」job 綠燈（run 31772685822）
+[x] Render preDeploy migrate 套用（0001_init applied）+ seed one-off job（counts 符合）
+[x] Human Owner acceptance（Step 1）— 2026-08-14
 
 ---
 
@@ -251,6 +261,16 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 / Step 1 — ACCEPTED（Human Owner 驗收通過）
+
+Completed:
+- Human Owner 正式驗收 Step 1（DB migration + seed）：CI db job 綠 + 線上 migrate applied + 線上 seed counts 符合
+- Step 1 標記 ACCEPTED
+
+Next:
+- Step 2 — LINE / LIFF 登入骨架。前置：Human Owner 準備 LINE 憑證（Login/LIFF/Messaging API channel）。
+- 流程：Human Owner 備妥 → Claude 提 Step 2 計畫 → 確認 → 實作。Claude 不自行開始。
 
 ### 2026-08-14 — Phase 6 / Step 1 — DB migration + seed（IMPLEMENTED）
 
