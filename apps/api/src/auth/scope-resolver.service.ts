@@ -46,4 +46,36 @@ export class ScopeResolver {
 
     return false;
   }
+
+  // 「班級管理者」判斷（docs/05 §2-3）：能否對該學生做園方管理動作
+  // （如審核/取消請假）。與 canAccessStudent 的差異：家長/監護人**不是**管理者。
+  //   OWNER / ADMIN → 全校皆可；TEACHER / BUS_TEACHER → 僅自己任教班級；PARENT / GUARDIAN → false。
+  // Leave 審核（TEACHER 自班 / ADMIN）與 staff 取消沿用此判斷；Attendance（Step 2）亦將複用。
+  async canManageStudentClass(
+    userId: string,
+    roles: AuthUser['roles'],
+    studentId: string,
+  ): Promise<boolean> {
+    const roleNames = new Set(roles.map((r) => r.role));
+
+    if (roleNames.has('OWNER') || roleNames.has('ADMIN')) {
+      return true;
+    }
+
+    if (roleNames.has('TEACHER') || roleNames.has('BUS_TEACHER')) {
+      const student = await this.prisma.student.findUnique({
+        where: { id: studentId },
+        select: { classId: true },
+      });
+      if (student) {
+        const assignment = await this.prisma.teacherAssignment.findFirst({
+          where: { userId, classId: student.classId },
+          select: { id: true },
+        });
+        if (assignment) return true;
+      }
+    }
+
+    return false;
+  }
 }

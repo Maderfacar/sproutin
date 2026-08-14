@@ -20,12 +20,13 @@
 ## 4. 目前在哪
 ```text
 Current Phase:
-Phase 6 — Vertical Slice = ✅ COMPLETE（2026-08-14, Human Owner）。下一階段 Phase 7 — Core MVP（新 session）。
+Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice = ✅ COMPLETE（2026-08-14, Human Owner）。
 
 Current Status:
-Phase 6（Step 1–4）全數 ACCEPTED：DB migration+seed / LINE·LIFF 登入 / RBAC 骨架 / 端到端讀取切片。
-端到端 LINE Login → User → Student → 權限 → LIFF Dashboard 已上線並驗收。
-線上：Web(Vercel) + API/Worker(Render) + PostgreSQL + Redis;CI 27 tests + db job 綠。
+Phase 7 Step 1 — Leave 狀態機（+ 寫入端 Outbox + transactional audit）→ IMPLEMENTED / VERIFICATION_PENDING。
+config-driven 狀態機（PENDING/APPROVED/REJECTED/CANCELLED;非法轉移→409）;每個狀態變更於同一交易寫
+Leave + OutboxEvent（PENDING，Step 3 消費）+ AuditLog（transactional）。本機 typecheck/jest(49)/build/DI-boot 綠;
+待 CI + Render 線上四端點 + Human Acceptance。（Phase 6 Step 1–4 已全數 ACCEPTED。）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）

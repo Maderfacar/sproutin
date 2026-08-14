@@ -2,42 +2,55 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-14（Phase 6 Step 1 IMPLEMENTED）
+> Last updated: 2026-08-15（Phase 7 Step 1 IMPLEMENTED — Leave 狀態機）
 
 ---
 
 ## Current Position
 
 **Phase:**
-Phase 6 — Vertical Slice → ✅ **COMPLETE**（2026-08-14, Human Owner）。下一階段：Phase 7 — Core MVP（於新 session 啟動）。
+Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 全部 4 步（DB migration+seed / LINE·LIFF 登入 / RBAC 骨架 / 端到端讀取切片）**全數 ACCEPTED**。端到端流程 LINE Login → User → Student → 權限 → LIFF Dashboard 已上線並驗收。
+Phase 7 Step 1（Leave 狀態機 + 寫入端 Outbox + transactional audit）→ **IMPLEMENTED / VERIFICATION_PENDING**（本機 typecheck/test/build/DI-boot 綠;待 CI + Render 線上 + Human Acceptance）。
 
 **Status:**
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）
-Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）
-  Step 1 DB migration + seed         → ✅ ACCEPTED
-  Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED
-  Step 3 RBAC 骨架                    → ✅ ACCEPTED
-  Step 4 端到端讀取切片                → ✅ ACCEPTED
-Phase 7:  NOT_STARTED（Core MVP：Leave 狀態機 / Attendance / Message / Announcement / Notification·LINE Push / Audit / Dashboard·Branding·Feature Flag）
+Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTED
+Phase 7:  IN_PROGRESS（Core MVP）
+  Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ IMPLEMENTED / VERIFICATION_PENDING
+  Step 2 Attendance（手動 SoT / Leave 投影 Derived;ADR-002）    → NOT_STARTED
+  Step 3 Event 串接（Outbox → Worker dispatch）                → NOT_STARTED
+  Step 4 Message / Announcement / Notification                → NOT_STARTED
+  Step 5 Notification / LINE Push（需 Messaging secret）        → NOT_STARTED
+  Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
+  Step 7 Dashboard / Branding / Feature Flag                   → NOT_STARTED
 ```
 
 ---
 
 ## Current Objective
 
-**Phase 6 — Vertical Slice：COMPLETE（2026-08-14, Human Owner）。**
-端到端流程 LINE Login → User → Student → 權限 → LIFF Dashboard 已上線並驗收（4/4 步 ACCEPTED）。
-下一階段 Phase 7 — Core MVP 於**新 session** 啟動（先計畫→確認→實作）。
+**Phase 7 Step 1 — Leave 狀態機。** config-driven（`SchoolConfig.leaveRequiresApproval`）狀態機
+PENDING/APPROVED/REJECTED/CANCELLED;每個狀態變更於同一 `$transaction` 寫 Leave + OutboxEvent（PENDING）
++ AuditLog（transactional）。**範圍 A（Human Owner 定案）**：含寫入端 Outbox + transactional audit;
+Worker dispatcher / Attendance 投影 / out-of-band audit 分別留 Step 3 / Step 2 / Step 6。
 
 ---
 
 ## Current Task
 
-無進行中 Task。等 Human Owner 於新 session 啟動 Phase 7。
+Phase 7 Step 1 — Leave 狀態機：**IMPLEMENTED / VERIFICATION_PENDING**。
+```text
+新增：apps/api/src/leaves/**（controller/service/module/spec）
+      apps/api/src/core/audit/**（AuditService.record — transactional only）
+      apps/api/src/auth/scope-resolver.service.ts +canManageStudentClass（+spec）
+      app.module.ts 掛 LeavesModule
+端點：POST /leaves · GET /leaves?studentId= · PATCH /leaves/:id/status · PATCH /leaves/:id/cancel
+本機驗證：typecheck ✓ · jest 49 tests ✓ · nest build ✓ · node dist/main.js DI boot ✓（4 routes mapped）
+待：CI 綠 → Render 線上四端點（含 409 · Outbox/Audit 有列）→ Human Acceptance
+```
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -172,9 +185,9 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Phase 7 — Core MVP（於新 session 啟動）：Leave 狀態機 → Attendance（含 ADR-002 override）→
-Message Center → Announcement → Notification / LINE Push → Audit（transactional + out-of-band）→
-Dashboard / Branding / Feature Flag。Claude 先提 Phase 7 計畫 → Human Owner 確認 → 再實作。
+Phase 7 Step 1（Leave 狀態機）→ push → CI 綠 → Render 線上四端點驗收 → Human Acceptance。
+通過後才進 Step 2（Attendance：手動 SoT / LeaveApproved 投影 Derived + ADR-002 override）。
+Claude 不自行跳步;每步先計畫 → Human Owner 確認 → 再實作。
 ```
 
 ---
@@ -279,6 +292,31 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-15 — Phase 7 / Step 1 — Leave 狀態機（IMPLEMENTED）
+
+Completed:
+- `LeavesService` 狀態機（docs/02 §4 / docs/06 §2 / docs/07 §4）：config-driven（`leaveRequiresApproval`）— 申請進 PENDING 或直核 APPROVED;審核 PENDING→APPROVED/REJECTED;取消 PENDING|APPROVED→CANCELLED;非法轉移→409 `LEAVE_INVALID_TRANSITION`
+- 每個狀態變更於**同一 `$transaction`**：寫/改 Leave + `OutboxEvent`（PENDING;LeaveSubmitted/Approved/Rejected/Cancelled）+ `AuditLog`（transactional，ADR-005 類別一）
+- 端點 `POST /leaves`、`GET /leaves?studentId=`、`PATCH /leaves/:id/status`、`PATCH /leaves/:id/cancel`（inline zod、raw 回應，比照 auth.controller）
+- 授權：controller `@Roles`（粗粒度）+ service `ScopeResolver`（資料列級）;新增 `ScopeResolver.canManageStudentClass`（OWNER/ADMIN 全校、TEACHER 自班、家長非管理者）。申請看 `canAccessStudent`、審核/staff 取消看 `canManageStudentClass`、家長取消限申請者本人（createdBy）
+- `core/audit`：`AuditService.record(tx, entry)` 只做交易內同步寫入（out-of-band 路徑留 Step 6）
+- `app.module.ts` 掛 LeavesModule → `app.module.spec` DI smoke test 自動涵蓋
+
+Verification:
+- 本機：typecheck ✓;jest **49 tests** ✓（leaves 17 / audit 2 / scope-resolver +5 / 既有 25）;nest build ✓;`node dist/main.js` 實際 boot 過 DI —— LeavesModule 初始化、`/leaves` 4 條 route mapped（Step 3 部署 DI bug 教訓已本機覆核）
+- 待：push → CI 綠（build + db job）→ Render 線上打四端點（含 409、查 OutboxEvent/AuditLog 有列）→ Human Acceptance
+- **注意**：本步 `LeaveApproved` 寫入 Outbox 但**尚未消費** → Attendance 尚不會投影（Step 2/3）
+
+Architecture:
+- 無變更。無新 migration（Leave/OutboxEvent/AuditLog + enum 已在 `0001_init`）。無新 library/infra（`@nestjs/event-emitter` 既有但本步未用;留 Step 3 in-process 事件）。
+- 範圍 A 由 Human Owner 定案：Outbox 寫入端 + transactional audit 隨 Leave 模組一起長出;避免 Step 6 回頭重開交易注入 audit。
+
+Human Owner:
+- NOW：確認是否 commit + push（push main 觸發 Render/Vercel 自動部署）→ CI 綠 → 線上以園長/家長 JWT + 既有 seed 學生打四端點驗收（Claude 給步驟）。
+
+Next:
+- Step 1 acceptance → Step 2（Attendance：手動 SoT / LeaveApproved 投影 Derived + ADR-002 override）。先計畫→確認→實作。
 
 ### 2026-08-14 — Phase 6 — Vertical Slice — COMPLETE（Human Owner 驗收通過）
 

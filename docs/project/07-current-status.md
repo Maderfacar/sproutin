@@ -1,21 +1,24 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-14（Phase 6 Step 1 IMPLEMENTED）
+> Last updated: 2026-08-15（Phase 7 Step 1 IMPLEMENTED — Leave 狀態機）
 
 Current Phase:
-Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
+Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
 
 Current Milestone:
-Phase 6 — Vertical Slice：✅ **COMPLETE**（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTED。下一階段 Phase 7 — Core MVP（新 session）。
+Phase 7 Step 1（Leave 狀態機 + 寫入端 Outbox + transactional audit）→ **IMPLEMENTED / VERIFICATION_PENDING**。
 
 Status:
 ```text
-Phase 5: ACCEPTED（Frontend + Backend API/Worker + Redis + PG + CI + Web→API 全綠）
-Step 1:  ACCEPTED（2026-08-14, Human Owner）— CI db job 綠（run 31772685822）+ 線上 migrate applied + 線上 seed counts 符合
-Step 2:  LINE / LIFF 登入骨架 — IMPLEMENTED（AuthModule + /liff + /config/public DB + seed liffId/owner + env 拆分;本機 typecheck/test/build 綠;待 CI + 手機實測 + 驗收）
+Phase 5/6: ACCEPTED
+Phase 7 Step 1 — Leave 狀態機：IMPLEMENTED / VERIFICATION_PENDING
+  狀態機 PENDING/APPROVED/REJECTED/CANCELLED（config-driven;非法轉移→409）
+  同交易寫 Leave + OutboxEvent（PENDING，Step 3 消費）+ AuditLog（transactional，ADR-005 類別一）
+  端點 POST/GET /leaves · PATCH /leaves/:id/{status,cancel};ScopeResolver +canManageStudentClass
+  本機 typecheck/jest(49)/build/DI-boot 綠;待 CI + Render 線上 + Human Acceptance
 ```
-（新增部署機制 Render preDeploy `migrate:deploy` 屬 ADR-006 邊界內。AuditLog append-only REVOKE 延至 Phase 7。）
+（範圍 A：不含 Worker dispatcher[Step 3] / Attendance 投影[Step 2] / out-of-band audit + append-only REVOKE[Step 6]。無新 migration/架構變更。）
 
 Completed（已建立，未驗收）:
 - 三項 Architecture clarification 同步（Runtime Config server-only / Leave-Attendance dual SoT rule / Audit durable path）

@@ -119,10 +119,23 @@
 - **Phase 6 — Vertical Slice：✅ COMPLETE（2026-08-14, Human Owner）** — Step 1–4 全數 ACCEPTED;端到端線上驗收通過。
 - **Acceptance**：Online 可驗證 + Human Acceptance。
 
-## Phase 7 — Core MVP  ⬜
-- [ ] Leave 狀態機 · Attendance · Leave/Attendance 衝突規則（ADR-002）— `NOT_STARTED`
+## Phase 7 — Core MVP  🟡
+- [~] **Step 1 — Leave 狀態機（+ 寫入端 Outbox + transactional audit）** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] `LeavesService` 狀態機（PENDING/APPROVED/REJECTED/CANCELLED;config-driven `leaveRequiresApproval`;非法轉移→409 `LEAVE_INVALID_TRANSITION`）
+    - [x] 每個狀態變更於**同一 `$transaction`** 寫 Leave + `OutboxEvent`（PENDING，Step 3 消費）+ `AuditLog`（transactional，ADR-005 類別一）
+    - [x] 端點 `POST /leaves`、`GET /leaves?studentId=`、`PATCH /leaves/:id/status`、`PATCH /leaves/:id/cancel`（docs/07 §3-4）
+    - [x] 授權：粗粒度 `@Roles`;資料列級於 service 用 `ScopeResolver`（新增 `canManageStudentClass`）—— 申請看 `canAccessStudent`、審核/staff 取消看 `canManageStudentClass`、家長取消限申請者本人
+    - [x] `core/audit`（`AuditService.record(tx, entry)`，僅交易內同步寫入）
+    - [x] 本機：typecheck ✓、jest 49 tests ✓（含 leaves 17 / audit 2 / scope-resolver +5）、nest build ✓、`node dist/main.js` DI boot ✓（LeavesModule + 4 routes mapped）;`app.module.spec` DI smoke test 已涵蓋 LeavesModule
+    - [ ] CI 綠 → Render 線上四端點行為（含 409、Outbox/Audit 有列）→ Human Acceptance
+  - **範圍界定（Human Owner 定案 A）**：本步含**寫入端** Outbox + transactional audit;**不含** Worker dispatcher（Step 3）、Attendance 投影（Step 2）、out-of-band DENIED/FAILURE audit + DB 層 append-only REVOKE + 稽核查詢端點（Step 6）。故 `LeaveApproved` 本步**尚不投影 Attendance**。
+  - **無新 migration**（Leave/OutboxEvent/AuditLog + enum 已在 `0001_init`）;**無架構變更、無新 library/infra**。
+  - **Deliverables**：`apps/api/src/leaves/**`、`apps/api/src/core/audit/**`、`apps/api/src/auth/scope-resolver.service.ts`（+spec）、`apps/api/src/app.module.ts`。
+  - **Owner**：Claude(impl) / Human(線上+accept)。
+- [ ] Step 2 — Attendance（手動 SoT / LeaveApproved 投影 Derived;ADR-002 override）— `NOT_STARTED`
+- [ ] Step 3 — Event 串接（Outbox → Worker dispatch）— `NOT_STARTED`
 - [ ] Message Center · Announcement · Notification / LINE Push — `NOT_STARTED`
-- [ ] Audit（transactional + out-of-band durable path）— `NOT_STARTED`
+- [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
 
 ## Phase 8 — Integration / Hardening  ⬜
