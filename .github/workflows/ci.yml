@@ -84,10 +84,11 @@ jobs:
       - name: Verify seed graph
         run: pnpm db:verify
 
-      # ④ Drift 檢查：套用後的 DB 必須與 schema.prisma 完全一致（否則 exit 2）
+      # ④ Drift 檢查：套用後的實際 DB（datasource url introspection）
+      #    必須與 schema.prisma 的 datamodel 完全一致（有差異則 exit 2）
       - name: Migration drift check
         run: >-
           pnpm --filter @sproutin/db exec prisma migrate diff
-          --from-database
+          --from-schema-datasource prisma/schema.prisma
           --to-schema-datamodel prisma/schema.prisma
           --exit-code
