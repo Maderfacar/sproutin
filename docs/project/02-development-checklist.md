@@ -106,7 +106,7 @@
     - [x] seed：`SchoolConfig.liffId=2011106015-hbS1EASz`；`DEMO_OWNER_LINE_USER_ID` env 對映園長（真 ID 不進 repo）
     - [x] env 拆 `LINE_LOGIN_*` / `LINE_MESSAGING_*`（render.yaml + docs/05）
     - [x] 測試：auth.service（provisioned/未provisioned/token 無效/me）+ jwt guard；本機 typecheck/test/build 綠
-    - [ ] CI 綠燈 → 線上手機實測（你 LINE 開 LIFF URL）→ Human Acceptance
+    - [x] CI 綠燈（run 31777136725）→ 線上手機實測 PASS（真 LINE → 王園長 OWNER）→ 僅待 Human Acceptance
   - **Acceptance Criteria**：CI 綠；線上手機用真 LINE 登入 `/liff` 顯示「已登入為 王園長(OWNER)」；未 provisioned→401。
   - **Deliverables**：`apps/api/src/auth/**`、`apps/api/src/core/config/public-config.*`、`apps/web/src/app/liff/**`、`apps/web/src/app/api/{auth/line/login,me}/route.ts`、`apps/web/src/lib/{liff,auth}.ts`、`packages/db/prisma/seed.ts`、`render.yaml`。
   - **Owner**：Claude(impl) / Human(線上實測+accept)。 **Note**：Messaging channel secret/token 屬 Phase 7,本步未用。

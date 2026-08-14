@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 2 — LINE / LIFF 登入骨架**：`IMPLEMENTED / VERIFICATION_PENDING`（本機 typecheck/test/build 綠;待 CI + 手機實測 + Human Acceptance）。Step 1 已 ACCEPTED。
+Phase 6 / **Step 2 — LINE / LIFF 登入骨架**：`VERIFICATION_PENDING`（CI 綠 + 線上手機實測 PASS）→ **只差 Human Acceptance**。Step 1 已 ACCEPTED。
 
 **Status:**
 ```text
@@ -44,12 +44,12 @@ Phase 6 / Step 2 — LINE / LIFF 登入骨架：
 [x] seed：SchoolConfig.liffId=2011106015-hbS1EASz；DEMO_OWNER_LINE_USER_ID 對映園長（真 ID 不進 repo）
 [x] env 拆 LINE_LOGIN_* / LINE_MESSAGING_*（render.yaml plain channel id + docs/05）
 [x] 測試 auth.service（4）+ jwt guard（3）；本機 typecheck ✓ / test 8 綠 ✓ / build ✓
-[ ] push → CI 綠燈                          — 待 push 後 run
-[ ] 線上手機實測（你 LINE 開 LIFF URL）       — 待 Human Owner（重跑 seed 帶 DEMO_OWNER_LINE_USER_ID）
+[x] CI 綠燈（run 31777136725）：build（8 tests）+ db job
+[x] 線上手機實測 PASS：真 LINE 開 LIFF URL → 顯示「已登入為 王園長(OWNER)」（/me 正確回 roles）
 [ ] Human Owner acceptance（Step 2）         — 待 Human Owner
 ```
 
-以上為 Claude 的 **IMPLEMENTED**（本機全綠）；CI 為第一道驗證，手機實測與驗收由 Human Owner 執行。
+Step 2 技術項目全數綠（CI + 線上手機實測）；**僅剩 Human Owner Acceptance**。
 
 ---
 
@@ -157,16 +157,9 @@ DONE
 - ✅ Phase 6 Step 1 — ACCEPTED（2026-08-14）
 - ✅ LINE Login channel + LIFF app 建立（LIFF_ID=2011106015-hbS1EASz）+ Messaging channel
 
-NOW（Step 2 線上落地；等 push 後 CI 綠再做）— 詳見 05-human-preparation §9
-1. 確認 CI 綠（build + db job）
-2. LIFF Endpoint URL 改指向登入頁：`https://sproutin-kb91-theta.vercel.app/liff`
-3. Render 跑一次 seed job 帶入你的 LINE ID（供手機實測對映園長）：
-   env `SEED_DEMO=true` + `DEMO_OWNER_LINE_USER_ID=Ubfb...`；指令 `pnpm db:seed`
-4. 手機開 `https://liff.line.me/2011106015-hbS1EASz` 登入 → 應顯示「已登入為 王園長(OWNER)」
-5. 回報 Claude → Human Acceptance（Step 2）
-
-> Step 2 不需填任何 secret（Login channel id 已 plain 進 render.yaml;LIFF_ID 由 seed 設定）。
-> Messaging channel secret/token 屬 Phase 7。
+NOW（Step 2 技術全綠，只差驗收）
+- ✅ CI 綠（run 31777136725）｜✅ 線上手機實測 PASS（王園長 OWNER）
+- 👉 **給 Phase 6 Step 2 正式 Acceptance**（唯一待辦）
 ```
 
 ---
@@ -188,8 +181,8 @@ Step 2 收尾：push → CI 綠 → 線上手機實測（Human Owner 重跑 seed
 Phase 6 — Step 2 Acceptance Gate（LINE / LIFF 登入骨架）
 [x] AuthModule + /config/public(DB) + /liff 前端 + seed liffId/owner 對映 + env 拆分
 [x] 本機 typecheck / test（8）/ build 綠
-[ ] CI 綠燈（build + db job）
-[ ] 線上手機實測：真 LINE 開 LIFF URL → 顯示「已登入為 王園長(OWNER)」;未 provisioned→401
+[x] CI 綠燈（run 31777136725；build + db job）
+[x] 線上手機實測 PASS：真 LINE 開 LIFF URL → 「已登入為 王園長(OWNER)」（/me 回 roles）
 [ ] Human Owner acceptance（Step 2）
 ```
 
@@ -276,7 +269,10 @@ Completed:
 
 Verification:
 - 本機：typecheck ✓（api+web）;test 8 passed ✓;build ✓（`/liff` + proxies 編譯）
-- 待 push 後 CI 綠;線上手機實測待 Human Owner（重跑 seed 帶 DEMO_OWNER_LINE_USER_ID → LINE 開 LIFF URL）
+- CI：run 31777136725 綠（build 8 tests + db job）
+- 線上手機實測 PASS：真 LINE 開 `https://liff.line.me/2011106015-hbS1EASz` → JWT 換發 → /me 回「王園長 / OWNER」✓
+  （診斷：/liff 顯示解碼 sub;重跑 seed 帶正確 DEMO_OWNER_LINE_USER_ID 後對映園長成功）
+- 僅剩 Human Owner Acceptance（Claude 不自行標 ACCEPTED）
 
 Architecture:
 - 無變更。LINE User ID 僅認證（修正 D）;public 值走 /config/public（ADR-001）;secret 走 env（ADR-004）。env 命名拆 LOGIN/MESSAGING 為實作細節。
