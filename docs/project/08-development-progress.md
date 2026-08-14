@@ -42,12 +42,14 @@ Phase 6 / Step 3 — RBAC 骨架：
 [x] ScopeResolver.canAccessStudent：OWNER/ADMIN 全校;TEACHER 比對 TeacherAssignment;PARENT/GUARDIAN 比對 Guardianship
 [x] 示範端點 GET /students/:id（JwtAuthGuard → RolesGuard → ScopeGuard）
 [x] 測試矩陣：scope-resolver(7：老師自班/他班、家長自己/他人、OWNER/ADMIN 全通)、roles.guard(3)、scope.guard(3)
-[x] 本機：typecheck ✓ / test 21 綠 ✓ / build ✓
-[x] CI 綠燈（run 31779660605）：build（21 tests）+ db job
+[x] 本機：typecheck ✓ / test 22 綠 ✓ / build ✓（含 app.module DI bootstrap smoke test）
+[x] 修 deploy-time DI bug：AuthModule re-export JwtModule（guards 在 consumer 模組需 JwtService）
+[x] CI 綠燈（run 31783265302）：build（22 tests）+ db job
+[x] Render 線上部署成功：GET /students/:id → 無 token 401 missing_token、壞 token 401 invalid_token（守衛生效）
 [ ] Human Owner acceptance（Step 3）         — 待 Human Owner
 ```
 
-Step 3 技術項目全數綠（本機 + CI）;**僅剩 Human Owner Acceptance**。DENIED out-of-band audit 留 Phase 7(ADR-005 TODO)。
+Step 3 技術項目全數綠（本機 + CI + 線上部署）;**僅剩 Human Owner Acceptance**。DENIED out-of-band audit 留 Phase 7(ADR-005 TODO)。
 
 ---
 
@@ -182,7 +184,8 @@ Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）
 [x] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ ScopeResolver（student）
 [x] 測試矩陣：老師自班 allow/他班 deny;家長自己小孩 allow/他人 deny;OWNER/ADMIN 全校（本機 21 tests 綠）
 [x] 套用到示範讀取端點 GET /students/:id（前端不決定授權）
-[x] CI 綠燈（run 31779660605；build 21 tests + db job）
+[x] CI 綠燈（run 31783265302；build 22 tests + db job）+ 修 deploy DI bug（JwtModule export + smoke test）
+[x] Render 線上部署成功：/students/:id 401（守衛生效）
 [ ] Human Owner acceptance（Step 3）
 ```
 
@@ -274,8 +277,12 @@ Completed:
 - 授權全在後端(Rule 5/6);DENIED out-of-band audit 標 TODO(Phase 7, ADR-005)
 
 Verification:
-- 本機：typecheck ✓（api+web）;test 21 passed ✓;build ✓
-- 待 push 後 CI 綠
+- 本機：typecheck ✓（api+web）;test 22 passed ✓;build ✓
+- CI 綠（run 31783265302）;Render 線上部署成功 → GET /students/:id 401（missing_token / invalid_token）守衛生效
+
+Issues:
+- Problem: 首個 Step 3 部署（143f0b5）Render 啟動 exit 1。Cause: JwtAuthGuard 經 @UseGuards 於 StudentsModule context 實例化，但 AuthModule 未 export JwtModule → 缺 JwtService。CI 未抓到（不啟動 server）。
+  Solution: AuthModule re-export JwtModule + 新增 app.module DI bootstrap smoke test（mock Prisma，CI 攔截此類 wiring 錯誤）。Trade-off: 無。
 
 Architecture:
 - 無變更。RBAC 依 docs/05 矩陣。ScopeResolver 目前支援 student 資源;其他資源(class/leave…)於後續 domain 端點擴充。
