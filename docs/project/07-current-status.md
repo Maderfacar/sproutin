@@ -7,7 +7,7 @@ Current Phase:
 Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Milestone:
-Phase 6 / Step 3 — RBAC 骨架：`ACCEPTED`（2026-08-14, Human Owner）。下一步 Step 4 — 端到端讀取切片（Phase 6 最後一步）。Step 1、2 亦 ACCEPTED。
+Phase 6 / Step 4 — 端到端讀取切片：`IMPLEMENTED / VERIFICATION_PENDING`（本機 27 tests + boot-DI 綠;待 CI + 手機 + 驗收）。Step 1–3 已 ACCEPTED。
 
 Status:
 ```text

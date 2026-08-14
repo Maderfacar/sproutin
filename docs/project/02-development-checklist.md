@@ -115,7 +115,11 @@
     - [x] 示範端點 `GET /students/:id`（JwtAuthGuard → RolesGuard → ScopeGuard）
     - [x] 測試矩陣 21 tests（老師自班/他班、家長自己/他人、OWNER/ADMIN 全校）;本機 typecheck/test/build 綠
     - [ ] CI 綠 → Human Acceptance。DENIED audit 留 Phase 7（ADR-005 TODO）。
-- [~] Step 4 — 端到端讀取切片：LINE Login → User → Student → 權限 → LIFF Dashboard — `NEXT`（Phase 6 最後一步）
+- [~] **Step 4 — 端到端讀取切片：LINE Login → User → Student → 權限 → LIFF Dashboard** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] 後端 `GET /me/students`（`listForUser`：家長自己小孩 / 老師自班 / OWNER 全校;過濾在後端）
+    - [x] 前端 `/liff` 最小 Dashboard（歡迎 + 可查看學生清單）+ proxy
+    - [x] 測試 listForUser 矩陣(5);共 27 tests;本機 typecheck/test/build + boot-DI 綠
+    - [ ] CI 綠 → 園長手機 Dashboard → Human Acceptance → **Phase 6 完成**
 - **Acceptance**：Online 可驗證 + Human Acceptance。
 
 ## Phase 7 — Core MVP  ⬜

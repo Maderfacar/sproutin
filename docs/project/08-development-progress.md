@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）**：✅ **ACCEPTED**（2026-08-14, Human Owner）。下一步：Step 4 — 端到端讀取切片（Phase 6 最後一步）。Step 1、2 亦 ACCEPTED。
+Phase 6 / **Step 4 — 端到端讀取切片（Phase 6 最後一步）**：`IMPLEMENTED / VERIFICATION_PENDING`（本機 typecheck/test(27)/build + boot/DI 綠;待 CI + 手機 + 驗收）。Step 1–3 已 ACCEPTED。
 
 **Status:**
 ```text
@@ -21,35 +21,34 @@ Phase 6:  🟡 IN PROGRESS
   Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
   Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED（2026-08-14, Human Owner）
   Step 3 RBAC 骨架                    → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 4 端到端讀取切片                → NEXT（家長看自己小孩 / 老師看自班 / Dashboard 後端過濾）
+  Step 4 端到端讀取切片                → IMPLEMENTED（本機綠;待 CI + 手機 + 驗收）→ Phase 6 收官
 ```
 
 ---
 
 ## Current Objective
 
-Phase 6 Step 3：把「你是誰 + 角色」變成「你能看/動哪些資料」——後端 **RolesGuard**(粗粒度 `@Roles`) + **ScopeGuard**(資料列級 `@Scope`)。
-老師只自班、家長只自己小孩;OWNER/ADMIN 全校。**授權全在後端**,前端不決定(Rule 5/6)。（**不含** Dashboard 讀取切片=Step 4、audit=Phase 7。）
+Phase 6 Step 4（Phase 6 最後一步）：把 Step 2(登入)+ Step 3(授權)串成**看得到的畫面**。
+`GET /me/students` 由**後端依角色/scope 過濾**——家長只自己小孩、老師只自班、OWNER/ADMIN 全校;`/liff` 換成最小 Dashboard。（**不含** 寫入=Phase 7、完整 card 系統。）
 
 ---
 
 ## Current Task
 
-Phase 6 / Step 3 — RBAC 骨架：
+Phase 6 / Step 4 — 端到端讀取切片：
 
 ```text
-[x] @Roles / @Scope 裝飾器;RolesGuard(粗粒度角色);ScopeGuard + ScopeResolver(資料列級)
-[x] ScopeResolver.canAccessStudent：OWNER/ADMIN 全校;TEACHER 比對 TeacherAssignment;PARENT/GUARDIAN 比對 Guardianship
-[x] 示範端點 GET /students/:id（JwtAuthGuard → RolesGuard → ScopeGuard）
-[x] 測試矩陣：scope-resolver(7：老師自班/他班、家長自己/他人、OWNER/ADMIN 全通)、roles.guard(3)、scope.guard(3)
-[x] 本機：typecheck ✓ / test 22 綠 ✓ / build ✓（含 app.module DI bootstrap smoke test）
-[x] 修 deploy-time DI bug：AuthModule re-export JwtModule（guards 在 consumer 模組需 JwtService）
-[x] CI 綠燈（run 31783265302）：build（22 tests）+ db job
-[x] Render 線上部署成功：GET /students/:id → 無 token 401 missing_token、壞 token 401 invalid_token（守衛生效）
-[x] Human Owner acceptance（Step 3）         — ✅ 2026-08-14
+[x] 後端 StudentsService.listForUser(userId, roles)：OWNER/ADMIN 全校;TEACHER→TeacherAssignment 班級;PARENT/GUARDIAN→Guardianship;多角色聯集去重
+[x] 端點 GET /me/students（MeStudentsController;僅 JwtAuthGuard,過濾在 service）
+[x] 前端 /liff 換成最小 Dashboard（歡迎 + 可查看學生清單）+ /api/me/students proxy
+[x] 測試 listForUser 矩陣(5)：OWNER 全校、TEACHER 自班、無班空、PARENT 自己小孩、多角色去重
+[x] 本機：typecheck ✓ / test 27 綠 ✓ / build ✓;boot 檢查 route {/me/students,GET} mapped、DI 無誤
+[ ] push → CI 綠燈                          — 待 push 後 run
+[ ] 線上：園長手機 Dashboard 看到全校學生         — 待 Human Owner
+[ ] Human Owner acceptance（Step 4）→ Phase 6 完成 — 待 Human Owner
 ```
 
-Step 3 **ACCEPTED**（2026-08-14, Human Owner）。下一個 milestone：Step 4 — 端到端讀取切片。
+以上為 Claude 的 **IMPLEMENTED**（本機全綠 + boot/DI 驗證）;隔離由 CI 矩陣證明,線上以園長帳號驗 Dashboard。
 
 ---
 
@@ -183,6 +182,15 @@ Claude 先提 Step 4 計畫 → Human Owner 確認 → 再實作。
 ## Next Acceptance Gate
 
 ```text
+Phase 6 — Step 4 Acceptance Gate（端到端讀取切片）— Phase 6 最後一步
+[x] 後端 GET /me/students 過濾（家長自己小孩 / 老師自班 / OWNER 全校）+ 最小 Dashboard
+[x] CI 測試矩陣（listForUser 5）+ 本機 27 tests / build / boot-DI 綠
+[ ] CI 綠燈（build + db job）
+[ ] 線上：園長手機開 LIFF → Dashboard 看到全校 5 名學生
+[ ] Human Owner acceptance（Step 4）→ Phase 6 完成
+```
+
+```text
 Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）— ✅ 通過（保留紀錄）
 [x] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ ScopeResolver（student）
 [x] 測試矩陣：老師自班 allow/他班 deny;家長自己小孩 allow/他人 deny;OWNER/ADMIN 全校（本機 21 tests 綠）
@@ -269,6 +277,24 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 / Step 4 — 端到端讀取切片（IMPLEMENTED）
+
+Completed:
+- 後端 `StudentsService.listForUser`（OWNER/ADMIN 全校;TEACHER→TeacherAssignment;PARENT/GUARDIAN→Guardianship;多角色聯集去重）
+- 端點 `GET /me/students`（`MeStudentsController`,僅 JwtAuthGuard,過濾在後端 Rule 5/6）+ `/api/me/students` proxy
+- 前端 `/liff` 除錯頁 → 最小 Dashboard（歡迎 name/role + 可查看學生清單）
+- 測試 listForUser 矩陣(5);共 27 tests。boot 檢查：route {/me/students,GET} mapped、DI 無誤（app.module smoke test 亦綠）
+
+Verification:
+- 本機：typecheck ✓;test 27 ✓;build ✓;node dist/main.js boot 過 DI（僅 fake-DB P1001,線上真 DB 正常）
+- 待 push 後 CI 綠;線上園長手機 Dashboard
+
+Architecture:
+- 無變更。過濾邏輯沿用 Step 3 授權矩陣（docs/05）。隔離由 CI 證明（線上只映園長帳號 → 看全校;完整隔離示範需多映家長帳號）。
+
+Next:
+- Step 4 acceptance → **Phase 6 完成** → Phase 7（Core MVP：Leave/Attendance/Message/Audit…）
 
 ### 2026-08-14 — Phase 6 / Step 3 — ACCEPTED（Human Owner 驗收通過）
 
