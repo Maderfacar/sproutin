@@ -95,7 +95,7 @@
     - [x] Idempotent synthetic seed（`seed.ts`）：身分/就學圖（1 School+Config、2 Class、5 Student、6 User+LineIdentity、UserRole、Guardianship 多小孩跨班+多監護人、TeacherAssignment）+ demo 業務資料（Leave×2 含 ADR-002 override、Attendance×3、Announcement×2）；`SEED_DEMO` guard
     - [x] 線上 migration 機制：`render.yaml` `sproutin-api` `preDeployCommand: migrate:deploy`
     - [x] CI DB job（postgres:16）：migrate deploy → seed×2（idempotent）→ `verify`（RBAC/ADR-002 斷言）→ drift check
-    - [ ] CI 綠燈（待 push 後 run）→ 線上 Render migrate（preDeploy 自動）+ seed one-off job → Human Acceptance
+    - [x] CI 綠燈（run 31772685822）→ 線上 Render migrate `0001_init applied` + seed one-off job（counts 符合）✓ → 僅待 Human Acceptance
   - **Acceptance Criteria**：CI DB job 綠燈；Render 部署日誌顯示 migration applied；seed job 日誌顯示 counts；Human Owner acceptance。
   - **Deliverables**：`packages/db/prisma/migrations/0001_init/*`、`packages/db/prisma/{seed,verify}.ts`、`packages/db/{package.json,tsconfig.json}`、`render.yaml`、`.github/workflows/ci.yml`。
   - **Owner**：Claude(impl) / Human(deploy+accept)。 **Note**：AuditLog append-only DB-層 REVOKE（ADR-005）延至 Phase 7（需 app-role 分離）。

@@ -13,7 +13,7 @@ Status:
 ```text
 Phase 5: ACCEPTED（Frontend + Backend API/Worker + Redis + PG + CI + Web→API 全綠）
 Step 1:  baseline migration 0001_init + idempotent synthetic seed + CI DB job + render preDeploy migrate
-         本機 drift/validate/typecheck ✓；待 CI db job 綠燈 + Render 線上 migrate/seed + Human Acceptance
+         CI db job 綠（run 31772685822）✓；線上 migrate applied ✓；線上 seed counts 符合 ✓；僅待 Human Acceptance
 ```
 （新增部署機制 Render preDeploy `migrate:deploy` 屬 ADR-006 邊界內。AuditLog append-only REVOKE 延至 Phase 7。）
 

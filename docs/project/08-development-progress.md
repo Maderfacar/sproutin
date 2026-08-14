@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 1 — DB migration + seed**：`IMPLEMENTED / VERIFICATION_PENDING`（待 CI 綠燈 + 線上套用 + Human Acceptance）
+Phase 6 / **Step 1 — DB migration + seed**：`VERIFICATION_PENDING`（CI 綠 + 線上已套用 + 線上 seed 成功）→ **只差 Human Acceptance**
 
 **Status:**
 ```text
@@ -45,12 +45,13 @@ Phase 6 / Step 1 — DB migration + seed：
 [x] render.yaml preDeployCommand: migrate:deploy（僅 api，自動套用 migration）
 [x] CI DB job（postgres:16）：migrate deploy → seed×2 → verify → drift check
 [x] 本機驗證：prisma validate ✓、committed migration == 重新產生（無 drift）✓、seed/verify typecheck ✓
-[ ] push → CI DB job 綠燈                         — 待 push 後 run
-[ ] Render 線上 migrate（preDeploy 自動）+ seed one-off job — 待 Human Owner
+[x] CI DB job 綠燈（run 31772685822）：migrate → seed×2 → verify（12 斷言全過）→ drift ✓
+[x] Render 線上 migrate（preDeploy 自動）：0001_init applied ✓
+[x] Render 線上 seed one-off job：counts 全數符合（school1/class2/student5/user6/…/attendance3/announcement2）✓
 [ ] Human Owner acceptance（Step 1）              — 待 Human Owner
 ```
 
-以上為 Claude 的 **IMPLEMENTED**；CI 綠燈為第一道驗證，線上套用與驗收由 Human Owner 執行。
+Step 1 技術項目全數綠（CI + 線上）；**僅剩 Human Owner Acceptance**。
 
 ---
 
@@ -152,15 +153,9 @@ AQ-2 — API (NestJS) Production Hosting      → DECIDED（2026-08-14, ADR-006�
 DONE
 - Phase 5 全綠並驗收（Vercel + Render + CI + Web→API）；AQ-1/AQ-2 → ADR-006
 
-NOW（Phase 6 Step 1 線上落地；等 push 後 CI DB job 綠燈再做）
-1. 確認 GitHub Actions「db」job 綠燈（migrate + seed + verify + drift 全過）
-2. Render：sproutin-api 下一次部署會自動跑 preDeploy `migrate:deploy`（0001_init 套進 sproutin-db）
-   → 於部署日誌確認「1 migration applied」
-3. Render：跑一次 seed one-off job 灌 Demo 資料（一次即可）：
-   - 於 sproutin-api 服務開 Shell / 建一次性 Job，指令：`pnpm db:seed`
-   - 環境變數：`SEED_DEMO=true`（DATABASE_URL 已由 Blueprint 注入）
-   - 於日誌確認 `[seed] OK — counts=...`
-4. 回報 Claude → 標 Step 1 VERIFICATION_PENDING → Human Acceptance（Step 1）
+NOW（Step 1 技術全綠，只差驗收）
+- ✅ CI db job 綠（run 31772685822）｜✅ 線上 migrate 0001_init applied｜✅ 線上 seed counts 正確
+- 👉 **給 Phase 6 Step 1 正式 Acceptance**（唯一待辦）
 
 LATER（Step 2 才需要）
 - LINE Developers / LINE OA / LIFF application / Channel 設定；於 Render/Vercel 填 LINE env
@@ -187,11 +182,11 @@ Phase 6 — Step 1 Acceptance Gate（DB migration + seed）
 [x] Baseline migration 0001_init 產出且與 schema 無 drift（本機驗證）
 [x] seed.ts idempotent + SEED_DEMO guard；verify.ts 斷言（RBAC / ADR-002）
 [x] render.yaml preDeploy migrate:deploy；CI DB job（postgres:16）
-[ ] CI「db」job 綠燈（migrate → seed×2 → verify → drift）
-[ ] Render：preDeploy migrate 套用（部署日誌「migration applied」）
-[ ] Render：seed one-off job 完成（日誌 counts）
+[x] CI「db」job 綠燈（migrate → seed×2 → verify → drift）— run 31772685822
+[x] Render：preDeploy migrate 套用（部署日誌「0001_init applied」）
+[x] Render：seed one-off job 完成（counts 全數符合）
 [ ] Human Owner acceptance（Step 1）
-→ 全數通過後 Step 1 標 ACCEPTED，才進 Step 2。
+→ 驗收通過後 Step 1 標 ACCEPTED，才進 Step 2。
 
 ---
 
@@ -268,8 +263,11 @@ Completed:
 - 依 Human Owner 3 項決定：migration 機制=Render preDeploy（自動）；seed 範圍=身分/就學圖 + demo 業務資料；套用=CI + 之後也 seed Render dev DB
 
 Verification:
-- 本機（無 DB 限制內最大化）：`prisma validate` ✓；committed migration == 重新產生（無 drift）✓；`seed.ts`/`verify.ts` typecheck ✓
-- 待 push 後 CI `db` job 綠燈（第一道自動驗證）；線上待 Render preDeploy migrate + seed one-off job
+- 本機：`prisma validate` ✓；committed migration == 重新產生（無 drift）✓；`seed.ts`/`verify.ts` typecheck ✓
+- CI（run 31772685822）：db job 全綠 — migrate deploy → seed×2（idempotent）→ verify（12 斷言全過）→ drift ✓
+- 線上：Render preDeploy 自動 migrate `0001_init applied` ✓；seed one-off job counts 全數符合
+  （school1/schoolConfig1/class2/student5/user6/lineIdentity6/userRole6/guardianship3/teacherAssignment2/leave2/attendance3/announcement2）✓
+- 僅剩 Human Owner Acceptance（Claude 不自行標 ACCEPTED）
 
 Issues:
 - Problem: 本機無 Docker/Postgres、無法跑實際 migrate/seed。Cause: 開發機環境。Solution: 以 CI 拋棄式 postgres:16 為權威驗證 + 本機 drift/typecheck。Trade-off: 實際套用結果須看 CI/線上日誌。
