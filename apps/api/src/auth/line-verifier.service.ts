@@ -37,7 +37,9 @@ export class LineVerifier {
     }
 
     if (!res.ok) {
-      throw new UnauthorizedException('line_token_invalid');
+      // 帶上 LINE 的 error_description（如 "IdToken expired."）便於診斷。
+      const detail = await res.text().catch(() => '');
+      throw new UnauthorizedException(`line_token_invalid: ${detail}`.slice(0, 200));
     }
 
     const payload = (await res.json()) as LineIdTokenPayload;
