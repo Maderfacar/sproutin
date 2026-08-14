@@ -18,6 +18,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Demo School 的公開 LIFF_ID（Phase 6 Step 2；公開值，走 /config/public，ADR-001）。
+const DEMO_LIFF_ID = '2011106015-hbS1EASz';
+
+// 手機實測用：把 Human Owner 的真實 LINE User ID 對映到 user-owner（園長）。
+// 真值由 Render seed job 的 env DEMO_OWNER_LINE_USER_ID 帶入，**不寫進 repo**。
+const OWNER_LINE_USER_ID = process.env.DEMO_OWNER_LINE_USER_ID ?? 'Udemo_owner';
+
 // ---- 安全閘門 --------------------------------------------------------------
 function assertSeedAllowed(): void {
   const allowed =
@@ -49,7 +56,7 @@ async function main(): Promise<void> {
 
   await prisma.schoolConfig.upsert({
     where: { id: 'demo-school-config' },
-    update: {},
+    update: { liffId: DEMO_LIFF_ID },
     create: {
       id: 'demo-school-config',
       schoolId: 'demo-school',
@@ -59,8 +66,8 @@ async function main(): Promise<void> {
       cardOrder: ['leave', 'attendance', 'message', 'announcement'],
       featureFlags: { ai: false, health: false, bus: false },
       leaveRequiresApproval: true,
-      // LINE / LIFF 公開值 Phase 6（登入步驟）再填；此處留白
-      liffId: null,
+      // LIFF_ID 公開（Step 2）走 /config/public；channel secret/token 走 env（ADR-004）
+      liffId: DEMO_LIFF_ID,
       lineOaChannelId: null,
       lineOaBasicId: null,
       apiBaseUrl: null,
@@ -98,7 +105,7 @@ async function main(): Promise<void> {
 
   // -------- 4. Users + LineIdentity（LINE ID 僅認證佔位）--------
   const users: Array<{ id: string; displayName: string; lineUserId: string }> = [
-    { id: 'user-owner', displayName: '王園長', lineUserId: 'Udemo_owner' },
+    { id: 'user-owner', displayName: '王園長', lineUserId: OWNER_LINE_USER_ID },
     { id: 'user-admin', displayName: '陳行政', lineUserId: 'Udemo_admin' },
     { id: 'user-teacher-sun', displayName: '林老師（向日葵班導）', lineUserId: 'Udemo_teacher_sun' },
     { id: 'user-teacher-tul', displayName: '黃老師（鬱金香班導）', lineUserId: 'Udemo_teacher_tul' },

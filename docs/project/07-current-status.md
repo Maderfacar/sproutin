@@ -7,13 +7,13 @@ Current Phase:
 Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Milestone:
-Phase 6 / Step 1 — DB migration + seed：`ACCEPTED`（2026-08-14, Human Owner）。下一步 Step 2 — LINE / LIFF 登入骨架。
+Phase 6 / Step 2 — LINE / LIFF 登入骨架：`IMPLEMENTED / VERIFICATION_PENDING`（本機綠;待 CI + 手機實測 + 驗收）。Step 1 已 ACCEPTED。
 
 Status:
 ```text
 Phase 5: ACCEPTED（Frontend + Backend API/Worker + Redis + PG + CI + Web→API 全綠）
 Step 1:  ACCEPTED（2026-08-14, Human Owner）— CI db job 綠（run 31772685822）+ 線上 migrate applied + 線上 seed counts 符合
-Step 2:  LINE / LIFF 登入骨架 — NOT_STARTED（卡 Human Owner LINE 憑證）
+Step 2:  LINE / LIFF 登入骨架 — IMPLEMENTED（AuthModule + /liff + /config/public DB + seed liffId/owner + env 拆分;本機 typecheck/test/build 綠;待 CI + 手機實測 + 驗收）
 ```
 （新增部署機制 Render preDeploy `migrate:deploy` 屬 ADR-006 邊界內。AuditLog append-only REVOKE 延至 Phase 7。）
 

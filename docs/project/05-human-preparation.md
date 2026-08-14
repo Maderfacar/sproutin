@@ -40,10 +40,12 @@
 | `SCHOOL_SLUG` | 本 instance 識別 | Server-only | **Now** | Render env（api，預設 `dev`） |
 | `PORT` | 服務監聽埠 | Server-only | **Now** | Render 自動注入（API 已讀取） |
 | `API_INTERNAL_URL` | web server → api 內部連線 | **Server-only（不得進 bundle / public config）** | **Now（web 端）** | Vercel env（server-only） |
-| `LINE_CHANNEL_ID` | LINE channel 識別 | Server-only（非高敏） | **Later** | Render env（`sync:false`） |
-| `LINE_CHANNEL_SECRET` | LINE 驗證 | **Server-only（secret）** | **Later** | Render env（`sync:false`） |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE push | **Server-only（secret）** | **Later** | Render env（`sync:false`） |
-| `LIFF_ID` | LIFF app id（**公開**） | Client-visible（runtime，非 build-time） | **Later** | 該校 DB `SchoolConfig` → `/config/public` |
+| `LINE_LOGIN_CHANNEL_ID` | LINE Login channel（驗 LIFF idToken 的 audience）；公開識別碼 | Server-only（非機密） | **Now（Step 2）** | render.yaml plain `2011106015`（**自動套用，無需手填**） |
+| `LINE_MESSAGING_CHANNEL_ID` | Messaging API / OA channel 識別；公開 | Server-only（非機密） | Later（Phase 7） | render.yaml plain `2011106146` |
+| `LINE_MESSAGING_CHANNEL_SECRET` | Messaging webhook 簽章驗證 | **Server-only（secret）** | Later（Phase 7） | Render env（`sync:false`，Human Owner 填） |
+| `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` | LINE push | **Server-only（secret）** | Later（Phase 7） | Render env（`sync:false`，Human Owner 填） |
+| `LIFF_ID` | LIFF app id（**公開**） | Client-visible（runtime） | **Now（Step 2）** | 該校 DB `SchoolConfig.liffId` → `/config/public`（由 seed 設定） |
+| `DEMO_OWNER_LINE_USER_ID` | 手機實測：把你的真 LINE ID 對映到 demo 園長 | Server-only（seed job 專用；個資，不進 repo） | Now（Step 2 測試，選用） | Render **seed job** env（跑 `pnpm db:seed` 時帶入） |
 
 > 原則（ADR-001 / ADR-004）：public 值走 runtime `/config/public`；機密走平台 env / Secret Manager，**永不進 repo**。`API_INTERNAL_URL` 永不出現在 public config。
 
@@ -112,3 +114,17 @@
 
 > §5 覆蓋情況：Demo School / ≥2 Class / 多名跨班 Student / Admin・Teacher・Parent(多小孩)・Guardian / multiple guardianship / permission scenario / Leave-Attendance override **皆由 seed 提供**。
 > `BUS_TEACHER`（隨車）+ 乘車名單於 MVP schema 尚未建模（YAGNI），故 seed 未含；未來 Bus domain 再補。真實 LINE 測試帳號（§6）仍需 Human Owner 於 Step 2 準備。
+
+## 9. Phase 6 Step 2 — LINE / LIFF 登入骨架（線上步驟）
+
+> **Step 2 不需要你填任何 secret。** Login channel ID 已 plain 寫進 render.yaml 自動套用;LIFF_ID 由 seed 寫入 SchoolConfig。
+
+1. **LINE 端(已完成)**:LINE Login channel + LIFF app 已建;`LIFF_ID = 2011106015-hbS1EASz`。
+   - LIFF Endpoint URL 目前指向 Vercel 根;**登入頁在 `/liff`**,建議把 Endpoint URL 改成 `https://sproutin-kb91-theta.vercel.app/liff`(或你正式網域 + `/liff`)。
+2. **push 後(自動)**:Render `sproutin-api` 重新部署 → `LINE_LOGIN_CHANNEL_ID` 生效;`/config/public` 會回傳 `liffId`。
+3. **重跑一次 seed(帶入你的 LINE ID,供手機實測)**:Render `sproutin-api` → Shell / 一次性 Job:
+   - env:`SEED_DEMO=true`、`DEMO_OWNER_LINE_USER_ID=Ubfb...（你的 LINE user ID）`
+   - 指令:`pnpm db:seed`
+   - 這會把 `user-owner`(王園長)的 `lineUserId` 更新成你的真 LINE ID → 你手機登入即對應園長。
+4. **手機實測**:用你的 LINE 開 `https://liff.line.me/2011106015-hbS1EASz` → 登入 → 頁面顯示「已登入為 王園長(OWNER)」。
+   - (未 provisioned 的 LINE 帳號登入 → 會顯示 401 `user_not_provisioned`,這是預期行為。)

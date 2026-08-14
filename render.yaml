@@ -54,15 +54,18 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true # Render 自動產生，不落地 repo
-      # LINE 相關（Phase 6 再填；先留白，由 Render 後台設定）
-      - key: LINE_CHANNEL_ID
-        sync: false
-      - key: LINE_CHANNEL_SECRET
-        sync: false
-      - key: LINE_CHANNEL_ACCESS_TOKEN
-        sync: false
-      - key: LIFF_ID
-        sync: false
+      # --- LINE Login（Step 2 登入）---
+      # Channel ID 為公開識別碼（已內含於公開 LIFF URL），非機密 → plain value 自動套用。
+      - key: LINE_LOGIN_CHANNEL_ID
+        value: "2011106015"
+      # --- LINE Messaging API / OA（Phase 7 推播；Step 2 用不到）---
+      - key: LINE_MESSAGING_CHANNEL_ID
+        value: "2011106146"
+      - key: LINE_MESSAGING_CHANNEL_SECRET
+        sync: false # Human Owner 於 Render 後台填（Phase 7）
+      - key: LINE_MESSAGING_CHANNEL_ACCESS_TOKEN
+        sync: false # Human Owner 於 Render 後台填（Phase 7）
+      # LIFF_ID 改由 SchoolConfig → /config/public 提供（ADR-001），不再走 env。
 
   # ---------- 背景 Worker（BullMQ，background worker）----------
   - type: worker

@@ -99,7 +99,17 @@
   - **Acceptance Criteria**：CI DB job 綠燈；Render 部署日誌顯示 migration applied；seed job 日誌顯示 counts；Human Owner acceptance。
   - **Deliverables**：`packages/db/prisma/migrations/0001_init/*`、`packages/db/prisma/{seed,verify}.ts`、`packages/db/{package.json,tsconfig.json}`、`render.yaml`、`.github/workflows/ci.yml`。
   - **Owner**：Claude(impl) / Human(deploy+accept)。 **Note**：AuditLog append-only DB-層 REVOKE（ADR-005）延至 Phase 7（需 app-role 分離）。
-- [ ] Step 2 — LINE / LIFF 登入骨架 — `NOT_STARTED`（卡 Human Owner LINE 憑證）
+- [~] **Step 2 — LINE / LIFF 登入骨架** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] 後端 `AuthModule`：`LineVerifier`(LINE verify 端點)、`AuthService`(查 LineIdentity→User+roles、簽 JWT、未 provisioned→401)、`AuthController`(`POST /auth/line/login`、`GET /me`)、`JwtAuthGuard`
+    - [x] `/config/public` 改讀 DB `SchoolConfig`（liffId 等公開值）
+    - [x] 前端 `/liff` 登入頁 + same-origin proxy（`/api/auth/line/login`、`/api/me`；API_INTERNAL_URL 保持 server-only）
+    - [x] seed：`SchoolConfig.liffId=2011106015-hbS1EASz`；`DEMO_OWNER_LINE_USER_ID` env 對映園長（真 ID 不進 repo）
+    - [x] env 拆 `LINE_LOGIN_*` / `LINE_MESSAGING_*`（render.yaml + docs/05）
+    - [x] 測試：auth.service（provisioned/未provisioned/token 無效/me）+ jwt guard；本機 typecheck/test/build 綠
+    - [ ] CI 綠燈 → 線上手機實測（你 LINE 開 LIFF URL）→ Human Acceptance
+  - **Acceptance Criteria**：CI 綠；線上手機用真 LINE 登入 `/liff` 顯示「已登入為 王園長(OWNER)」；未 provisioned→401。
+  - **Deliverables**：`apps/api/src/auth/**`、`apps/api/src/core/config/public-config.*`、`apps/web/src/app/liff/**`、`apps/web/src/app/api/{auth/line/login,me}/route.ts`、`apps/web/src/lib/{liff,auth}.ts`、`packages/db/prisma/seed.ts`、`render.yaml`。
+  - **Owner**：Claude(impl) / Human(線上實測+accept)。 **Note**：Messaging channel secret/token 屬 Phase 7,本步未用。
 - [ ] Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）— `NOT_STARTED`
 - [ ] Step 4 — 端到端讀取切片：LINE Login → User → Student → 權限 → LIFF Dashboard — `NOT_STARTED`
 - **Acceptance**：Online 可驗證 + Human Acceptance。

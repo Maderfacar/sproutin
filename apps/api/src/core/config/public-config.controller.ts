@@ -8,7 +8,7 @@ export class PublicConfigController {
   constructor(private readonly service: PublicConfigService) {}
 
   @Get('public')
-  getPublic(): PublicConfig {
+  async getPublic(): Promise<PublicConfig> {
     return this.service.get();
   }
 }

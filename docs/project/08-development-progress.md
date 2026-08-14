@@ -12,14 +12,14 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 1 — DB migration + seed**：✅ **ACCEPTED**（2026-08-14, Human Owner）。下一步：Step 2 — LINE / LIFF 登入骨架（卡 Human Owner LINE 憑證）。
+Phase 6 / **Step 2 — LINE / LIFF 登入骨架**：`IMPLEMENTED / VERIFICATION_PENDING`（本機 typecheck/test/build 綠;待 CI + 手機實測 + Human Acceptance）。Step 1 已 ACCEPTED。
 
 **Status:**
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）— Frontend / API / Worker / Redis / PostgreSQL / CI / Web→API 全綠
 Phase 6:  🟡 IN PROGRESS
   Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 2 LINE / LIFF 登入骨架         → NOT_STARTED（卡 Human Owner LINE 憑證）
+  Step 2 LINE / LIFF 登入骨架         → IMPLEMENTED（本機綠;待 CI + 手機實測 + 驗收）
   Step 3 RBAC 骨架                    → NOT_STARTED
   Step 4 端到端讀取切片                → NOT_STARTED
 ```
@@ -28,30 +28,28 @@ Phase 6:  🟡 IN PROGRESS
 
 ## Current Objective
 
-Phase 6 Step 1：建立**第一版 DB schema（baseline migration）**與**一間 Demo School 的 synthetic seed**，
-並以 **CI（拋棄式 Postgres）** 證明 migration 可套用、seed 可重入、資料圖符合 RBAC/ADR-002；
-線上經 Render preDeploy 自動 migrate + 一次性 seed job 落地。（**不含** LINE 登入 / RBAC guard / 任何讀取 API — 那些是 Step 2–4。）
+Phase 6 Step 2：跑通**認證鏈**——LIFF 登入 → 後端驗 LINE ID token → 換發 **Sproutin JWT** → `GET /me` 回「你是誰 + 角色」。
+LINE User ID **僅認證**（查 LineIdentity→User），不進業務外鍵。（**不含** RBAC 資料過濾=Step 3、Dashboard 讀取=Step 4、LINE 推播=Phase 7。）
 
 ---
 
 ## Current Task
 
-Phase 6 / Step 1 — DB migration + seed：
+Phase 6 / Step 2 — LINE / LIFF 登入骨架：
 
 ```text
-[x] Baseline migration 0001_init（17 tables/11 enums/13 FK/11 index；純 Expand，ADR-003）
-[x] Idempotent synthetic seed（seed.ts；SEED_DEMO guard）— 身分/就學圖 + demo 業務資料（含 ADR-002 override 情境）
-[x] CI 斷言 verify.ts（家長只見自己小孩 / 老師只見自班 / override source=MANUAL 保留血緣）
-[x] render.yaml preDeployCommand: migrate:deploy（僅 api，自動套用 migration）
-[x] CI DB job（postgres:16）：migrate deploy → seed×2 → verify → drift check
-[x] 本機驗證：prisma validate ✓、committed migration == 重新產生（無 drift）✓、seed/verify typecheck ✓
-[x] CI DB job 綠燈（run 31772685822）：migrate → seed×2 → verify（12 斷言全過）→ drift ✓
-[x] Render 線上 migrate（preDeploy 自動）：0001_init applied ✓
-[x] Render 線上 seed one-off job：counts 全數符合（school1/class2/student5/user6/…/attendance3/announcement2）✓
-[x] Human Owner acceptance（Step 1）              — ✅ 2026-08-14
+[x] 後端 AuthModule：LineVerifier(LINE verify 端點) / AuthService(查身分+簽 JWT+未 provisioned 401) / AuthController(POST /auth/line/login, GET /me) / JwtAuthGuard
+[x] /config/public 改讀 DB SchoolConfig（liffId 等公開值）
+[x] 前端 /liff 登入頁 + same-origin proxy（/api/auth/line/login, /api/me；API_INTERNAL_URL 保 server-only）
+[x] seed：SchoolConfig.liffId=2011106015-hbS1EASz；DEMO_OWNER_LINE_USER_ID 對映園長（真 ID 不進 repo）
+[x] env 拆 LINE_LOGIN_* / LINE_MESSAGING_*（render.yaml plain channel id + docs/05）
+[x] 測試 auth.service（4）+ jwt guard（3）；本機 typecheck ✓ / test 8 綠 ✓ / build ✓
+[ ] push → CI 綠燈                          — 待 push 後 run
+[ ] 線上手機實測（你 LINE 開 LIFF URL）       — 待 Human Owner（重跑 seed 帶 DEMO_OWNER_LINE_USER_ID）
+[ ] Human Owner acceptance（Step 2）         — 待 Human Owner
 ```
 
-Step 1 **ACCEPTED**（2026-08-14, Human Owner）。下一個 milestone：Step 2 — LINE / LIFF 登入骨架。
+以上為 Claude 的 **IMPLEMENTED**（本機全綠）；CI 為第一道驗證，手機實測與驗收由 Human Owner 執行。
 
 ---
 
@@ -157,14 +155,18 @@ DONE
 
 DONE
 - ✅ Phase 6 Step 1 — ACCEPTED（2026-08-14）
+- ✅ LINE Login channel + LIFF app 建立（LIFF_ID=2011106015-hbS1EASz）+ Messaging channel
 
-NOW（Step 2 前置；可並行準備）
-- LINE Developers 帳號 → LINE Login channel + LIFF app（拿 `LIFF_ID`）
-- Messaging API channel（LINE OA）→ `LINE_CHANNEL_ID / SECRET / ACCESS_TOKEN`
-- 機密由 Human Owner 填 Render（`sync:false`）；公開 `LIFF_ID` 走 `SchoolConfig`→`/config/public`
-- online test accounts（真實 LINE，見 05-human-preparation §6）
+NOW（Step 2 線上落地；等 push 後 CI 綠再做）— 詳見 05-human-preparation §9
+1. 確認 CI 綠（build + db job）
+2. LIFF Endpoint URL 改指向登入頁：`https://sproutin-kb91-theta.vercel.app/liff`
+3. Render 跑一次 seed job 帶入你的 LINE ID（供手機實測對映園長）：
+   env `SEED_DEMO=true` + `DEMO_OWNER_LINE_USER_ID=Ubfb...`；指令 `pnpm db:seed`
+4. 手機開 `https://liff.line.me/2011106015-hbS1EASz` 登入 → 應顯示「已登入為 王園長(OWNER)」
+5. 回報 Claude → Human Acceptance（Step 2）
 
-> Claude NEXT：待 Human Owner 準備 LINE 憑證後，提 **Step 2 具體計畫**（先計畫→確認→再實作）。
+> Step 2 不需填任何 secret（Login channel id 已 plain 進 render.yaml;LIFF_ID 由 seed 設定）。
+> Messaging channel secret/token 屬 Phase 7。
 ```
 
 ---
@@ -172,23 +174,23 @@ NOW（Step 2 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 2 — LINE / LIFF 登入骨架（換發 JWT；LINE User ID 僅認證）。
-前置：Human Owner 準備 LINE 憑證（Login/LIFF/Messaging API channel）。
-流程：Human Owner 備妥 → Claude 提 Step 2 計畫 → Human Owner 確認 → 再實作。
+Step 2 收尾：push → CI 綠 → 線上手機實測（Human Owner 重跑 seed 帶 DEMO_OWNER_LINE_USER_ID → LINE 開 LIFF URL 登入）
+→ Human Acceptance（Step 2）。通過後才進 Step 3（RBAC 骨架 RolesGuard + ScopeGuard）。
 ```
 
-（Claude 不自行開始 Step 2；先等 LINE 憑證 + 計畫確認。）
+（Step 3 不卡憑證，可接續;Claude 仍先計畫→確認→再實作。）
 
 ---
 
 ## Next Acceptance Gate
 
 ```text
-Phase 6 — Step 2 Acceptance Gate（LINE / LIFF 登入骨架）— 尚未開始
-[ ] Human Owner：LINE Login / LIFF / Messaging API channel 備妥，憑證填入 Render
-[ ] Claude：Step 2 計畫經 Human Owner 確認
-[ ] LINE/LIFF 登入 → 換發 JWT 骨架（LINE User ID 僅認證，不作業務外鍵）
-[ ] 線上可驗證 + Human Acceptance（Step 2）
+Phase 6 — Step 2 Acceptance Gate（LINE / LIFF 登入骨架）
+[x] AuthModule + /config/public(DB) + /liff 前端 + seed liffId/owner 對映 + env 拆分
+[x] 本機 typecheck / test（8）/ build 綠
+[ ] CI 綠燈（build + db job）
+[ ] 線上手機實測：真 LINE 開 LIFF URL → 顯示「已登入為 王園長(OWNER)」;未 provisioned→401
+[ ] Human Owner acceptance（Step 2）
 ```
 
 ```text
@@ -261,6 +263,29 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 / Step 2 — LINE / LIFF 登入骨架（IMPLEMENTED）
+
+Completed:
+- 後端 `apps/api/src/auth/`：`LineVerifier`（LINE `/oauth2/v2.1/verify`,audience=Login channel）、`AuthService`（查 `LineIdentity`→`User`+roles、簽 Sproutin JWT、未 provisioned→401）、`AuthController`（`POST /auth/line/login`、`GET /me`）、`JwtAuthGuard`；接進 app.module
+- `/config/public` 改讀 DB `SchoolConfig`（liffId 等公開值;fallback env）
+- 前端 `/liff` 登入頁 + same-origin proxy（`/api/auth/line/login`、`/api/me`）;`lib/liff.ts`、`lib/auth.ts`（`@line/liff` 既有）
+- seed：`SchoolConfig.liffId=2011106015-hbS1EASz`;`DEMO_OWNER_LINE_USER_ID` env → 對映 `user-owner`（真 ID 不進 repo）
+- env 拆 `LINE_LOGIN_CHANNEL_ID`(plain 2011106015) / `LINE_MESSAGING_*`（Phase 7,secret sync:false）;render.yaml + docs/05 更新
+- 測試：auth.service（provisioned / 未provisioned / token 無效 / me）+ jwt guard（有效/缺/無效）
+
+Verification:
+- 本機：typecheck ✓（api+web）;test 8 passed ✓;build ✓（`/liff` + proxies 編譯）
+- 待 push 後 CI 綠;線上手機實測待 Human Owner（重跑 seed 帶 DEMO_OWNER_LINE_USER_ID → LINE 開 LIFF URL）
+
+Architecture:
+- 無變更。LINE User ID 僅認證（修正 D）;public 值走 /config/public（ADR-001）;secret 走 env（ADR-004）。env 命名拆 LOGIN/MESSAGING 為實作細節。
+
+Human Owner:
+- NOW：CI 綠 → 改 LIFF Endpoint URL 到 `/liff` → 重跑 seed（帶你的 LINE ID）→ 手機實測 → 驗收
+
+Next:
+- Step 2 acceptance → Step 3（RBAC 骨架 RolesGuard + ScopeGuard）
 
 ### 2026-08-14 — Phase 6 / Step 1 — ACCEPTED（Human Owner 驗收通過）
 
