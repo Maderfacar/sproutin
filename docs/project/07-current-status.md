@@ -7,7 +7,7 @@ Current Phase:
 Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Milestone:
-Phase 6 / Step 2 — LINE / LIFF 登入骨架：`VERIFICATION_PENDING`（CI 綠 + 線上手機實測 PASS）→ 只差 Human Acceptance。Step 1 已 ACCEPTED。
+Phase 6 / Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）：IN_PROGRESS。Step 1、Step 2 已 ACCEPTED。
 
 Status:
 ```text

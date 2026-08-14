@@ -12,15 +12,15 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 2 — LINE / LIFF 登入骨架**：`VERIFICATION_PENDING`（CI 綠 + 線上手機實測 PASS）→ **只差 Human Acceptance**。Step 1 已 ACCEPTED。
+Phase 6 / **Step 2 — LINE / LIFF 登入骨架**：✅ **ACCEPTED**（2026-08-14, Human Owner）。下一步：Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）。Step 1 亦 ACCEPTED。
 
 **Status:**
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）— Frontend / API / Worker / Redis / PostgreSQL / CI / Web→API 全綠
 Phase 6:  🟡 IN PROGRESS
   Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 2 LINE / LIFF 登入骨架         → IMPLEMENTED（本機綠;待 CI + 手機實測 + 驗收）
-  Step 3 RBAC 骨架                    → NOT_STARTED
+  Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED（2026-08-14, Human Owner）
+  Step 3 RBAC 骨架                    → IN PROGRESS（RolesGuard + ScopeGuard）
   Step 4 端到端讀取切片                → NOT_STARTED
 ```
 
@@ -46,10 +46,10 @@ Phase 6 / Step 2 — LINE / LIFF 登入骨架：
 [x] 測試 auth.service（4）+ jwt guard（3）；本機 typecheck ✓ / test 8 綠 ✓ / build ✓
 [x] CI 綠燈（run 31777136725）：build（8 tests）+ db job
 [x] 線上手機實測 PASS：真 LINE 開 LIFF URL → 顯示「已登入為 王園長(OWNER)」（/me 正確回 roles）
-[ ] Human Owner acceptance（Step 2）         — 待 Human Owner
+[x] Human Owner acceptance（Step 2）         — ✅ 2026-08-14
 ```
 
-Step 2 技術項目全數綠（CI + 線上手機實測）；**僅剩 Human Owner Acceptance**。
+Step 2 **ACCEPTED**（2026-08-14, Human Owner）。進行中：Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）。
 
 ---
 
@@ -66,6 +66,7 @@ Step 2 技術項目全數綠（CI + 線上手機實測）；**僅剩 Human Owner
 [x] AQ-1 / AQ-2 部署決策 — DECIDED（ADR-006：Vercel + Render）
 [x] Phase 5（整體）— ACCEPTED（2026-08-14, Human Owner）
 [x] Phase 6 Step 1 — DB migration + seed — ACCEPTED（2026-08-14, Human Owner）
+[x] Phase 6 Step 2 — LINE / LIFF 登入骨架 — ACCEPTED（2026-08-14, Human Owner）
 ```
 
 > `[~] IMPLEMENTED` 代表 code 已寫，**不等於 Human Acceptance**。
@@ -157,9 +158,12 @@ DONE
 - ✅ Phase 6 Step 1 — ACCEPTED（2026-08-14）
 - ✅ LINE Login channel + LIFF app 建立（LIFF_ID=2011106015-hbS1EASz）+ Messaging channel
 
-NOW（Step 2 技術全綠，只差驗收）
-- ✅ CI 綠（run 31777136725）｜✅ 線上手機實測 PASS（王園長 OWNER）
-- 👉 **給 Phase 6 Step 2 正式 Acceptance**（唯一待辦）
+DONE
+- ✅ Phase 6 Step 2 — ACCEPTED（2026-08-14）
+
+NOW（Step 3 — RBAC 骨架；不卡憑證）
+- 無 Human Owner 待辦;Claude 實作 RolesGuard + ScopeGuard,CI 用 seed 資料驗權限隔離
+- Step 3 完成後由 Human Owner 驗收（線上以既有 demo 帳號驗證）
 ```
 
 ---
@@ -167,23 +171,27 @@ NOW（Step 2 技術全綠，只差驗收）
 ## Next Task
 
 ```text
-Step 2 收尾：push → CI 綠 → 線上手機實測（Human Owner 重跑 seed 帶 DEMO_OWNER_LINE_USER_ID → LINE 開 LIFF URL 登入）
-→ Human Acceptance（Step 2）。通過後才進 Step 3（RBAC 骨架 RolesGuard + ScopeGuard）。
+Step 3 — RBAC 骨架：RolesGuard（粗粒度 @Roles）+ ScopeGuard（資料列級 @Scope；老師自班、家長自己小孩）。
+後端授權、前端不決定;以 seed 資料在 CI 驗權限隔離（允許/拒絕）。完成 → Human Acceptance → Step 4。
 ```
-
-（Step 3 不卡憑證，可接續;Claude 仍先計畫→確認→再實作。）
 
 ---
 
 ## Next Acceptance Gate
 
 ```text
-Phase 6 — Step 2 Acceptance Gate（LINE / LIFF 登入骨架）
+Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）— 進行中
+[ ] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ scope 解析（student/class）
+[ ] CI 單元/整合測試：老師自班 allow、他班 deny;家長自己小孩 allow、他人 deny;OWNER/ADMIN 全校
+[ ] 套用到示範讀取端點（前端不決定授權）
+[ ] Human Owner acceptance（Step 3）
+```
+
+```text
+Phase 6 — Step 2 Acceptance Gate（LINE / LIFF 登入骨架）— ✅ 通過（保留紀錄）
 [x] AuthModule + /config/public(DB) + /liff 前端 + seed liffId/owner 對映 + env 拆分
-[x] 本機 typecheck / test（8）/ build 綠
-[x] CI 綠燈（run 31777136725；build + db job）
-[x] 線上手機實測 PASS：真 LINE 開 LIFF URL → 「已登入為 王園長(OWNER)」（/me 回 roles）
-[ ] Human Owner acceptance（Step 2）
+[x] CI 綠燈（run 31777136725）+ 線上手機實測 PASS（王園長 OWNER）
+[x] Human Owner acceptance（Step 2）— 2026-08-14
 ```
 
 ```text
@@ -256,6 +264,15 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 / Step 2 — ACCEPTED（Human Owner 驗收通過）
+
+Completed:
+- Human Owner 驗收 Step 2：CI 綠（run 31777136725）+ 線上手機實測 PASS（真 LINE → LIFF → JWT → /me = 王園長/OWNER）
+- Step 2 標記 ACCEPTED
+
+Next:
+- Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）。不卡憑證,CI 用 seed 資料驗權限隔離。
 
 ### 2026-08-14 — Phase 6 / Step 2 — LINE / LIFF 登入骨架（IMPLEMENTED）
 

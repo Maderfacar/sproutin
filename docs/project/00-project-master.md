@@ -23,9 +23,9 @@ Current Phase:
 Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Status:
-Phase 6 / Step 1（DB migration + seed）= ✅ ACCEPTED（2026-08-14, Human Owner）
-  CI db job 綠 + 線上 migrate 0001_init applied + 線上 seed counts 符合
-Step 2（LINE/LIFF 登入）尚未開始，卡 Human Owner LINE 憑證。
+Phase 6 Step 1（DB migration + seed）= ✅ ACCEPTED（2026-08-14）
+Phase 6 Step 2（LINE/LIFF 登入骨架）= ✅ ACCEPTED（2026-08-14）— 線上手機實測 PASS（王園長/OWNER）
+Phase 6 Step 3（RBAC 骨架 RolesGuard + ScopeGuard）= IN PROGRESS（不卡憑證）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）
