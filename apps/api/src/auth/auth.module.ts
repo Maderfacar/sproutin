@@ -23,6 +23,7 @@ const jwtSecret = process.env.JWT_SECRET ?? 'dev-only-insecure-secret';
   controllers: [AuthController],
   providers: [AuthService, LineVerifier, JwtAuthGuard, RolesGuard, ScopeGuard, ScopeResolver],
   // 匯出 guards/resolver 供 domain 模組（如 StudentsModule）掛用（Step 3 RBAC）。
-  exports: [JwtAuthGuard, RolesGuard, ScopeGuard, ScopeResolver],
+  // 同時 re-export JwtModule：guards 在 consumer 模組 context 實例化時需 JwtService。
+  exports: [JwtModule, JwtAuthGuard, RolesGuard, ScopeGuard, ScopeResolver],
 })
 export class AuthModule {}
