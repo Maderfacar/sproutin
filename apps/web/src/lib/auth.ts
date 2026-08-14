@@ -13,7 +13,8 @@ export async function lineLogin(idToken: string): Promise<LoginResult> {
     body: JSON.stringify({ idToken }),
   });
   if (!res.ok) {
-    throw new Error(`login failed: ${res.status}`);
+    const detail = await res.text().catch(() => '');
+    throw new Error(`login failed: ${res.status} ${detail}`);
   }
   return (await res.json()) as LoginResult;
 }

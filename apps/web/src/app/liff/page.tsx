@@ -15,6 +15,7 @@ export default function LiffLoginPage() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [user, setUser] = useState<AuthUser | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sub, setSub] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,14 +27,16 @@ export default function LiffLoginPage() {
           throw new Error('liffId 未設定（/config/public）——請確認已 seed SchoolConfig.liffId');
         }
 
-        const idToken = await ensureLiffLogin(config.liffId);
-        if (idToken === null) {
+        const login = await ensureLiffLogin(config.liffId);
+        if (login === null) {
           // 導向 LINE 登入中；返回後本頁會重新掛載。
           if (!cancelled) setPhase('redirecting');
           return;
         }
+        // 先顯示真實 sub（診斷用：seed 對映需用這個值）。
+        if (!cancelled) setSub(login.sub);
 
-        const { accessToken } = await lineLogin(idToken);
+        const { accessToken } = await lineLogin(login.idToken);
         const me = await fetchMe(accessToken);
         if (!cancelled) {
           setUser(me);
@@ -58,15 +61,23 @@ export default function LiffLoginPage() {
       <h1>Sproutin — LIFF 登入</h1>
       {phase === 'loading' && <p>登入中…（初始化 LIFF）</p>}
       {phase === 'redirecting' && <p>導向 LINE 登入…</p>}
-      {phase === 'error' && <p style={{ color: 'crimson' }}>登入失敗：{error}</p>}
+
+      {/* 診斷：顯示這台裝置登入帳號的真實 LINE User ID（sub）。seed 要對映的就是這個值。 */}
+      {sub && (
+        <p style={{ background: '#f3f4f6', padding: 8, borderRadius: 6, wordBreak: 'break-all' }}>
+          你的 LINE User ID（sub）：<strong>{sub}</strong>
+        </p>
+      )}
+
+      {phase === 'error' && (
+        <p style={{ color: 'crimson', wordBreak: 'break-all' }}>登入失敗：{error}</p>
+      )}
       {phase === 'authed' && user && (
         <section>
           <p>
             已登入為 <strong>{user.displayName}</strong>
           </p>
-          <p>
-            角色：{user.roles.map((r) => r.role).join('、') || '（無角色）'}
-          </p>
+          <p>角色：{user.roles.map((r) => r.role).join('、') || '（無角色）'}</p>
           <pre>{JSON.stringify(user, null, 2)}</pre>
         </section>
       )}
