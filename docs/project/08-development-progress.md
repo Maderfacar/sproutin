@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-15（Phase 7 Step 2 IMPLEMENTED — Attendance;Step 1 CI 綠）
+> Last updated: 2026-08-15（Phase 7 Step 1 + Step 2 ACCEPTED;下一步 Step 3 Event 串接）
 
 ---
 
@@ -12,16 +12,16 @@
 Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 7 Step 1（Leave 狀態機 + 寫入端 Outbox + transactional audit）→ **IMPLEMENTED / VERIFICATION_PENDING**（本機 typecheck/test/build/DI-boot 綠;待 CI + Render 線上 + Human Acceptance）。
+Phase 7 Step 1（Leave 狀態機）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15, Human Owner）。下一步 Step 3 — Event 串接（先計畫→確認→實作）。
 
 **Status:**
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）
 Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTED
 Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）
-  Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ IMPLEMENTED;CI 綠（run 31838405561）;待線上+驗收
-  Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → IMPLEMENTED / VERIFICATION_PENDING
-  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾）        → NOT_STARTED
+  Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ ✅ ACCEPTED（2026-08-15, Human Owner）
+  Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → ✅ ACCEPTED（2026-08-15, Human Owner）
+  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ NEXT（先計畫→確認→實作）
   Step 4 Message / Announcement / Notification                → NOT_STARTED
   Step 5 Notification / LINE Push（需 Messaging secret）        → NOT_STARTED
   Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
@@ -32,25 +32,17 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Objective
 
-**Phase 7 Step 1 — Leave 狀態機。** config-driven（`SchoolConfig.leaveRequiresApproval`）狀態機
-PENDING/APPROVED/REJECTED/CANCELLED;每個狀態變更於同一 `$transaction` 寫 Leave + OutboxEvent（PENDING）
-+ AuditLog（transactional）。**範圍 A（Human Owner 定案）**：含寫入端 Outbox + transactional audit;
-Worker dispatcher / Attendance 投影 / out-of-band audit 分別留 Step 3 / Step 2 / Step 6。
+**Phase 7 Step 3 — Event 串接（下一步，先計畫→確認→實作）。** Worker 消費 Transactional Outbox
+（BullMQ dispatcher）→ `LeaveApproved` 投影 `Attendance(source=LEAVE_EVENT)`（override 感知，ADR-002）、
+`LeaveRejected/Cancelled` 回滾（僅動 LEAVE_EVENT 列;override 過的 MANUAL 列不觸碰、發衝突通知）、
+各事件 → Notification。Step 1/2 已把事件寫進 OutboxEvent（PENDING），本步把它們真正消費掉。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 1 — Leave 狀態機：**IMPLEMENTED / VERIFICATION_PENDING**。
-```text
-新增：apps/api/src/leaves/**（controller/service/module/spec）
-      apps/api/src/core/audit/**（AuditService.record — transactional only）
-      apps/api/src/auth/scope-resolver.service.ts +canManageStudentClass（+spec）
-      app.module.ts 掛 LeavesModule
-端點：POST /leaves · GET /leaves?studentId= · PATCH /leaves/:id/status · PATCH /leaves/:id/cancel
-本機驗證：typecheck ✓ · jest 49 tests ✓ · nest build ✓ · node dist/main.js DI boot ✓（4 routes mapped）
-待：CI 綠 → Render 線上四端點（含 409 · Outbox/Audit 有列）→ Human Acceptance
-```
+Phase 7 Step 1 + Step 2 — ✅ ACCEPTED（2026-08-15, Human Owner）。線上已部署（`/leaves`、`/attendance` 回 401）。
+下一個 Task = **Step 3 — Event 串接**（見文末 handoff prompt;可於新 session 執行）。
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -185,9 +177,10 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Phase 7 Step 1（Leave 狀態機）→ push → CI 綠 → Render 線上四端點驗收 → Human Acceptance。
-通過後才進 Step 2（Attendance：手動 SoT / LeaveApproved 投影 Derived + ADR-002 override）。
-Claude 不自行跳步;每步先計畫 → Human Owner 確認 → 再實作。
+Step 3 — Event 串接：Worker Outbox dispatcher（BullMQ）消費 OutboxEvent →
+  LeaveApproved 投影 Attendance(source=LEAVE_EVENT, override 感知) + LeaveRejected/Cancelled 回滾 +
+  各事件 Notification;idempotent（Attendance @@unique upsert、回滾以 sourceRef 定位）。
+先計畫 → Human Owner 確認 → 實作。可於新 session 執行（handoff prompt 已備）。
 ```
 
 ---
@@ -292,6 +285,16 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-15 — Phase 7 / Step 1 + Step 2 — ACCEPTED（Human Owner）
+
+Completed:
+- Human Owner 驗收 **Step 1（Leave 狀態機）+ Step 2（Attendance）** → 兩者 ACCEPTED。
+- 依據：CI 綠（run 31840973966，build + db）;Render 線上 `/leaves`、`/attendance` 皆回 401（路由部署 + guard 生效）;帶登入完整流程（201/403/409/override）由 API 級 e2e（真實 JWT）於 CI 覆蓋。
+- 驗收方式認可：後端優先下暫無 UI，帶 token 手動實測以 CI e2e 取代（Human Owner 同意）。
+
+Next:
+- **Step 3 — Event 串接**（Outbox dispatcher on Worker → LeaveApproved 投影 Attendance[override 感知] + LeaveRejected/Cancelled 回滾 + Notification）。Claude 先提計畫 → Human Owner 確認 → 實作。可能於新 session 執行（見 handoff prompt）。
 
 ### 2026-08-15 — Phase 7 / Step 2 — Attendance（IMPLEMENTED）+ Step 1 CI 綠
 

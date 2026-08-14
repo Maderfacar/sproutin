@@ -121,7 +121,7 @@
 - **Acceptance**：Online 可驗證 + Human Acceptance。
 
 ## Phase 7 — Core MVP  🟡
-- [~] **Step 1 — Leave 狀態機（+ 寫入端 Outbox + transactional audit）** — `IMPLEMENTED / VERIFICATION_PENDING`
+- [x] **Step 1 — Leave 狀態機（+ 寫入端 Outbox + transactional audit）** — `ACCEPTED`（2026-08-15, Human Owner;CI run 31840973966 綠 + Render 線上 `/leaves` 401 + API e2e 覆蓋帶登入流程）
     - [x] `LeavesService` 狀態機（PENDING/APPROVED/REJECTED/CANCELLED;config-driven `leaveRequiresApproval`;非法轉移→409 `LEAVE_INVALID_TRANSITION`）
     - [x] 每個狀態變更於**同一 `$transaction`** 寫 Leave + `OutboxEvent`（PENDING，Step 3 消費）+ `AuditLog`（transactional，ADR-005 類別一）
     - [x] 端點 `POST /leaves`、`GET /leaves?studentId=`、`PATCH /leaves/:id/status`、`PATCH /leaves/:id/cancel`（docs/07 §3-4）
@@ -133,7 +133,7 @@
   - **無新 migration**（Leave/OutboxEvent/AuditLog + enum 已在 `0001_init`）;**無架構變更、無新 library/infra**。
   - **Deliverables**：`apps/api/src/leaves/**`、`apps/api/src/core/audit/**`、`apps/api/src/auth/scope-resolver.service.ts`（+spec）、`apps/api/src/app.module.ts`。
   - **Owner**：Claude(impl) / Human(線上+accept)。
-- [~] **Step 2 — Attendance（手動 SoT + ADR-002 override-on-edit）** — `IMPLEMENTED / VERIFICATION_PENDING`
+- [x] **Step 2 — Attendance（手動 SoT + ADR-002 override-on-edit）** — `ACCEPTED`（2026-08-15, Human Owner;CI 綠 + Render 線上 `/attendance` 401 + API e2e override 覆蓋）
     - [x] `AttendanceService`：`POST /attendance`（手動 `source=MANUAL`;每日一列 upsert）、`GET /attendance?classId=&date=`（staff 班級視圖）/`?studentId=`（家長/該生）、`PATCH /attendance/:id`
     - [x] **Override（ADR-002 rule 4）**：改到一筆 `source=LEAVE_EVENT` 列 → 轉 `MANUAL`、記 `overriddenAt/overriddenBy`、保留 `derivedFrom`（血緣）、清 active `sourceRef`;audit `attendance.override`
     - [x] 每個變更於**同一 `$transaction`** 寫 Attendance + `OutboxEvent(AttendanceMarked)` + `AuditLog`

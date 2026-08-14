@@ -7,7 +7,7 @@ Current Phase:
 Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 2（Attendance：手動 SoT + ADR-002 override-on-edit）→ **IMPLEMENTED / VERIFICATION_PENDING**。Step 1 CI 綠（run 31838405561）。
+Phase 7 Step 1（Leave）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15, Human Owner;CI 綠 + Render 線上 401 + API e2e）。下一步 Step 3 — Event 串接。
 
 Status:
 ```text
