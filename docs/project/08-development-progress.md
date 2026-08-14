@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 4 — 端到端讀取切片（Phase 6 最後一步）**：`IMPLEMENTED / VERIFICATION_PENDING`（本機 typecheck/test(27)/build + boot/DI 綠;待 CI + 手機 + 驗收）。Step 1–3 已 ACCEPTED。
+Phase 6 / **Step 4 — 端到端讀取切片（Phase 6 最後一步）**：`VERIFICATION_PENDING`（本機 + CI 綠 + Render 部署;/me/students 401 守衛生效）→ 待園長手機 Dashboard + Human Acceptance。Step 1–3 已 ACCEPTED。
 
 **Status:**
 ```text
@@ -43,8 +43,9 @@ Phase 6 / Step 4 — 端到端讀取切片：
 [x] 前端 /liff 換成最小 Dashboard（歡迎 + 可查看學生清單）+ /api/me/students proxy
 [x] 測試 listForUser 矩陣(5)：OWNER 全校、TEACHER 自班、無班空、PARENT 自己小孩、多角色去重
 [x] 本機：typecheck ✓ / test 27 綠 ✓ / build ✓;boot 檢查 route {/me/students,GET} mapped、DI 無誤
-[ ] push → CI 綠燈                          — 待 push 後 run
-[ ] 線上：園長手機 Dashboard 看到全校學生         — 待 Human Owner
+[x] CI 綠燈（run 31792055646）：build（27 tests）+ db job
+[x] Render 線上部署成功：GET /me/students → 無 token 401（守衛生效、路由已上線）
+[ ] 線上：園長手機開 LIFF → Dashboard 看到全校 5 名學生   — 待 Human Owner
 [ ] Human Owner acceptance（Step 4）→ Phase 6 完成 — 待 Human Owner
 ```
 
@@ -185,7 +186,8 @@ Claude 先提 Step 4 計畫 → Human Owner 確認 → 再實作。
 Phase 6 — Step 4 Acceptance Gate（端到端讀取切片）— Phase 6 最後一步
 [x] 後端 GET /me/students 過濾（家長自己小孩 / 老師自班 / OWNER 全校）+ 最小 Dashboard
 [x] CI 測試矩陣（listForUser 5）+ 本機 27 tests / build / boot-DI 綠
-[ ] CI 綠燈（build + db job）
+[x] CI 綠燈（run 31792055646；build 27 tests + db job）
+[x] Render 線上部署成功：/me/students 401（守衛生效、路由上線）
 [ ] 線上：園長手機開 LIFF → Dashboard 看到全校 5 名學生
 [ ] Human Owner acceptance（Step 4）→ Phase 6 完成
 ```
