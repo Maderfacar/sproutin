@@ -1,24 +1,24 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-15（Phase 7 Step 1 IMPLEMENTED — Leave 狀態機）
+> Last updated: 2026-08-15（Phase 7 Step 2 IMPLEMENTED — Attendance;Step 1 CI 綠）
 
 Current Phase:
-Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
+Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1（Leave 狀態機 + 寫入端 Outbox + transactional audit）→ **IMPLEMENTED / VERIFICATION_PENDING**。
+Phase 7 Step 2（Attendance：手動 SoT + ADR-002 override-on-edit）→ **IMPLEMENTED / VERIFICATION_PENDING**。Step 1 CI 綠（run 31838405561）。
 
 Status:
 ```text
 Phase 5/6: ACCEPTED
-Phase 7 Step 1 — Leave 狀態機：IMPLEMENTED / VERIFICATION_PENDING
-  狀態機 PENDING/APPROVED/REJECTED/CANCELLED（config-driven;非法轉移→409）
-  同交易寫 Leave + OutboxEvent（PENDING，Step 3 消費）+ AuditLog（transactional，ADR-005 類別一）
-  端點 POST/GET /leaves · PATCH /leaves/:id/{status,cancel};ScopeResolver +canManageStudentClass
-  本機 typecheck/jest(49)/build/DI-boot 綠;待 CI + Render 線上 + Human Acceptance
+Phase 7 Step 1 — Leave 狀態機：IMPLEMENTED;CI 綠;待 Render 線上 + Human Acceptance
+Phase 7 Step 2 — Attendance：IMPLEMENTED / VERIFICATION_PENDING
+  手動標記 source=MANUAL（SoT，每日 upsert）;GET ?classId=/?studentId=;PATCH override（Derived→MANUAL 保留血緣，ADR-002 rule 4）
+  同交易寫 Attendance + OutboxEvent(AttendanceMarked) + AuditLog
+  新增 API 級 e2e（supertest + 真實 JWT，401/403/400/409+override）;本機 typecheck/jest(68)/build/DI-boot 綠
 ```
-（範圍 A：不含 Worker dispatcher[Step 3] / Attendance 投影[Step 2] / out-of-band audit + append-only REVOKE[Step 6]。無新 migration/架構變更。）
+（Step 2 不含 LeaveApproved→投影 Attendance 與回滾[Step 3];無新 migration/架構變更;新增 devDep supertest。）
 
 Completed（已建立，未驗收）:
 - 三項 Architecture clarification 同步（Runtime Config server-only / Leave-Attendance dual SoT rule / Audit durable path）

@@ -23,10 +23,11 @@ Current Phase:
 Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice = ✅ COMPLETE（2026-08-14, Human Owner）。
 
 Current Status:
-Phase 7 Step 1 — Leave 狀態機（+ 寫入端 Outbox + transactional audit）→ IMPLEMENTED / VERIFICATION_PENDING。
-config-driven 狀態機（PENDING/APPROVED/REJECTED/CANCELLED;非法轉移→409）;每個狀態變更於同一交易寫
-Leave + OutboxEvent（PENDING，Step 3 消費）+ AuditLog（transactional）。本機 typecheck/jest(49)/build/DI-boot 綠;
-待 CI + Render 線上四端點 + Human Acceptance。（Phase 6 Step 1–4 已全數 ACCEPTED。）
+Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。
+- Step 1 Leave 狀態機：IMPLEMENTED;CI 綠（run 31838405561）;待 Render 線上 + Human Acceptance。
+- Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）：IMPLEMENTED / VERIFICATION_PENDING。
+  端點 POST/GET /attendance · PATCH /attendance/:id;同交易寫 Attendance + Outbox + Audit;
+  新增 API 級 e2e（supertest + 真實 JWT）。本機 typecheck/jest(68)/build/DI-boot 綠。（Phase 6 全數 ACCEPTED。）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）

@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-15（Phase 7 Step 1 IMPLEMENTED — Leave 狀態機）
+> Last updated: 2026-08-15（Phase 7 Step 2 IMPLEMENTED — Attendance;Step 1 CI 綠）
 
 ---
 
@@ -18,10 +18,10 @@ Phase 7 Step 1（Leave 狀態機 + 寫入端 Outbox + transactional audit）→ 
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）
 Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTED
-Phase 7:  IN_PROGRESS（Core MVP）
-  Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ IMPLEMENTED / VERIFICATION_PENDING
-  Step 2 Attendance（手動 SoT / Leave 投影 Derived;ADR-002）    → NOT_STARTED
-  Step 3 Event 串接（Outbox → Worker dispatch）                → NOT_STARTED
+Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）
+  Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ IMPLEMENTED;CI 綠（run 31838405561）;待線上+驗收
+  Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → IMPLEMENTED / VERIFICATION_PENDING
+  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾）        → NOT_STARTED
   Step 4 Message / Announcement / Notification                → NOT_STARTED
   Step 5 Notification / LINE Push（需 Messaging secret）        → NOT_STARTED
   Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
@@ -292,6 +292,34 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-15 — Phase 7 / Step 2 — Attendance（IMPLEMENTED）+ Step 1 CI 綠
+
+Completed:
+- **Step 1 已 push（commit ef9696c）→ CI 綠**（run 31838405561;build + db 兩 job 皆 success）。
+- **修 Render 部署失敗（ef9696c build 失敗，dep-d9vnmtvavr4c739d71a0）**：Root cause = `ops/deploy/Dockerfile.api` **未 COPY `tsconfig.base.json`**（`apps/api/tsconfig.json` extends 它、含 `strict:true`）。Docker build 失去 strict → zod `z.infer` 全欄位變 optional → `leaves.controller.ts:50` TS2345（`parsed.data` 不符 required 的 `CreateLeaveInput`）。CI/本機有完整 repo 故不觸發;Phase 5/6 未踩到（先前 controller 只讀 `parsed.data.idToken`，未把整個物件傳給 required-param）。Fix：Dockerfile COPY 加入 `tsconfig.base.json`。以乾淨重現（移除該檔→重現 TS2345;還原→build 綠 EXIT=0）確認。
+- Roadmap 決策（Human Owner）：**前端採「後端優先」** → 各功能可操作頁面 + 主題/色彩/園方設定集中於 **Step 7**;Step 2~6 為後端。
+- `AttendanceService`（docs/02 §4a-4b / ADR-002）：手動標記 `source=MANUAL`（SoT，每日一列 upsert）;`GET /attendance?classId=&date=`（staff）/`?studentId=`（家長）;`PATCH /attendance/:id`
+- **Override（ADR-002 rule 4）**：改到 `source=LEAVE_EVENT` 列 → 轉 `MANUAL`、記 `overriddenAt/overriddenBy`、保留 `derivedFrom`、清 `sourceRef`;audit `attendance.override`。同交易寫 Attendance + `OutboxEvent(AttendanceMarked)` + `AuditLog`
+- 授權：coarse `@Roles` + service `ScopeResolver`（寫=canManageStudentClass、家長讀=canAccessStudent、班級清單=service 內 canManageClass）
+- **API 級 e2e**（`src/e2e/api.e2e.spec.ts`，supertest + 真實 JWT）：401/403/400/409 + override —— 涵蓋 Leave + Attendance 完整 HTTP pipeline（Human Owner 要求的線上前把關;新增 devDep supertest）
+
+Verification:
+- 本機：typecheck ✓;jest **68 tests** ✓（e2e 9 / attendance 10 / 既有 49）;nest build ✓;`node dist/main.js` DI boot ✓（AttendanceModule + `/attendance` 3 routes;LeavesModule 4 routes）
+- 待：push → CI 綠 → Render 線上 → Human Acceptance
+
+Architecture:
+- 無變更。無新 migration（Attendance + override 欄位/enum 已在 `0001_init`）。新增 devDep `supertest`/`@types/supertest`（僅測試）。
+- 範圍界定：Step 2 = 手動 SoT + override-on-edit;`LeaveApproved`→投影 Attendance 與回滾屬 Step 3（需 Worker 消費 Outbox）。
+
+Human Owner:
+- NOW：確認是否 push Step 2 + Dockerfile 修正（同一 commit 觸發全新部署;會一併帶入 Step 1 code + 修正 → build 應轉綠、`/leaves` 上線回 401）。
+
+Tech Debt（本次暴露）:
+- **CI 未建置 Docker image** → Docker build context 與 CI（完整 repo、turbo）分歧的錯誤（如缺 `tsconfig.base.json`）會逃過 CI，只在 Render 才爆。建議 CI 加一個 `docker build -f ops/deploy/Dockerfile.api .` job 作為真實建置把關（比照 Step 3 之後補 app.module DI smoke test 的作法）。
+
+Next:
+- Step 2 acceptance → Step 3（Event 串接：Outbox dispatcher on Worker → LeaveApproved 投影 Attendance[override 感知] + LeaveRejected/Cancelled 回滾 + Notification）。
 
 ### 2026-08-15 — Phase 7 / Step 1 — Leave 狀態機（IMPLEMENTED）
 

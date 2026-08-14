@@ -85,6 +85,7 @@
 
 ### Technical Debt（Phase 5 引入）
 - [ ] **ESLint flat config** — `DEFERRED`；MVP Release Candidate（Phase 8）前必須完成，不得永久忽略。
+- [ ] **CI 未建置 Docker image**（Phase 7 Step 1 暴露）— Docker build context 與 CI 分歧的錯誤會逃過 CI（本次：Dockerfile 缺 `tsconfig.base.json` → 失去 strict → zod 推導 TS2345，只在 Render build 爆）。建議 CI 加 `docker build -f ops/deploy/Dockerfile.api .` job。`Priority: Medium`。
 
 ---
 
@@ -132,8 +133,18 @@
   - **無新 migration**（Leave/OutboxEvent/AuditLog + enum 已在 `0001_init`）;**無架構變更、無新 library/infra**。
   - **Deliverables**：`apps/api/src/leaves/**`、`apps/api/src/core/audit/**`、`apps/api/src/auth/scope-resolver.service.ts`（+spec）、`apps/api/src/app.module.ts`。
   - **Owner**：Claude(impl) / Human(線上+accept)。
-- [ ] Step 2 — Attendance（手動 SoT / LeaveApproved 投影 Derived;ADR-002 override）— `NOT_STARTED`
-- [ ] Step 3 — Event 串接（Outbox → Worker dispatch）— `NOT_STARTED`
+- [~] **Step 2 — Attendance（手動 SoT + ADR-002 override-on-edit）** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] `AttendanceService`：`POST /attendance`（手動 `source=MANUAL`;每日一列 upsert）、`GET /attendance?classId=&date=`（staff 班級視圖）/`?studentId=`（家長/該生）、`PATCH /attendance/:id`
+    - [x] **Override（ADR-002 rule 4）**：改到一筆 `source=LEAVE_EVENT` 列 → 轉 `MANUAL`、記 `overriddenAt/overriddenBy`、保留 `derivedFrom`（血緣）、清 active `sourceRef`;audit `attendance.override`
+    - [x] 每個變更於**同一 `$transaction`** 寫 Attendance + `OutboxEvent(AttendanceMarked)` + `AuditLog`
+    - [x] 授權：coarse `@Roles` + service `ScopeResolver`（寫=canManageStudentClass 自班、家長讀=canAccessStudent、班級清單=canManageClass）
+    - [x] **API 級 e2e**（`src/e2e/api.e2e.spec.ts`，supertest + 真實 JWT）：401/403/400/409 + override，涵蓋 Leave + Attendance 完整 HTTP pipeline
+    - [x] 本機：typecheck ✓、jest **68 tests** ✓（含 e2e 9 / attendance 10）、nest build ✓、`node dist/main.js` DI boot ✓（AttendanceModule + 3 routes）
+    - [ ] CI 綠 → Render 線上 → Human Acceptance
+  - **範圍界定**：本步做手動 SoT + 老師改 Derived→MANUAL 的 override 路徑（以 seed 既有 LEAVE_EVENT 列驗）;**不做** `LeaveApproved`→投影 Attendance 與 `LeaveRejected/Cancelled` 回滾（需 Worker 消費 Outbox = **Step 3**）。
+  - **無新 migration**;**無架構變更**。新增 devDep `supertest`/`@types/supertest`（僅測試用）。
+  - **Deliverables**：`apps/api/src/attendance/**`、`apps/api/src/e2e/api.e2e.spec.ts`、`apps/api/src/app.module.ts`、`apps/api/package.json`+lockfile。
+- [ ] Step 3 — Event 串接（Outbox → Worker dispatch;LeaveApproved 投影 Attendance + 回滾 + Notification）— `NOT_STARTED`
 - [ ] Message Center · Announcement · Notification / LINE Push — `NOT_STARTED`
 - [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
