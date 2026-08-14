@@ -9,47 +9,44 @@
 ## Current Position
 
 **Phase:**
-Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
+Phase 6 — Vertical Slice → ✅ **COMPLETE**（2026-08-14, Human Owner）。下一階段：Phase 7 — Core MVP（於新 session 啟動）。
 
 **Milestone:**
-Phase 6 / **Step 4 — 端到端讀取切片（Phase 6 最後一步）**：`VERIFICATION_PENDING`（本機 + CI 綠 + Render 部署;/me/students 401 守衛生效）→ 待園長手機 Dashboard + Human Acceptance。Step 1–3 已 ACCEPTED。
+Phase 6 全部 4 步（DB migration+seed / LINE·LIFF 登入 / RBAC 骨架 / 端到端讀取切片）**全數 ACCEPTED**。端到端流程 LINE Login → User → Student → 權限 → LIFF Dashboard 已上線並驗收。
 
 **Status:**
 ```text
-Phase 5:  ✅ ACCEPTED（2026-08-14）— Frontend / API / Worker / Redis / PostgreSQL / CI / Web→API 全綠
-Phase 6:  🟡 IN PROGRESS
-  Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 3 RBAC 骨架                    → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 4 端到端讀取切片                → IMPLEMENTED（本機綠;待 CI + 手機 + 驗收）→ Phase 6 收官
+Phase 5:  ✅ ACCEPTED（2026-08-14）
+Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）
+  Step 1 DB migration + seed         → ✅ ACCEPTED
+  Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED
+  Step 3 RBAC 骨架                    → ✅ ACCEPTED
+  Step 4 端到端讀取切片                → ✅ ACCEPTED
+Phase 7:  NOT_STARTED（Core MVP：Leave 狀態機 / Attendance / Message / Announcement / Notification·LINE Push / Audit / Dashboard·Branding·Feature Flag）
 ```
 
 ---
 
 ## Current Objective
 
-Phase 6 Step 4（Phase 6 最後一步）：把 Step 2(登入)+ Step 3(授權)串成**看得到的畫面**。
-`GET /me/students` 由**後端依角色/scope 過濾**——家長只自己小孩、老師只自班、OWNER/ADMIN 全校;`/liff` 換成最小 Dashboard。（**不含** 寫入=Phase 7、完整 card 系統。）
+**Phase 6 — Vertical Slice：COMPLETE（2026-08-14, Human Owner）。**
+端到端流程 LINE Login → User → Student → 權限 → LIFF Dashboard 已上線並驗收（4/4 步 ACCEPTED）。
+下一階段 Phase 7 — Core MVP 於**新 session** 啟動（先計畫→確認→實作）。
 
 ---
 
 ## Current Task
 
-Phase 6 / Step 4 — 端到端讀取切片：
+無進行中 Task。等 Human Owner 於新 session 啟動 Phase 7。
 
+Phase 6 成果（全數 ACCEPTED）：
 ```text
-[x] 後端 StudentsService.listForUser(userId, roles)：OWNER/ADMIN 全校;TEACHER→TeacherAssignment 班級;PARENT/GUARDIAN→Guardianship;多角色聯集去重
-[x] 端點 GET /me/students（MeStudentsController;僅 JwtAuthGuard,過濾在 service）
-[x] 前端 /liff 換成最小 Dashboard（歡迎 + 可查看學生清單）+ /api/me/students proxy
-[x] 測試 listForUser 矩陣(5)：OWNER 全校、TEACHER 自班、無班空、PARENT 自己小孩、多角色去重
-[x] 本機：typecheck ✓ / test 27 綠 ✓ / build ✓;boot 檢查 route {/me/students,GET} mapped、DI 無誤
-[x] CI 綠燈（run 31792055646）：build（27 tests）+ db job
-[x] Render 線上部署成功：GET /me/students → 無 token 401（守衛生效、路由已上線）
-[ ] 線上：園長手機開 LIFF → Dashboard 看到全校 5 名學生   — 待 Human Owner
-[ ] Human Owner acceptance（Step 4）→ Phase 6 完成 — 待 Human Owner
+Step 1  DB baseline migration 0001_init + synthetic demo seed
+Step 2  LINE/LIFF 登入 → Sproutin JWT（LINE ID 僅認證）
+Step 3  RBAC 骨架 RolesGuard + ScopeGuard（後端授權）
+Step 4  端到端讀取切片 GET /me/students + LIFF Dashboard（後端過濾）
+線上：Web(Vercel) + API/Worker(Render) + PostgreSQL + Redis;27 tests + db job CI 綠
 ```
-
-以上為 Claude 的 **IMPLEMENTED**（本機全綠 + boot/DI 驗證）;隔離由 CI 矩陣證明,線上以園長帳號驗 Dashboard。
 
 ---
 
@@ -68,6 +65,8 @@ Phase 6 / Step 4 — 端到端讀取切片：
 [x] Phase 6 Step 1 — DB migration + seed — ACCEPTED（2026-08-14, Human Owner）
 [x] Phase 6 Step 2 — LINE / LIFF 登入骨架 — ACCEPTED（2026-08-14, Human Owner）
 [x] Phase 6 Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）— ACCEPTED（2026-08-14, Human Owner）
+[x] Phase 6 Step 4 — 端到端讀取切片（/me/students + LIFF Dashboard）— ACCEPTED（2026-08-14, Human Owner）
+[x] **Phase 6 — Vertical Slice — COMPLETE（2026-08-14, Human Owner）**
 ```
 
 > `[~] IMPLEMENTED` 代表 code 已寫，**不等於 Human Acceptance**。
@@ -160,12 +159,12 @@ DONE
 - ✅ LINE Login channel + LIFF app 建立（LIFF_ID=2011106015-hbS1EASz）+ Messaging channel
 
 DONE
-- ✅ Phase 6 Step 2 — ACCEPTED（2026-08-14）
-- ✅ Phase 6 Step 3 — ACCEPTED（2026-08-14）
+- ✅ Phase 6 — Vertical Slice — COMPLETE（2026-08-14）: Step 1–4 全數 ACCEPTED
 
-NOW（Step 4 — 端到端讀取切片；不卡憑證）
-- 無 Human Owner 待辦;Claude 提 Step 4 計畫 → 確認 → 實作
-- Step 4 完成後:CI（後端過濾邏輯）+ 你手機（以園長帳號看 Dashboard）驗證 → 驗收
+NOW（Phase 7 前置；可並行準備）
+- 無硬性待辦。Phase 7 = Core MVP（Leave/Attendance/Message/Announcement/Notification·LINE Push/Audit/Dashboard·Branding·Feature Flag）
+- LINE Push（Phase 7）需 Messaging channel secret/token → 屆時於 Render 填 `LINE_MESSAGING_CHANNEL_SECRET`/`LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（sync:false）
+- 於新 session 啟動 Phase 7;Claude 先提 Phase 7 計畫 → 確認 → 實作
 ```
 
 ---
@@ -173,9 +172,9 @@ NOW（Step 4 — 端到端讀取切片；不卡憑證）
 ## Next Task
 
 ```text
-Step 4 — 端到端讀取切片（Phase 6 最後一步）：家長登入→只看自己小孩;老師→只看自班;
-Card Dashboard 由後端過濾（/me/dashboard 或 /students?scope）。/liff 除錯頁換成真 Dashboard。
-Claude 先提 Step 4 計畫 → Human Owner 確認 → 再實作。
+Phase 7 — Core MVP（於新 session 啟動）：Leave 狀態機 → Attendance（含 ADR-002 override）→
+Message Center → Announcement → Notification / LINE Push → Audit（transactional + out-of-band）→
+Dashboard / Branding / Feature Flag。Claude 先提 Phase 7 計畫 → Human Owner 確認 → 再實作。
 ```
 
 ---
@@ -183,13 +182,14 @@ Claude 先提 Step 4 計畫 → Human Owner 確認 → 再實作。
 ## Next Acceptance Gate
 
 ```text
-Phase 6 — Step 4 Acceptance Gate（端到端讀取切片）— Phase 6 最後一步
+Phase 6 — Step 4 Acceptance Gate（端到端讀取切片）— ✅ 通過 → Phase 6 COMPLETE
 [x] 後端 GET /me/students 過濾（家長自己小孩 / 老師自班 / OWNER 全校）+ 最小 Dashboard
-[x] CI 測試矩陣（listForUser 5）+ 本機 27 tests / build / boot-DI 綠
-[x] CI 綠燈（run 31792055646；build 27 tests + db job）
-[x] Render 線上部署成功：/me/students 401（守衛生效、路由上線）
-[ ] 線上：園長手機開 LIFF → Dashboard 看到全校 5 名學生
-[ ] Human Owner acceptance（Step 4）→ Phase 6 完成
+[x] CI 綠燈（run 31792055646；27 tests + db job）+ Render 部署（/me/students 401）
+[x] 修 LIFF 過期 token（偵測 exp → 強制重新登入）
+[x] 線上：園長手機 Dashboard 顯示（王園長 OWNER + 學生清單）
+[x] Human Owner acceptance（Step 4）— 2026-08-14 → **Phase 6 COMPLETE**
+
+下一個 Gate：Phase 7 — Core MVP（各模組 Online 驗收）。
 ```
 
 ```text
@@ -279,6 +279,19 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 — Vertical Slice — COMPLETE（Human Owner 驗收通過）
+
+Completed:
+- Human Owner 驗收 Step 4：園長手機 LIFF → Dashboard 顯示（王園長 OWNER + 學生清單）
+- 過程修一個 LIFF 過期 token 問題（沿用 Step 2 舊 token → LINE verify 拒絕;改為偵測 exp 強制重新登入）
+- **Phase 6（Step 1–4）全數 ACCEPTED → Vertical Slice 完成**
+
+Verification:
+- 端到端線上驗收通過（LINE Login → JWT → RBAC → 後端過濾 Dashboard）;CI 27 tests + db job 綠
+
+Next:
+- Phase 7 — Core MVP（新 session）：Leave/Attendance/Message/Announcement/Notification·LINE Push/Audit/Dashboard·Branding·Feature Flag。先計畫→確認→實作。
 
 ### 2026-08-14 — Phase 6 / Step 4 — 端到端讀取切片（IMPLEMENTED）
 

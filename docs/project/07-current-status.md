@@ -7,7 +7,7 @@ Current Phase:
 Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Milestone:
-Phase 6 / Step 4 — 端到端讀取切片：`IMPLEMENTED / VERIFICATION_PENDING`（本機 27 tests + boot-DI 綠;待 CI + 手機 + 驗收）。Step 1–3 已 ACCEPTED。
+Phase 6 — Vertical Slice：✅ **COMPLETE**（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTED。下一階段 Phase 7 — Core MVP（新 session）。
 
 Status:
 ```text

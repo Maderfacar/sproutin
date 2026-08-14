@@ -40,13 +40,13 @@
 - **Testing Scope**：CI（install/generate/typecheck/test/build）+ Online availability/health/runtime-config。
 - **Exit**：Human Acceptance 通過。 **Next**：Phase 6。
 
-## Phase 6 — Vertical Slice  ⬜
+## Phase 6 — Vertical Slice  ✅（COMPLETE 2026-08-14, Human Owner）
 - **Purpose**：跑通一條端到端流程：**LINE Login → User → Student → 權限 → LIFF Dashboard**。
 - **Main Tasks**：DB migration + seed、LINE/LIFF 登入骨架、RBAC 骨架、一條讀取切片。
 - **Entry**：Phase 5 accepted。 **Acceptance**：該流程 Online 可驗證 + Human Acceptance。
 - **Major Release**：Identity / Authorization。 **Next**：Phase 7。
 
-## Phase 7 — Core MVP  ⬜
+## Phase 7 — Core MVP  ⬜（下一階段 / 目前）
 - **Purpose**：完成 MVP 模組（Leave 狀態機、Attendance、Message Center、Announcement、Notification/LINE Push、Audit、Dashboard、Branding、Feature Flag）。
 - **Entry**：Phase 6 accepted。 **Acceptance**：各模組 Online 驗收。
 - **Major Release**：Leave / Attendance / Communication / Notification。 **Next**：Phase 8。
