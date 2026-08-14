@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 2 — LINE / LIFF 登入骨架**：✅ **ACCEPTED**（2026-08-14, Human Owner）。下一步：Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）。Step 1 亦 ACCEPTED。
+Phase 6 / **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）**：`IMPLEMENTED / VERIFICATION_PENDING`（本機 typecheck/test(21)/build 綠;待 CI + Human Acceptance）。Step 1、Step 2 已 ACCEPTED。
 
 **Status:**
 ```text
@@ -20,7 +20,7 @@ Phase 5:  ✅ ACCEPTED（2026-08-14）— Frontend / API / Worker / Redis / Post
 Phase 6:  🟡 IN PROGRESS
   Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
   Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 3 RBAC 骨架                    → IN PROGRESS（RolesGuard + ScopeGuard）
+  Step 3 RBAC 骨架                    → IMPLEMENTED（本機綠;待 CI + 驗收）
   Step 4 端到端讀取切片                → NOT_STARTED
 ```
 
@@ -28,28 +28,26 @@ Phase 6:  🟡 IN PROGRESS
 
 ## Current Objective
 
-Phase 6 Step 2：跑通**認證鏈**——LIFF 登入 → 後端驗 LINE ID token → 換發 **Sproutin JWT** → `GET /me` 回「你是誰 + 角色」。
-LINE User ID **僅認證**（查 LineIdentity→User），不進業務外鍵。（**不含** RBAC 資料過濾=Step 3、Dashboard 讀取=Step 4、LINE 推播=Phase 7。）
+Phase 6 Step 3：把「你是誰 + 角色」變成「你能看/動哪些資料」——後端 **RolesGuard**(粗粒度 `@Roles`) + **ScopeGuard**(資料列級 `@Scope`)。
+老師只自班、家長只自己小孩;OWNER/ADMIN 全校。**授權全在後端**,前端不決定(Rule 5/6)。（**不含** Dashboard 讀取切片=Step 4、audit=Phase 7。）
 
 ---
 
 ## Current Task
 
-Phase 6 / Step 2 — LINE / LIFF 登入骨架：
+Phase 6 / Step 3 — RBAC 骨架：
 
 ```text
-[x] 後端 AuthModule：LineVerifier(LINE verify 端點) / AuthService(查身分+簽 JWT+未 provisioned 401) / AuthController(POST /auth/line/login, GET /me) / JwtAuthGuard
-[x] /config/public 改讀 DB SchoolConfig（liffId 等公開值）
-[x] 前端 /liff 登入頁 + same-origin proxy（/api/auth/line/login, /api/me；API_INTERNAL_URL 保 server-only）
-[x] seed：SchoolConfig.liffId=2011106015-hbS1EASz；DEMO_OWNER_LINE_USER_ID 對映園長（真 ID 不進 repo）
-[x] env 拆 LINE_LOGIN_* / LINE_MESSAGING_*（render.yaml plain channel id + docs/05）
-[x] 測試 auth.service（4）+ jwt guard（3）；本機 typecheck ✓ / test 8 綠 ✓ / build ✓
-[x] CI 綠燈（run 31777136725）：build（8 tests）+ db job
-[x] 線上手機實測 PASS：真 LINE 開 LIFF URL → 顯示「已登入為 王園長(OWNER)」（/me 正確回 roles）
-[x] Human Owner acceptance（Step 2）         — ✅ 2026-08-14
+[x] @Roles / @Scope 裝飾器;RolesGuard(粗粒度角色);ScopeGuard + ScopeResolver(資料列級)
+[x] ScopeResolver.canAccessStudent：OWNER/ADMIN 全校;TEACHER 比對 TeacherAssignment;PARENT/GUARDIAN 比對 Guardianship
+[x] 示範端點 GET /students/:id（JwtAuthGuard → RolesGuard → ScopeGuard）
+[x] 測試矩陣：scope-resolver(7：老師自班/他班、家長自己/他人、OWNER/ADMIN 全通)、roles.guard(3)、scope.guard(3)
+[x] 本機：typecheck ✓ / test 21 綠 ✓ / build ✓
+[ ] push → CI 綠燈                          — 待 push 後 run
+[ ] Human Owner acceptance（Step 3）         — 待 Human Owner
 ```
 
-Step 2 **ACCEPTED**（2026-08-14, Human Owner）。進行中：Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）。
+以上為 Claude 的 **IMPLEMENTED**（本機全綠）;DENIED 的 out-of-band audit 留 Phase 7(ADR-005,已標 TODO)。
 
 ---
 
@@ -180,10 +178,11 @@ Step 3 — RBAC 骨架：RolesGuard（粗粒度 @Roles）+ ScopeGuard（資料�
 ## Next Acceptance Gate
 
 ```text
-Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）— 進行中
-[ ] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ scope 解析（student/class）
-[ ] CI 單元/整合測試：老師自班 allow、他班 deny;家長自己小孩 allow、他人 deny;OWNER/ADMIN 全校
-[ ] 套用到示範讀取端點（前端不決定授權）
+Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）
+[x] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ ScopeResolver（student）
+[x] 測試矩陣：老師自班 allow/他班 deny;家長自己小孩 allow/他人 deny;OWNER/ADMIN 全校（本機 21 tests 綠）
+[x] 套用到示範讀取端點 GET /students/:id（前端不決定授權）
+[ ] CI 綠燈（build 21 tests + db job）
 [ ] Human Owner acceptance（Step 3）
 ```
 
@@ -264,6 +263,28 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 / Step 3 — RBAC 骨架（IMPLEMENTED）
+
+Completed:
+- `@Roles`/`@Scope` 裝飾器;`RolesGuard`(粗粒度)、`ScopeGuard`+`ScopeResolver`(資料列級,docs/05 §3)
+- `ScopeResolver.canAccessStudent`：OWNER/ADMIN 全校;TEACHER→TeacherAssignment 比對 student.classId;PARENT/GUARDIAN→Guardianship
+- 示範端點 `GET /students/:id`（JwtAuthGuard → RolesGuard → ScopeGuard;`@Roles(...)` + `@Scope('student')`）
+- 測試矩陣：scope-resolver(7) + roles.guard(3) + scope.guard(3) → 老師自班 allow/他班 deny、家長自己/他人、OWNER 全通
+- 授權全在後端(Rule 5/6);DENIED out-of-band audit 標 TODO(Phase 7, ADR-005)
+
+Verification:
+- 本機：typecheck ✓（api+web）;test 21 passed ✓;build ✓
+- 待 push 後 CI 綠
+
+Architecture:
+- 無變更。RBAC 依 docs/05 矩陣。ScopeResolver 目前支援 student 資源;其他資源(class/leave…)於後續 domain 端點擴充。
+
+Human Owner:
+- NOW：確認 CI 綠 → Human Acceptance（Step 3）。線上可用既有 demo 帳號打 GET /students/:id 驗正/反例(選用)。
+
+Next:
+- Step 3 acceptance → Step 4（端到端讀取切片：家長看自己小孩、老師看自班、Dashboard 後端過濾）
 
 ### 2026-08-14 — Phase 6 / Step 2 — ACCEPTED（Human Owner 驗收通過）
 

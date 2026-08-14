@@ -7,7 +7,7 @@ Current Phase:
 Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）。
 
 Current Milestone:
-Phase 6 / Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）：IN_PROGRESS。Step 1、Step 2 已 ACCEPTED。
+Phase 6 / Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）：`IMPLEMENTED / VERIFICATION_PENDING`（本機 21 tests 綠;待 CI + 驗收）。Step 1、Step 2 已 ACCEPTED。
 
 Status:
 ```text
