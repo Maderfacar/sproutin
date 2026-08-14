@@ -7,7 +7,10 @@ RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+# tsconfig.base.json 必須一起複製：apps/api/tsconfig.json extends ../../tsconfig.base.json
+# （含 strict:true）。少了它 → Docker build 失去 strict → zod z.infer 全欄位變 optional → TS2345。
+# CI/本機有完整 repo 故不會發生;此檔為 Docker build context 對齊 CI 的關鍵。
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
 COPY packages ./packages
 COPY apps/api ./apps/api
 RUN pnpm install --frozen-lockfile
