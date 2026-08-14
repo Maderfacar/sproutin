@@ -25,7 +25,8 @@ Phase 6 — Vertical Slice（進行中）。Phase 5 已 ACCEPTED（2026-08-14）
 Current Status:
 Phase 6 Step 1（DB migration + seed）= ✅ ACCEPTED（2026-08-14）
 Phase 6 Step 2（LINE/LIFF 登入骨架）= ✅ ACCEPTED（2026-08-14）— 線上手機實測 PASS（王園長/OWNER）
-Phase 6 Step 3（RBAC 骨架 RolesGuard + ScopeGuard）= IN PROGRESS（不卡憑證）
+Phase 6 Step 3（RBAC 骨架 RolesGuard + ScopeGuard）= ✅ ACCEPTED（2026-08-14）— CI + 線上 /students/:id 401 守衛生效
+Phase 6 Step 4（端到端讀取切片）= NEXT（Phase 6 最後一步）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）

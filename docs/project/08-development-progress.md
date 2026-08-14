@@ -12,7 +12,7 @@
 Phase 6 — Vertical Slice（**進行中**）。Phase 5 已 ACCEPTED（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 6 / **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）**：`VERIFICATION_PENDING`（本機 + CI 綠,run 31779660605）→ **只差 Human Acceptance**。Step 1、Step 2 已 ACCEPTED。
+Phase 6 / **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）**：✅ **ACCEPTED**（2026-08-14, Human Owner）。下一步：Step 4 — 端到端讀取切片（Phase 6 最後一步）。Step 1、2 亦 ACCEPTED。
 
 **Status:**
 ```text
@@ -20,8 +20,8 @@ Phase 5:  ✅ ACCEPTED（2026-08-14）— Frontend / API / Worker / Redis / Post
 Phase 6:  🟡 IN PROGRESS
   Step 1 DB migration + seed         → ✅ ACCEPTED（2026-08-14, Human Owner）
   Step 2 LINE / LIFF 登入骨架         → ✅ ACCEPTED（2026-08-14, Human Owner）
-  Step 3 RBAC 骨架                    → IMPLEMENTED（本機綠;待 CI + 驗收）
-  Step 4 端到端讀取切片                → NOT_STARTED
+  Step 3 RBAC 骨架                    → ✅ ACCEPTED（2026-08-14, Human Owner）
+  Step 4 端到端讀取切片                → NEXT（家長看自己小孩 / 老師看自班 / Dashboard 後端過濾）
 ```
 
 ---
@@ -46,10 +46,10 @@ Phase 6 / Step 3 — RBAC 骨架：
 [x] 修 deploy-time DI bug：AuthModule re-export JwtModule（guards 在 consumer 模組需 JwtService）
 [x] CI 綠燈（run 31783265302）：build（22 tests）+ db job
 [x] Render 線上部署成功：GET /students/:id → 無 token 401 missing_token、壞 token 401 invalid_token（守衛生效）
-[ ] Human Owner acceptance（Step 3）         — 待 Human Owner
+[x] Human Owner acceptance（Step 3）         — ✅ 2026-08-14
 ```
 
-Step 3 技術項目全數綠（本機 + CI + 線上部署）;**僅剩 Human Owner Acceptance**。DENIED out-of-band audit 留 Phase 7(ADR-005 TODO)。
+Step 3 **ACCEPTED**（2026-08-14, Human Owner）。下一個 milestone：Step 4 — 端到端讀取切片。
 
 ---
 
@@ -67,6 +67,7 @@ Step 3 技術項目全數綠（本機 + CI + 線上部署）;**僅剩 Human Owne
 [x] Phase 5（整體）— ACCEPTED（2026-08-14, Human Owner）
 [x] Phase 6 Step 1 — DB migration + seed — ACCEPTED（2026-08-14, Human Owner）
 [x] Phase 6 Step 2 — LINE / LIFF 登入骨架 — ACCEPTED（2026-08-14, Human Owner）
+[x] Phase 6 Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）— ACCEPTED（2026-08-14, Human Owner）
 ```
 
 > `[~] IMPLEMENTED` 代表 code 已寫，**不等於 Human Acceptance**。
@@ -160,10 +161,11 @@ DONE
 
 DONE
 - ✅ Phase 6 Step 2 — ACCEPTED（2026-08-14）
+- ✅ Phase 6 Step 3 — ACCEPTED（2026-08-14）
 
-NOW（Step 3 — RBAC 骨架；不卡憑證）
-- 無 Human Owner 待辦;Claude 實作 RolesGuard + ScopeGuard,CI 用 seed 資料驗權限隔離
-- Step 3 完成後由 Human Owner 驗收（線上以既有 demo 帳號驗證）
+NOW（Step 4 — 端到端讀取切片；不卡憑證）
+- 無 Human Owner 待辦;Claude 提 Step 4 計畫 → 確認 → 實作
+- Step 4 完成後:CI（後端過濾邏輯）+ 你手機（以園長帳號看 Dashboard）驗證 → 驗收
 ```
 
 ---
@@ -171,8 +173,9 @@ NOW（Step 3 — RBAC 骨架；不卡憑證）
 ## Next Task
 
 ```text
-Step 3 — RBAC 骨架：RolesGuard（粗粒度 @Roles）+ ScopeGuard（資料列級 @Scope；老師自班、家長自己小孩）。
-後端授權、前端不決定;以 seed 資料在 CI 驗權限隔離（允許/拒絕）。完成 → Human Acceptance → Step 4。
+Step 4 — 端到端讀取切片（Phase 6 最後一步）：家長登入→只看自己小孩;老師→只看自班;
+Card Dashboard 由後端過濾（/me/dashboard 或 /students?scope）。/liff 除錯頁換成真 Dashboard。
+Claude 先提 Step 4 計畫 → Human Owner 確認 → 再實作。
 ```
 
 ---
@@ -180,13 +183,13 @@ Step 3 — RBAC 骨架：RolesGuard（粗粒度 @Roles）+ ScopeGuard（資料�
 ## Next Acceptance Gate
 
 ```text
-Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）
+Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）— ✅ 通過（保留紀錄）
 [x] RolesGuard（@Roles）+ ScopeGuard（@Scope）+ ScopeResolver（student）
 [x] 測試矩陣：老師自班 allow/他班 deny;家長自己小孩 allow/他人 deny;OWNER/ADMIN 全校（本機 21 tests 綠）
 [x] 套用到示範讀取端點 GET /students/:id（前端不決定授權）
 [x] CI 綠燈（run 31783265302；build 22 tests + db job）+ 修 deploy DI bug（JwtModule export + smoke test）
 [x] Render 線上部署成功：/students/:id 401（守衛生效）
-[ ] Human Owner acceptance（Step 3）
+[x] Human Owner acceptance（Step 3）— ✅ 2026-08-14
 ```
 
 ```text
@@ -266,6 +269,16 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-14 — Phase 6 / Step 3 — ACCEPTED（Human Owner 驗收通過）
+
+Completed:
+- Human Owner 驗收 Step 3（RBAC 骨架）：CI 綠（run 31783265302, 22 tests）+ Render 線上 GET /students/:id 401（守衛生效）
+- 過程中抓到並修好 deploy-time DI bug（JwtModule 未 export）→ 補 app.module DI bootstrap smoke test 堵住 CI gap
+- Step 3 標記 ACCEPTED
+
+Next:
+- Step 4 — 端到端讀取切片（Phase 6 最後一步）。家長看自己小孩 / 老師看自班 / Dashboard 後端過濾。先計畫→確認→實作。
 
 ### 2026-08-14 — Phase 6 / Step 3 — RBAC 骨架（IMPLEMENTED）
 

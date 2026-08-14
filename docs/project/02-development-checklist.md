@@ -110,12 +110,12 @@
   - **Acceptance Criteria**：CI 綠；線上手機用真 LINE 登入 `/liff` 顯示「已登入為 王園長(OWNER)」；未 provisioned→401。
   - **Deliverables**：`apps/api/src/auth/**`、`apps/api/src/core/config/public-config.*`、`apps/web/src/app/liff/**`、`apps/web/src/app/api/{auth/line/login,me}/route.ts`、`apps/web/src/lib/{liff,auth}.ts`、`packages/db/prisma/seed.ts`、`render.yaml`。
   - **Owner**：Claude(impl) / Human(線上實測+accept)。 **Note**：Messaging channel secret/token 屬 Phase 7,本步未用。
-- [~] **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）** — `IMPLEMENTED / VERIFICATION_PENDING`
+- [x] **Step 3 — RBAC 骨架（RolesGuard + ScopeGuard）** — `ACCEPTED`（2026-08-14, Human Owner）
     - [x] `@Roles`/`@Scope` + `RolesGuard` + `ScopeGuard` + `ScopeResolver`（student）
     - [x] 示範端點 `GET /students/:id`（JwtAuthGuard → RolesGuard → ScopeGuard）
     - [x] 測試矩陣 21 tests（老師自班/他班、家長自己/他人、OWNER/ADMIN 全校）;本機 typecheck/test/build 綠
     - [ ] CI 綠 → Human Acceptance。DENIED audit 留 Phase 7（ADR-005 TODO）。
-- [ ] Step 4 — 端到端讀取切片：LINE Login → User → Student → 權限 → LIFF Dashboard — `NOT_STARTED`
+- [~] Step 4 — 端到端讀取切片：LINE Login → User → Student → 權限 → LIFF Dashboard — `NEXT`（Phase 6 最後一步）
 - **Acceptance**：Online 可驗證 + Human Acceptance。
 
 ## Phase 7 — Core MVP  ⬜
