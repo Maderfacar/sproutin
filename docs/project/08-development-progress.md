@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-16（Phase 7 Step 6 — Audit out-of-band durable path + 稽核查詢端點 IMPLEMENTED;待 CI + Render 線上 + Human Acceptance）
+> Last updated: 2026-08-16（Phase 7 Step 7a — 前端地基[Tailwind/TanStack Query/品牌] + 家長「請假」端到端 IMPLEMENTED;本機 typecheck/test/build 綠;待 push→CI + Vercel Preview + Human 手機實測）
 
 ---
 
@@ -28,25 +28,29 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
   Step 5 Notification / LINE Push                              → IMPLEMENTED（待 push + CI;線上驗卡 Human Owner 填 Messaging token + LINE 設定）
   Step 6 Audit out-of-band durable path + 稽核查詢端點          → ✅ ACCEPTED（2026-08-16, Human Owner）
     └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（§D 提案;本版先程式自律）
-  Step 7 Dashboard / Branding / Feature Flag                   → NOT_STARTED
+  Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → IN_PROGRESS（切子步驟:先家長→老師→園長）
+    ├ 7a 前端地基（Tailwind+TanStack Query+品牌主題）+ 家長「請假」端到端 → IMPLEMENTED（待 push→CI + Vercel + Human 手機實測）
+    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → NOT_STARTED
+    ├ 7c 老師端（審核請假/點名/班級訊息·公告）                 → NOT_STARTED
+    └ 7d 園長·ADMIN（全校視角 + 稽核查詢頁）                   → NOT_STARTED
 ```
+
+> Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（先家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留下一版（§D）。多重身份（同帳號兼園長/老師/家長）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
 
 ---
 
 ## Current Objective
 
-**Phase 7 Step 6 — ✅ ACCEPTED（2026-08-16, Human Owner）。** Audit 已補齊 out-of-band durable path（DENIED / FAILURE / 敏感 READ
-→ durable BullMQ `audit` 佇列 + DLQ + 無 Redis 降級 → Worker 寫入 AuditLog）+ 稽核查詢端點 `GET /audit-logs`。
-**下一步（先計畫→確認→實作）**：append-only DB 層鎖死（決策 2 說好的獨立 release）—— Claude 以 06 §D 格式提案
-（least-privilege app role + REVOKE + 新 secret + 換連線），等 Human Owner 定案;之後進 Step 7。
+**Phase 7 Step 7a — IMPLEMENTED（2026-08-16）。** 第一次做前端可操作頁面:建立前端地基（Tailwind + TanStack Query + runtime 品牌主題 + LIFF session + AppShell + config-driven 卡片牆）並打通**家長「請假」一條端到端**（申請 / 查詢狀態 / 取消）。
+**下一步（等 Human Owner）**:① 確認是否 commit + push（push main 觸發 Vercel/Render）② 家長手機實測前置二選一（A 你先把一個 LINE 帳號對映 seed 家長 User 直接實測 / B 先用園長帳號驗品牌+版面，家長流程靠 CI）。之後進 7b（家長其餘卡片）。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 6 — Audit out-of-band + 稽核查詢端點 — ✅ **ACCEPTED**（2026-08-16, Human Owner）。
-依據：CI 綠（run 31904698836，build + db + docker-build）;commit b4f8446 上線;Render 線上 `/audit-logs` 無 token → 401 missing_token、壞 token → 401 invalid_token（路由 + 守衛部署）;帶 token 的 DENIED/FAILURE/READ 流程由 CI e2e（真實 JWT）+ 單元測試覆蓋（Step 1–4 慣例）。
-下一步 = append-only DB 層鎖死的 §D 提案（下一版），或 Step 7（Dashboard·Branding·Feature Flag）—— 先計畫 → Human Owner 確認 → 實作。
+Phase 7 Step 7a — 前端地基 + 家長請假端到端 — **IMPLEMENTED**（2026-08-16）。
+本機驗證:typecheck ✓、test ✓（api 126 + shared 7 = 133）、`pnpm build` ✓（`/liff`、`/liff/leave`、`/api/leaves(+/[id]/cancel)` 路由產出;First Load JS 151/140kB）。
+待:push → CI 綠（build + db + docker-build）→ Vercel Preview → Human Owner 手機實測（家長 LINE 登入看到套品牌畫面 + 請假整條跑通）。**commit/push 前先問 Human Owner。**
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -176,10 +180,13 @@ DONE
 DONE
 - ✅ Phase 6 — Vertical Slice — COMPLETE（2026-08-14）: Step 1–4 全數 ACCEPTED
 
-NOW（Phase 7 前置；可並行準備）
-- 無硬性待辦。Phase 7 = Core MVP（Leave/Attendance/Message/Announcement/Notification·LINE Push/Audit/Dashboard·Branding·Feature Flag）
-- LINE Push（Phase 7）需 Messaging channel secret/token → 屆時於 Render 填 `LINE_MESSAGING_CHANNEL_SECRET`/`LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（sync:false）
-- 於新 session 啟動 Phase 7;Claude 先提 Phase 7 計畫 → 確認 → 實作
+NOW（Step 7a IMPLEMENTED,等 Human Owner）
+- ① 確認是否 commit + push（push main 觸發 Vercel/Render 自動部署）。
+- ② 家長手機實測前置二選一:**A** 把一個 LINE 帳號對映到 seed 家長 User（比照 `DEMO_OWNER_LINE_USER_ID`）→ 直接以家長身分實測;**B** 先用園長帳號驗品牌+版面,家長流程靠 CI e2e。
+- （選用）若要每園所 dashboard 卡片組成不同,可調整該校 `SchoolConfig.cardOrder` / `featureFlags`（已被前端消費,零改版）。
+
+LATER
+- LINE Push（Step 5）線上實測需 Messaging token + LINE 好友/provider（Render 填 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`）。
 ```
 
 ---
@@ -187,12 +194,12 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 6 已 ACCEPTED（2026-08-16）。下一步二選一，皆先計畫 → Human Owner 確認 → 實作：
-  A. append-only DB 層鎖死（決策 2 說好的獨立 release）：Claude 以 06 §D 格式提案 —— least-privilege
-     app role（只授 AuditLog INSERT/SELECT）+ REVOKE UPDATE/DELETE + 新 secret（APP_DATABASE_URL）
-     + runtime 換連線（migrate 續用 owner）。屬 infra/ADR-003 破壞性變更，等 Human Owner 定案。
-  B. Step 7 — Dashboard / Branding / Feature Flag。
-  平行未了項：Step 5 線上「真的收到 LINE 推播」仍卡 Human Owner 前置（Messaging token + LINE 好友/provider）。
+Step 7a IMPLEMENTED（2026-08-16,本機綠;待 push→CI + Vercel + Human 手機實測）。
+  下一步 = 7b（家長其餘卡片:出缺勤/訊息/通知/公告）—— 先計畫 → Human Owner 確認 → 實作。
+  未了項:
+   - Step 7a 尚待 Human Owner 手機實測驗收（+ 家長帳號對映前置）。
+   - append-only DB 層鎖死（Step 6 決策 2）留下一版獨立 release（§D 提案,infra/ADR-003 破壞性變更）。
+   - Step 5 線上「真的收到 LINE 推播」仍卡 Human Owner 前置（Messaging token + LINE 好友/provider）。
 ```
 
 ---
@@ -298,6 +305,30 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 / Step 7a — 前端地基 + 家長請假端到端（IMPLEMENTED）
+
+Completed:
+- **設計決策定案（Human Owner 拍板）**:切子步驟先家長→老師→園長;UI=Tailwind + 少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留下一版。多重身份（同帳號兼多角色）確認**架構本就支援**（`User.roles[]` 多筆 + `Guardianship` + docs/05 §5），前端採**聯集視圖**（不需改 schema）。
+- **前端地基**:`apps/web` 導入 Tailwind（`tailwind.config.ts`/`postcss.config.js`/`globals.css`,品牌色以 CSS 變數承載）+ TanStack Query（`providers.tsx`）;`next.config.mjs` 加 `extensionAlias`（讓 webpack 解析 shared 的 NodeNext `.js` 匯入,因 dashboard 首次匯入 shared 的 **runtime 值**）。
+- **runtime 品牌**（ADR-001）:`BrandingProvider` 讀 `/api/public-config` 把 primary/secondary 灌成 CSS 變數、logo/banner 上 `AppShell` 頁首;bundle 零 per-school 值。
+- **session + 外框**:`SessionProvider`（LIFF 登入→Sproutin JWT,沿用 Phase 6 `lib/liff`/`lib/auth`）、`StatusScreen`、`AppShell`;`/liff/layout.tsx` 串起 config→品牌→登入→外框。
+- **config-driven 卡片牆**:`shared` 新增純函式 `selectDashboardCards`（角色聯集 + featureFlags + cardOrder,附 7 個單元測試）;`/liff` Dashboard 依此渲染,未實作功能顯示「即將推出」。
+- **家長請假端到端**:same-origin proxy `/api/leaves`（+`/[id]/cancel`,通用 `proxyToApi` helper）;`features/leave`（`LeaveForm` 申請 / `LeaveList` 查詢+取消 / TanStack hooks / 狀態標籤 + 錯誤碼轉中文）;`/liff/leave` 頁（多小孩選擇器）。授權仍全在後端（卡片/頁面只呈現）。
+- **新技術決策（§D 已核准/衍生）**:web deps `@tanstack/react-query`、`tailwindcss`/`postcss`/`autoprefixer`;shared devDeps `jest`/`ts-jest`/`@types/jest`（放純邏輯的單元測試,比照 api）。
+
+Verification:
+- 本機:`pnpm typecheck` ✓;`pnpm test` ✓（api 126 + shared 7 = 133）;`pnpm build` ✓（`/liff`、`/liff/leave`、`/api/leaves`、`/api/leaves/[id]/cancel` 皆產出;First Load JS 151/140kB,符合 app-page 預算）。
+- 待:push → CI 綠 → Vercel Preview → **Human Owner 手機實測**（程式無法自證手機畫面）。
+
+Architecture:
+- **無變更**。無新 migration（Branding/flags/cardOrder 欄位皆已在 `0001_init` / SchoolConfig）;品牌與卡片走既有 `/config/public`（ADR-001）;多重身份沿用既有 RBAC（docs/05 §5）。版型風格模板（需 SchoolConfig 新欄位）依 Human Owner 決策留下一版 §D。
+
+Human Owner:
+- NOW:① 確認是否 commit + push（push main 觸發 Vercel/Render 自動部署）② 家長手機實測前置二選一（A 對映 LINE 帳號到 seed 家長 User / B 先用園長帳號驗品牌+版面）。
+
+Next:
+- 7a acceptance → 7b（家長其餘卡片:出缺勤/訊息/通知/公告）。
 
 ### 2026-08-16 — Phase 7 / Step 6 — ACCEPTED（Human Owner）
 

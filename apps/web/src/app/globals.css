@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 品牌色預設值（fallback）。BrandingProvider 於 runtime 依該校 SchoolConfig 覆寫，
+   確保同一 bundle 適用所有學校（ADR-001）。 */
+:root {
+  --brand-primary: #2e7d32;
+  --brand-secondary: #a5d6a7;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: #f7f8f7;
+  color: #1f2937;
+  -webkit-font-smoothing: antialiased;
+}

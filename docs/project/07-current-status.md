@@ -1,13 +1,13 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-16（Phase 7 Step 6 ✅ ACCEPTED — Audit out-of-band durable path + 稽核查詢端點;Step 1–4/6 ACCEPTED、Step 5 IMPLEMENTED）
+> Last updated: 2026-08-16（Phase 7 Step 7a IMPLEMENTED — 前端地基[Tailwind/TanStack Query/品牌] + 家長「請假」端到端;本機 typecheck/test/build 綠;待 push→CI + Vercel + Human 手機實測）
 
 Current Phase:
-Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
+Phase 7 — Core MVP（進行中;Step 7 = 前端可操作頁面 + 品牌 + Feature Flag,切子步驟先家長→老師→園長）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**。Step 5（LINE Push）→ **IMPLEMENTED**（線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider）。**Step 6** 依據 CI run 31904698836 綠 + Render 線上 `/audit-logs` 401 + CI e2e 覆蓋帶 token 流程。下一步：append-only DB 層鎖死（決策 2，§D 提案，下一版）或 Step 7。
+Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Step 7a**（前端地基 + 家長請假端到端）→ **IMPLEMENTED**（本機 typecheck ✓ / test ✓ [api 126 + shared 7 = 133] / build ✓;待 push→CI + Vercel Preview + Human Owner 手機實測）。設計決策:Tailwind + 少量自建元件、TanStack Query（皆 §D 核准）、品牌=色/logo/banner、切子步驟先家長;多重身份採聯集視圖（架構本就支援）。下一步:7b（家長其餘卡片）。
 
 Status:
 ```text

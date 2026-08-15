@@ -186,7 +186,18 @@
   - **append-only DB 層強制（決策 A，migration 0002）**：程式層——`AuditService` 只 create、無改/刪路徑 + 測試斷言;**DB 層——trigger** 擋 `AuditLog` UPDATE/DELETE/TRUNCATE（`RAISE EXCEPTION`;即使 owner 連線也擋）。純 expand migration、零 infra。CI db job（`verify.ts`）斷言 INSERT 允許 / 改·刪·清空被擋 + drift 需過。owner 連線 REVOKE 無效故不用 REVOKE。least-privilege role 分離屬未來 hardening（Phase 8+，非必要）。
   - **無新 migration、無新 library（沿用 BullMQ/ioredis/rxjs）、無架構變更。**
   - **Deliverables**：`apps/api/src/core/audit/{audit.service,audit-enqueuer.service,audit.util,audit-read.decorator,audit-read.interceptor,audit-failure.interceptor,audit.module}.ts`、`apps/api/src/audit-logs/**`、guards（roles/scope）、`auth.module.ts`、`app.module.ts`、`students`/`messages` controller（`@AuditRead`）、`worker.ts`。
-- [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
+- [~] **Step 7 — Dashboard · Branding · Feature Flag（前端可操作頁面）** — `IN_PROGRESS`（切子步驟:先家長→老師→園長）
+  - [~] **7a — 前端地基 + 家長「請假」端到端** — `IMPLEMENTED`（本機 typecheck ✓ / test ✓[api 126 + shared 7 = 133] / build ✓;待 push→CI + Vercel + Human 手機實測）
+    - [x] 前端地基:Tailwind（`tailwind.config.ts`/`postcss.config.js`/`globals.css`,品牌色走 CSS 變數）+ TanStack Query（`providers.tsx`）+ `next.config.mjs` `extensionAlias`（webpack 解析 shared NodeNext `.js`）
+    - [x] runtime 品牌（ADR-001）:`BrandingProvider`（primary/secondary→CSS 變數、logo/banner→`AppShell`）;bundle 零 per-school 值
+    - [x] session + 外框:`SessionProvider`（LIFF→JWT）、`StatusScreen`、`AppShell`、`/liff/layout.tsx`
+    - [x] config-driven 卡片牆:`shared.selectDashboardCards`（角色聯集 + featureFlags + cardOrder,+7 單元測試）;`/liff` Dashboard,未實作功能顯示「即將推出」
+    - [x] 家長請假端到端:proxy `/api/leaves`(+`/[id]/cancel`,`proxyToApi` helper)、`features/leave`（`LeaveForm`/`LeaveList`/hooks/labels）、`/liff/leave`（多小孩選擇器）
+    - [x] 設計決策（Human Owner）:Tailwind+自建元件、TanStack Query（皆 §D 核准）、品牌=色/logo/banner、切子步驟先家長、版型模板留下一版;多重身份採聯集視圖（架構本就支援,零 schema 變更）
+    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance（+ 家長 LINE 帳號對映前置）
+  - [ ] 7b 家長其餘卡片（出缺勤/訊息/通知/公告）— `NOT_STARTED`
+  - [ ] 7c 老師端（審核請假/點名/班級訊息·公告）— `NOT_STARTED`
+  - [ ] 7d 園長·ADMIN（全校視角 + 稽核查詢頁）— `NOT_STARTED`
 
 ## Phase 8 — Integration / Hardening  ⬜
 - [ ] 多校隔離 / secret exposure / 錯誤處理 / 效能 — `NOT_STARTED`
