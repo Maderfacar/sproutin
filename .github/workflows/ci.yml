@@ -92,3 +92,26 @@ jobs:
           --from-schema-datasource prisma/schema.prisma
           --to-schema-datamodel prisma/schema.prisma
           --exit-code
+
+  # ----------------------------------------------------------------
+  # docker-build job（Phase 7 / Step 3）：以真實 Docker build 把關。
+  # 動機：Docker build context 只 COPY 部分檔案，與 CI（完整 repo + turbo）分歧的錯誤
+  #       會逃過 build job，只在 Render 才爆（前例：漏 COPY tsconfig.base.json → 失去 strict
+  #       → zod z.infer TS2345）。此 job 用同一 Dockerfile 在 CI 建置，讓分歧提早紅燈。
+  #       只 build（不 push image、不部署）。api 與 worker 共用同一 image。
+  # ----------------------------------------------------------------
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build API/Worker image (same Dockerfile, no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ops/deploy/Dockerfile.api
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

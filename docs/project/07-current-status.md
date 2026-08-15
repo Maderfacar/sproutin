@@ -1,13 +1,14 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-15（Phase 7 Step 2 IMPLEMENTED — Attendance;Step 1 CI 綠）
+> Last updated: 2026-08-15（Phase 7 Step 3 IMPLEMENTED — Event 串接 Outbox→Worker dispatch;Step 1/2 ACCEPTED）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1（Leave）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15, Human Owner;CI 綠 + Render 線上 401 + API e2e）。下一步 Step 3 — Event 串接。
+Phase 7 Step 1（Leave）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15）。
+Step 3（Event 串接：Outbox→Worker dispatch）→ **IMPLEMENTED**（本機 typecheck/jest 86/build/worker-boot 綠;待 CI + Render worker log + Human Acceptance）。
 
 Status:
 ```text
@@ -50,6 +51,7 @@ Blocked:
 
 Technical Debt:
 - **ESLint flat config 未建** → CI 暫略 `lint`。列為 DEFERRED；**MVP Release Candidate（Phase 8）前必須完成**，不得永久忽略。
+- ~~**CI 未建置 Docker image**~~ → ✅ RESOLVED（Phase 7 Step 3）：CI 新增 `docker-build` job（同一 Dockerfile.api，push:false）。待 CI 綠驗證。
 
 Architecture Questions:
 - **AQ-1 / AQ-2 — DECIDED（2026-08-14, ADR-006）**：架構不變，僅定部署位置 → Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL。

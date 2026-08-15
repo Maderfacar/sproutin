@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-15（Phase 7 Step 1 + Step 2 ACCEPTED;下一步 Step 3 Event 串接）
+> Last updated: 2026-08-15（Phase 7 Step 3 — Event 串接 IMPLEMENTED;待 CI + Render 線上 + Human Acceptance）
 
 ---
 
@@ -12,7 +12,8 @@
 Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 7 Step 1（Leave 狀態機）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15, Human Owner）。下一步 Step 3 — Event 串接（先計畫→確認→實作）。
+Phase 7 Step 1（Leave）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15）。
+Step 3（Event 串接：Outbox → Worker dispatch）→ **IMPLEMENTED**（2026-08-15;本機 typecheck/jest 86/build/worker-boot 綠;待 CI + Render worker log + Human Acceptance）。
 
 **Status:**
 ```text
@@ -21,7 +22,7 @@ Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTE
 Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）
   Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ NEXT（先計畫→確認→實作）
+  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ IMPLEMENTED（待 CI + 線上 + Human Acceptance）
   Step 4 Message / Announcement / Notification                → NOT_STARTED
   Step 5 Notification / LINE Push（需 Messaging secret）        → NOT_STARTED
   Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
@@ -41,8 +42,9 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Task
 
-Phase 7 Step 1 + Step 2 — ✅ ACCEPTED（2026-08-15, Human Owner）。線上已部署（`/leaves`、`/attendance` 回 401）。
-下一個 Task = **Step 3 — Event 串接**（見文末 handoff prompt;可於新 session 執行）。
+Phase 7 Step 3 — Event 串接 — **IMPLEMENTED**（2026-08-15）。Worker 消費 Outbox → 投影/回滾/通知已寫好並本機驗證。
+下一步 = commit/push（觸發 Render 部署）→ CI 綠（build + db + 新 docker-build job）→ 觀察 `sproutin-worker` log 確認 dispatch → 以 API/DB 驗 Attendance 投影 / OutboxEvent 轉 DISPATCHED / Notification 有列 → **Human Acceptance**。
+（push 前需 Human Owner 同意;本機未 push docs commit b7bf9c0/c89fa92/48abdfe 一併帶上。）
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -177,11 +179,10 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 3 — Event 串接：Worker Outbox dispatcher（BullMQ）消費 OutboxEvent →
-  LeaveApproved 投影 Attendance(source=LEAVE_EVENT, override 感知) + LeaveRejected/Cancelled 回滾 +
-  各事件 Notification;idempotent（Attendance @@unique upsert、回滾以 sourceRef 定位）。
-  併入：CI 加 docker build job（清 tech debt「CI 未建置 Docker image」，一起做）。
-先計畫 → Human Owner 確認 → 實作。可於新 session 執行（handoff prompt 已備）。
+Step 3 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→
+  Render 自動部署 → 觀察 sproutin-worker log 確認 dispatch →
+  API/DB 驗證（Attendance 投影、OutboxEvent 轉 DISPATCHED、Notification 有列）→ Human Acceptance。
+通過後才進 Step 4（Message / Announcement / Notification）。Claude 不自行跳步。
 ```
 
 ---
@@ -286,6 +287,31 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-15 — Phase 7 / Step 3 — Event 串接（IMPLEMENTED）
+
+Completed:
+- **新 module `apps/api/src/events/**`**（Outbox → Worker dispatch，docs/06 §2-4 / ADR-002）：
+  - `OutboxDispatcherService`：`claimBatch`（撈 PENDING → status-guard 樂觀鎖翻 `PROCESSING`，等效 SKIP LOCKED，不重複派發）、`markDispatched`/`markFailed`、`resetStaleProcessing`（啟動 reaper 退回遺留 PROCESSING）。`OutboxEvent.status` 為自由 String → 新增 PROCESSING/DISPATCHED/FAILED 值**零 migration**。
+  - `LeaveEventHandler`：`LeaveApproved` 逐日投影 `Attendance(status=LEAVE, source=LEAVE_EVENT, sourceRef/derivedFrom=leaveId)`，**override 感知**（當日已 `MANUAL` → 不覆寫、發 `attendance.override_conflict`）;`LeaveRejected/Cancelled` 只刪 `LEAVE_EVENT AND sourceRef=leaveId`，`MANUAL AND derivedFrom=leaveId` 不觸碰、發衝突通知;idempotent（@@unique upsert + source 判斷、回滾以 sourceRef 定位）。
+  - `EventHandlersService`（事件路由，未來新事件的訂閱點）、`RecipientsService`（studentId→家長/老師/OWNER·ADMIN）、`NotificationService`（站內 Notification）、`day-key`（UTC 午夜逐日，對齊 seed/`@@unique([studentId,date])`）、`WorkerModule`（精簡 DI 圖）。
+- **`worker.ts` 改寫**：`NestFactory.createApplicationContext(WorkerModule)`（重用 PrismaService/AuditService，不複製業務碼）+ Outbox poller → BullMQ `events` 佇列（jobId=outbox.id 去重）→ consumer 跑 handler → 標 DISPATCHED;retry/backoff/DLQ 由 BullMQ 提供。
+- **CI `docker-build` job**（清 tech debt「CI 未建置 Docker image」）：`docker/build-push-action`，push:false，用同一 `ops/deploy/Dockerfile.api` 在 CI 真實建置，堵住 Docker-context 與 CI 分歧的錯誤（前例：漏 COPY tsconfig.base.json）。
+- **設計決策（Human Owner 確認：就照建議做）**：1=Outbox+BullMQ relay;2=Nest context 重用;3=收件人（Submitted→審核者、Approved→家長+老師、Rejected→家長、Cancelled/conflict→老師+行政、AttendanceMarked MVP 不發）;4=day-key UTC 午夜。
+
+Verification:
+- 本機：typecheck ✓;jest **86 tests** ✓（+18：day-key 4 / leave-event.handler 8 / outbox-dispatcher 6 + worker DI boot smoke）;`pnpm build` ✓（`dist/worker.js` + `dist/events/*` 產出）;`node dist/worker.js` 無 REDIS_URL → boot guard exit 1 ✓。
+- **worker DI boot smoke test**（`worker.boot.spec.ts`，比照 app.module.spec）：編譯 WorkerModule DI 圖、取得 dispatcher + handler —— 攔截「CI 綠但 worker 啟動崩潰」的 wiring 錯誤（硬性規矩：worker 改用 Nest context 需等價啟動驗證）。
+- 待：push → CI 綠（build + db + docker-build）→ Render worker log 觀察 dispatch → API/DB 驗投影/DISPATCHED/Notification → Human Acceptance。
+
+Architecture:
+- **無變更**。無新 migration（status String;Attendance/Notification/OutboxEvent/AuditLog 已在 `0001_init`）。無新 library（BullMQ/ioredis/@nestjs/core 皆既有）。
+
+Human Owner:
+- NOW：確認是否 commit + push（push main 觸發 Render/Vercel 自動部署;本機未 push docs commit b7bf9c0/c89fa92/48abdfe 一併帶上）。
+
+Next:
+- Step 3 acceptance → Step 4（Message / Announcement / Notification）。
 
 ### 2026-08-15 — Phase 7 / Step 1 + Step 2 — ACCEPTED（Human Owner）
 

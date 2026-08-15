@@ -26,7 +26,7 @@ Current Status:
 Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。
 - Step 1 Leave 狀態機 + Step 2 Attendance → ✅ ACCEPTED（2026-08-15, Human Owner）。
   CI 綠（run 31840973966）;Render 線上 `/leaves`、`/attendance` 回 401;API 級 e2e（真實 JWT）覆蓋帶登入流程。
-- 下一步 Step 3 — Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）。先計畫→確認→實作。（Phase 6 全數 ACCEPTED。）
+- Step 3 — Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ **IMPLEMENTED**（2026-08-15;本機 typecheck/jest 86/build/worker-boot 綠;含 CI docker-build job 清 tech debt）。待 commit/push → CI + Render worker log + Human Acceptance。（Phase 6 全數 ACCEPTED。）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）

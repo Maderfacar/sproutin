@@ -49,7 +49,7 @@
 
 - [~] **Worker / BullMQ entrypoint**
     - [x] `apps/api/src/worker.ts`（骨架 + `start:worker` script）
-    - [ ] Outbox dispatcher / processors（**Phase 6+**）
+    - [x] Outbox dispatcher / processors（**Phase 7 Step 3**：Nest context + poller + BullMQ consumer）
   - **Note**：Production hosting 為 **Architecture Question**（見 [07](./07-current-status.md)）。 **Status**：`IMPLEMENTED`
 
 - [~] **Docker baseline**
@@ -85,7 +85,7 @@
 
 ### Technical Debt（Phase 5 引入）
 - [ ] **ESLint flat config** — `DEFERRED`；MVP Release Candidate（Phase 8）前必須完成，不得永久忽略。
-- [ ] **CI 未建置 Docker image**（Phase 7 Step 1 暴露）— Docker build context 與 CI 分歧的錯誤會逃過 CI（本次：Dockerfile 缺 `tsconfig.base.json` → 失去 strict → zod 推導 TS2345，只在 Render build 爆）。CI 加 `docker build -f ops/deploy/Dockerfile.api .` job。**已排入 Phase 7 Step 3（一起做）**。`Priority: Medium`。
+- [x] **CI 未建置 Docker image**（Phase 7 Step 1 暴露）— ✅ **RESOLVED（Phase 7 Step 3）**：CI 新增 `docker-build` job（`docker/build-push-action`，push:false，用同一 `ops/deploy/Dockerfile.api`），讓 Docker build context 與 CI 分歧的錯誤（如缺 `tsconfig.base.json`）在 CI 就紅燈。待 CI 綠驗證。
 
 ---
 
@@ -144,8 +144,18 @@
   - **範圍界定**：本步做手動 SoT + 老師改 Derived→MANUAL 的 override 路徑（以 seed 既有 LEAVE_EVENT 列驗）;**不做** `LeaveApproved`→投影 Attendance 與 `LeaveRejected/Cancelled` 回滾（需 Worker 消費 Outbox = **Step 3**）。
   - **無新 migration**;**無架構變更**。新增 devDep `supertest`/`@types/supertest`（僅測試用）。
   - **Deliverables**：`apps/api/src/attendance/**`、`apps/api/src/e2e/api.e2e.spec.ts`、`apps/api/src/app.module.ts`、`apps/api/package.json`+lockfile。
-- [ ] Step 3 — Event 串接（Outbox → Worker dispatch;LeaveApproved 投影 Attendance + 回滾 + Notification）— `NOT_STARTED`
-    - [ ] 併入：CI 加 `docker build -f ops/deploy/Dockerfile.api .` job（清 technical debt「CI 未建置 Docker image」;Step 3 一起做）
+- [~] **Step 3 — Event 串接（Outbox → Worker dispatch）** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] `apps/api/src/events/**` 新 module：`OutboxDispatcherService`（poller：claim PENDING→PROCESSING status-guard、markDispatched/markFailed、resetStaleProcessing reaper）、`EventHandlersService`（事件路由）、`LeaveEventHandler`（投影/回滾/通知）、`RecipientsService`、`NotificationService`、`day-key`（UTC 午夜逐日）、`WorkerModule`
+    - [x] `worker.ts` 改寫：`NestFactory.createApplicationContext(WorkerModule)`（重用 Prisma/Audit，決策 2=A）+ Outbox poller → BullMQ `events` 佇列（jobId=outbox.id 去重）→ consumer 跑 handler → 標 DISPATCHED;retry/backoff/DLQ 由 BullMQ 提供（決策 1=B）
+    - [x] `LeaveApproved` → 逐日 upsert `Attendance(source=LEAVE_EVENT)`;當日已 `MANUAL`（override）→ 不覆寫、發 `attendance.override_conflict`（Notification + AuditLog）
+    - [x] `LeaveRejected/Cancelled` → 只刪 `LEAVE_EVENT AND sourceRef=leaveId` 列;`MANUAL AND derivedFrom=leaveId` 不觸碰、發衝突通知（ADR-002 rule 4/5/7）
+    - [x] 各事件 → 站內 `Notification`（收件人：LeaveSubmitted→審核者、Approved→家長+老師、Rejected→家長、Cancelled/conflict→老師+行政）;LINE Push 屬 Step 5
+    - [x] **併入**：CI 新增 `docker-build` job（清 tech debt「CI 未建置 Docker image」）
+    - [x] 本機：typecheck ✓、jest **86 tests** ✓（+18：day-key 4 / handler 8 / dispatcher 6;worker DI boot smoke）、build ✓、`node dist/worker.js` boot guard ✓
+    - [ ] CI 綠（build + db + docker-build）→ Render worker log 觀察 dispatch → API/DB 驗投影/DISPATCHED/Notification → Human Acceptance
+  - **無新 migration**（`OutboxEvent.status` 為自由 String，新增 PROCESSING/DISPATCHED/FAILED 值零 migration;Attendance/Notification 已在 `0001_init`）;**無架構變更**。
+  - **設計決策（Human Owner 確認）**：1=Outbox+BullMQ relay、2=Nest context 重用、3=收件人規則如上、4=day-key UTC 午夜（對齊 seed）。
+  - **Deliverables**：`apps/api/src/events/**`、`apps/api/src/worker.ts`、`apps/api/src/worker.boot.spec.ts`、`.github/workflows/ci.yml`。
 - [ ] Message Center · Announcement · Notification / LINE Push — `NOT_STARTED`
 - [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
