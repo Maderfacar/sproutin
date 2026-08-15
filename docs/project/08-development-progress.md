@@ -14,7 +14,7 @@ Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（
 **Milestone:**
 Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。
 Step 5（LINE Push）→ **IMPLEMENTED**（線上驗證卡 Human Owner 填 Messaging token + LINE 好友/provider）。
-Step 6（Audit out-of-band durable path + 稽核查詢端點）→ **IMPLEMENTED**（2026-08-16;本機 typecheck / jest 126 / build / API+worker boot 綠;待 push + CI + Render 線上 + Human Acceptance）。
+Step 6（Audit out-of-band durable path + 稽核查詢端點）→ ✅ **ACCEPTED**（2026-08-16, Human Owner;CI 綠 run 31904698836 + Render 線上 `/audit-logs` 401 missing_token/invalid_token + 帶 token 流程由 CI e2e 覆蓋）。append-only DB 層鎖死拆下一版（§D 提案）。
 
 **Status:**
 ```text
@@ -26,8 +26,8 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
   Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 4 Message / Announcement / Notification（站內讀取端）    → ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 5 Notification / LINE Push                              → IMPLEMENTED（待 push + CI;線上驗卡 Human Owner 填 Messaging token + LINE 設定）
-  Step 6 Audit out-of-band durable path + 稽核查詢端點          → IMPLEMENTED（2026-08-16;待 push + CI + Render 線上 + Human Acceptance）
-    └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（本版先程式自律）
+  Step 6 Audit out-of-band durable path + 稽核查詢端點          → ✅ ACCEPTED（2026-08-16, Human Owner）
+    └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（§D 提案;本版先程式自律）
   Step 7 Dashboard / Branding / Feature Flag                   → NOT_STARTED
 ```
 
@@ -35,18 +35,18 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Objective
 
-**Phase 7 Step 6 — Audit out-of-band durable path + 稽核查詢端點（IMPLEMENTED，待驗收）。**
-把 Audit 從「只有 transactional」補成完整可靠稽核（ADR-005 類別二）：DENIED / FAILURE / 敏感 READ
-→ enqueue durable BullMQ `audit` 佇列（Redis + retry/backoff + DLQ、無 Redis 降級記 log）→ Worker consumer
-寫入 AuditLog;新增 `GET /audit-logs`（OWNER/ADMIN、篩選、分頁）。append-only DB 層鎖死依決策 2 先「程式自律」，
-真正 role 分離拆下一版。**本版純程式碼，不動基礎設施。**
+**Phase 7 Step 6 — ✅ ACCEPTED（2026-08-16, Human Owner）。** Audit 已補齊 out-of-band durable path（DENIED / FAILURE / 敏感 READ
+→ durable BullMQ `audit` 佇列 + DLQ + 無 Redis 降級 → Worker 寫入 AuditLog）+ 稽核查詢端點 `GET /audit-logs`。
+**下一步（先計畫→確認→實作）**：append-only DB 層鎖死（決策 2 說好的獨立 release）—— Claude 以 06 §D 格式提案
+（least-privilege app role + REVOKE + 新 secret + 換連線），等 Human Owner 定案;之後進 Step 7。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 6 — Audit out-of-band + 稽核查詢端點 — **IMPLEMENTED**（2026-08-16）。本機 typecheck / jest **126** / build / API boot（`/audit-logs` mapped）/ worker boot（無 Redis exit 1）綠。
-下一步 = commit/push（需 Human Owner 同意）→ CI 綠（build + db + docker-build）→ Render 部署 → 線上打無權限請求驗 AuditLog 有 DENIED 列 + `GET /audit-logs`（OWNER token）回列 → Human Acceptance。
+Phase 7 Step 6 — Audit out-of-band + 稽核查詢端點 — ✅ **ACCEPTED**（2026-08-16, Human Owner）。
+依據：CI 綠（run 31904698836，build + db + docker-build）;commit b4f8446 上線;Render 線上 `/audit-logs` 無 token → 401 missing_token、壞 token → 401 invalid_token（路由 + 守衛部署）;帶 token 的 DENIED/FAILURE/READ 流程由 CI e2e（真實 JWT）+ 單元測試覆蓋（Step 1–4 慣例）。
+下一步 = append-only DB 層鎖死的 §D 提案（下一版），或 Step 7（Dashboard·Branding·Feature Flag）—— 先計畫 → Human Owner 確認 → 實作。
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -190,14 +190,12 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 6 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→ Render 部署。
-  程式層驗證由 CI + 單元測試覆蓋（DENIED/FAILURE/READ enqueue、降級記 log、查詢授權/過濾/分頁、worker consumer 寫入）。
-  線上驗（Human Owner 或 Claude 皆可，帶 token）：
-    ① 打一個會被擋的請求（無權限）→ 查 AuditLog 有 result=DENIED 列
-    ② GET /audit-logs（OWNER token）→ 回稽核列（含剛才那筆 DENIED）
-  → Human Acceptance。
-  平行未了項：Step 5 線上「真的收到 LINE 推播」仍卡 Human Owner 前置（Messaging token + LINE 好友/provider）——不擋 Step 6。
-  下一版獨立 release：append-only DB 層鎖死（決策 2，§D 提案）。之後進 Step 7（Dashboard/Branding/Feature Flag）。
+Step 6 已 ACCEPTED（2026-08-16）。下一步二選一，皆先計畫 → Human Owner 確認 → 實作：
+  A. append-only DB 層鎖死（決策 2 說好的獨立 release）：Claude 以 06 §D 格式提案 —— least-privilege
+     app role（只授 AuditLog INSERT/SELECT）+ REVOKE UPDATE/DELETE + 新 secret（APP_DATABASE_URL）
+     + runtime 換連線（migrate 續用 owner）。屬 infra/ADR-003 破壞性變更，等 Human Owner 定案。
+  B. Step 7 — Dashboard / Branding / Feature Flag。
+  平行未了項：Step 5 線上「真的收到 LINE 推播」仍卡 Human Owner 前置（Messaging token + LINE 好友/provider）。
 ```
 
 ---
@@ -270,11 +268,11 @@ Backend（Render 部署 2026-08-14，已驗證）
 ## Latest CI
 
 ```text
-Commit:  37a60da（ci: fix pnpm version conflict）
-Run:     31732797734
-Status:  ✅ SUCCESS（install / db:generate / typecheck / test / build 全綠）
-Date:    2026-08-14
-Note:    僅 Node 20 deprecation 警告（非致命）
+Commit:  b4f8446（feat(audit): Phase 7 Step 6 — out-of-band durable audit + 稽核查詢端點）
+Run:     31904698836
+Status:  ✅ SUCCESS（build + db + docker-build 全綠）
+Date:    2026-08-16
+Note:    僅 Node 20 deprecation 警告（非致命）。線上 /audit-logs → 401 missing_token/invalid_token。
 ```
 
 ---
@@ -293,15 +291,25 @@ Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待�
 ## Latest Accepted Commit
 
 ```text
-Phase 5 — ACCEPTED（2026-08-14, Human Owner）
-  含：Frontend(Vercel) + Backend API/Worker(Render) + Redis + PostgreSQL + CI + Web→API
-  全數線上驗證通過。ref commit ~6ba52a9（main）。
-Next: Phase 6 — Vertical Slice（於新 session 啟動）
+Phase 7 Step 6 — ACCEPTED（2026-08-16, Human Owner）
+  Audit out-of-band durable path（DENIED/FAILURE/敏感 READ → `audit` 佇列 + DLQ + 無 Redis 降級 → Worker 寫入）
+  + 稽核查詢端點 GET /audit-logs（OWNER/ADMIN、篩選、分頁）。ref commit b4f8446（main）。
+  append-only DB 層鎖死（決策 2）拆下一版獨立 release（§D 提案）。
+Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—— 先計畫→確認→實作。
 ```
 
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 / Step 6 — ACCEPTED（Human Owner）
+
+Completed:
+- Human Owner 驗收 **Step 6（Audit out-of-band durable path + 稽核查詢端點）** → ACCEPTED。依據：CI run 31904698836 綠（build + db + docker-build）;commit b4f8446 上線;Render 線上 `/audit-logs` 無 token → 401 `missing_token`、壞 token → 401 `invalid_token`（路由 + 守衛部署）。帶 token 的 DENIED/FAILURE/READ 完整流程由 CI e2e（真實 JWT，已實際觸發 DENIED enqueue）+ 單元測試覆蓋（後端優先無 UI，比照 Step 1–4 慣例，Human Owner 認可）。
+- append-only DB 層鎖死（決策 2）確認拆**下一版獨立 release**（列入 Technical Debt）。
+
+Next:
+- 二選一，皆先計畫 → 確認 → 實作：**A.** append-only DB 層鎖死的 06 §D 提案（infra/ADR-003 破壞性變更，需 Human Owner 定案）;**B.** Step 7（Dashboard / Branding / Feature Flag）。
 
 ### 2026-08-16 — Phase 7 / Step 6 — Audit out-of-band durable path + 稽核查詢端點（IMPLEMENTED）
 

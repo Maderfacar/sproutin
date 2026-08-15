@@ -1,13 +1,13 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-16（Phase 7 Step 6 IMPLEMENTED — Audit out-of-band durable path + 稽核查詢端點;Step 1–4 ACCEPTED、Step 5 IMPLEMENTED）
+> Last updated: 2026-08-16（Phase 7 Step 6 ✅ ACCEPTED — Audit out-of-band durable path + 稽核查詢端點;Step 1–4/6 ACCEPTED、Step 5 IMPLEMENTED）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。Step 5（LINE Push）→ **IMPLEMENTED**（線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider）。**Step 6（Audit out-of-band + 稽核查詢端點）→ IMPLEMENTED**（本機 jest 126 綠;待 CI + Render 線上 + Human Acceptance）。append-only DB 層鎖死依決策 2 拆下一版。
+Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**。Step 5（LINE Push）→ **IMPLEMENTED**（線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider）。**Step 6** 依據 CI run 31904698836 綠 + Render 線上 `/audit-logs` 401 + CI e2e 覆蓋帶 token 流程。下一步：append-only DB 層鎖死（決策 2，§D 提案，下一版）或 Step 7。
 
 Status:
 ```text
