@@ -144,7 +144,7 @@
   - **範圍界定**：本步做手動 SoT + 老師改 Derived→MANUAL 的 override 路徑（以 seed 既有 LEAVE_EVENT 列驗）;**不做** `LeaveApproved`→投影 Attendance 與 `LeaveRejected/Cancelled` 回滾（需 Worker 消費 Outbox = **Step 3**）。
   - **無新 migration**;**無架構變更**。新增 devDep `supertest`/`@types/supertest`（僅測試用）。
   - **Deliverables**：`apps/api/src/attendance/**`、`apps/api/src/e2e/api.e2e.spec.ts`、`apps/api/src/app.module.ts`、`apps/api/package.json`+lockfile。
-- [~] **Step 3 — Event 串接（Outbox → Worker dispatch）** — `IMPLEMENTED / VERIFICATION_PENDING`
+- [x] **Step 3 — Event 串接（Outbox → Worker dispatch）** — `ACCEPTED`（2026-08-15, Human Owner;CI run 31862077030 綠 = build + db + docker-build）
     - [x] `apps/api/src/events/**` 新 module：`OutboxDispatcherService`（poller：claim PENDING→PROCESSING status-guard、markDispatched/markFailed、resetStaleProcessing reaper）、`EventHandlersService`（事件路由）、`LeaveEventHandler`（投影/回滾/通知）、`RecipientsService`、`NotificationService`、`day-key`（UTC 午夜逐日）、`WorkerModule`
     - [x] `worker.ts` 改寫：`NestFactory.createApplicationContext(WorkerModule)`（重用 Prisma/Audit，決策 2=A）+ Outbox poller → BullMQ `events` 佇列（jobId=outbox.id 去重）→ consumer 跑 handler → 標 DISPATCHED;retry/backoff/DLQ 由 BullMQ 提供（決策 1=B）
     - [x] `LeaveApproved` → 逐日 upsert `Attendance(source=LEAVE_EVENT)`;當日已 `MANUAL`（override）→ 不覆寫、發 `attendance.override_conflict`（Notification + AuditLog）
@@ -156,7 +156,16 @@
   - **無新 migration**（`OutboxEvent.status` 為自由 String，新增 PROCESSING/DISPATCHED/FAILED 值零 migration;Attendance/Notification 已在 `0001_init`）;**無架構變更**。
   - **設計決策（Human Owner 確認）**：1=Outbox+BullMQ relay、2=Nest context 重用、3=收件人規則如上、4=day-key UTC 午夜（對齊 seed）。
   - **Deliverables**：`apps/api/src/events/**`、`apps/api/src/worker.ts`、`apps/api/src/worker.boot.spec.ts`、`.github/workflows/ci.yml`。
-- [ ] Message Center · Announcement · Notification / LINE Push — `NOT_STARTED`
+- [~] **Step 4 — Message · Announcement · Notification（站內讀取端）** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] **Notifications**（`notifications/**`）：`GET /notifications?unread=`（本人）+ `PATCH /notifications/:id/read`（idempotent）;只需登入、service 以 userId 過濾
+    - [x] **Messages**（`messages/**`，雙向）：`POST /messages`（校方↔家長，綁 student，classId 由 DB 推導）、`GET /messages?studentId=`（+ 本人 isRead）、`PATCH /messages/:id/read`（MessageRead upsert）;授權 `canAccessStudent`;同交易寫 Message + `OutboxEvent(MessageSent)` + `AuditLog(message.send)`
+    - [x] **Announcements**（`announcements/**`）：`POST /announcements`（SCHOOL→OWNER/ADMIN;CLASS→OWNER/ADMIN 或 TEACHER 自班）、`GET /announcements`（可見範圍：全校 + 相關班級）;同交易寫 Announcement + `OutboxEvent(AnnouncementPublished)` + `AuditLog(announcement.publish)`
+    - [x] **Worker handler 擴充**：`MessageEventHandler`（通知家長+老師、排除發訊者）、`AnnouncementEventHandler`（全校→所有 User;班級→該班老師+該班家長）;`EventHandlersService` 加 MessageSent / AnnouncementPublished 路由;`RecipientsService` 加 forClass/allUsers
+    - [x] 本機：typecheck ✓、jest **109 tests** ✓（+23）、build ✓、`node dist/main.js` boot ✓（/messages·/announcements·/notifications 路由全 mapped、DI 無誤）;`app.module.spec` + `worker.boot.spec` DI smoke 自動涵蓋新 module
+    - [ ] CI 綠 → Render 線上（路由 401）→ Human Acceptance
+  - **雙向決策（Human Owner）**：訊息雙向;公告權限/可見範圍照建議。**無新 migration**（Message/MessageRead/Announcement/Notification 已在 `0001_init`）;**無架構變更**。
+  - **Deliverables**：`apps/api/src/{messages,announcements,notifications}/**`、`apps/api/src/events/{message,announcement}-event.handler.ts`（+ event-handlers/recipients/worker.module 擴充）、`apps/api/src/app.module.ts`。
+- [ ] Step 5 — Notification / LINE Push（需 Messaging secret）— `NOT_STARTED`
 - [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
 

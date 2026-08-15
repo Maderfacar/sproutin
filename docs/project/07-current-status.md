@@ -7,8 +7,7 @@ Current Phase:
 Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1（Leave）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15）。
-Step 3（Event 串接：Outbox→Worker dispatch）→ **IMPLEMENTED**（本機 typecheck/jest 86/build/worker-boot 綠;待 CI + Render worker log + Human Acceptance）。
+Phase 7 Step 1/2/3 → ✅ **ACCEPTED**。Step 4（Message / Announcement / Notification 站內讀取端）→ **IMPLEMENTED**（本機 typecheck / jest 109 / build / boot 綠;待 push + CI + 線上 + Human Acceptance）。
 
 Status:
 ```text

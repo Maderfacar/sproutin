@@ -12,8 +12,8 @@
 Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 7 Step 1（Leave）+ Step 2（Attendance）→ ✅ **ACCEPTED**（2026-08-15）。
-Step 3（Event 串接：Outbox → Worker dispatch）→ **IMPLEMENTED**（2026-08-15;本機 typecheck/jest 86/build/worker-boot 綠;待 CI + Render worker log + Human Acceptance）。
+Phase 7 Step 1/2/3 → ✅ **ACCEPTED**。
+Step 4（Message / Announcement / Notification 站內讀取端）→ **IMPLEMENTED**（2026-08-15;本機 typecheck / jest 109 / build / boot 綠;待 push → CI + 線上 + Human Acceptance）。
 
 **Status:**
 ```text
@@ -22,8 +22,8 @@ Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTE
 Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）
   Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ IMPLEMENTED（待 CI + 線上 + Human Acceptance）
-  Step 4 Message / Announcement / Notification                → NOT_STARTED
+  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ ✅ ACCEPTED（2026-08-15, Human Owner）
+  Step 4 Message / Announcement / Notification（站內讀取端）    → IMPLEMENTED（待 push + CI + 線上 + Human Acceptance）
   Step 5 Notification / LINE Push（需 Messaging secret）        → NOT_STARTED
   Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
   Step 7 Dashboard / Branding / Feature Flag                   → NOT_STARTED
@@ -42,9 +42,9 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Task
 
-Phase 7 Step 3 — Event 串接 — **IMPLEMENTED**（2026-08-15）。Worker 消費 Outbox → 投影/回滾/通知已寫好並本機驗證。
-下一步 = commit/push（觸發 Render 部署）→ CI 綠（build + db + 新 docker-build job）→ 觀察 `sproutin-worker` log 確認 dispatch → 以 API/DB 驗 Attendance 投影 / OutboxEvent 轉 DISPATCHED / Notification 有列 → **Human Acceptance**。
-（push 前需 Human Owner 同意;本機未 push docs commit b7bf9c0/c89fa92/48abdfe 一併帶上。）
+Phase 7 Step 4 — Message / Announcement / Notification（站內讀取端）— **IMPLEMENTED**（2026-08-15）。
+本機 typecheck / jest 109 / build / boot 全綠。下一步 = commit/push（需 Human Owner 同意;觸發 Render 部署）→ CI 綠 → 線上路由 401 + Human Acceptance。
+（Step 3 已 ACCEPTED;Step 3 的驗收 docs 也會與 Step 4 一起 push。）
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -179,10 +179,9 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 3 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→
-  Render 自動部署 → 觀察 sproutin-worker log 確認 dispatch →
-  API/DB 驗證（Attendance 投影、OutboxEvent 轉 DISPATCHED、Notification 有列）→ Human Acceptance。
-通過後才進 Step 4（Message / Announcement / Notification）。Claude 不自行跳步。
+Step 4 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→
+  Render 自動部署 → 線上 /messages · /announcements · /notifications 無 token 回 401（路由+guard）→
+  Human Acceptance。通過後才進 Step 5（Notification / LINE Push，需 Messaging secret）。
 ```
 
 ---
@@ -287,6 +286,38 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-15 — Phase 7 / Step 4 — Message / Announcement / Notification（IMPLEMENTED）
+
+Completed:
+- **Notifications 讀取端**（`apps/api/src/notifications/**`）：`GET /notifications?unread=`（本人，userId 過濾，不需 ScopeResolver）+ `PATCH /notifications/:id/read`（idempotent;他人→403、不存在→404）。
+- **Messages**（`apps/api/src/messages/**`，**雙向** — Human Owner 決策）：`POST /messages`（校方↔家長皆可，綁 student;classId 由 DB 推導不信任前端）、`GET /messages?studentId=`（+ 本人 isRead）、`PATCH /messages/:id/read`（MessageRead upsert）。授權 `canAccessStudent`;同交易寫 Message + `OutboxEvent(MessageSent)` + `AuditLog(message.send)`。
+- **Announcements**（`apps/api/src/announcements/**`）：`POST /announcements`（SCHOOL→OWNER/ADMIN;CLASS→OWNER/ADMIN 或 TEACHER 自班）、`GET /announcements`（可見範圍：全校公告 + 使用者相關班級公告）。同交易寫 Announcement + `OutboxEvent(AnnouncementPublished)` + `AuditLog(announcement.publish)`。
+- **Worker handler 擴充**（沿用 Step 3 dispatcher，docs/06 §6 訂閱既有機制、不改既有 domain）：`MessageEventHandler`（通知該生家長+老師、**排除發訊者**）、`AnnouncementEventHandler`（全校→所有 User;班級→該班老師+該班學生家長）;`EventHandlersService` 加 MessageSent / AnnouncementPublished 路由;`RecipientsService` 加 `forClass` / `allUsers`;`WorkerModule` 註冊兩新 handler。
+- **設計決策（Human Owner）**：訊息**雙向**;公告發布權限/可見範圍照建議;一次做完三塊。
+
+Verification:
+- 本機：typecheck ✓;jest **109 tests** ✓（+23：notifications 6 / messages 8 / announcements 7 / 事件 handler 通知 3 —— 涵蓋雙向 scope、override 無關、收件人排除發訊者、公告可見範圍）;`pnpm build` ✓;`node dist/main.js` boot ✓（`/messages`·`/announcements`·`/notifications` 全部路由 mapped、DI 無誤，僅在無本機 DB 時 P1001）。
+- `app.module.spec`（API DI）與 `worker.boot.spec`（Worker DI）已自動涵蓋三個新 module + 兩個新 handler 的 wiring。
+- 待：push → CI 綠（build + db + docker-build）→ Render 線上路由 401 → Human Acceptance。
+
+Architecture:
+- **無變更**。無新 migration（Message/MessageRead/Announcement/Notification 已在 `0001_init`）。無新 library。事件經既有 Outbox + Step 3 dispatcher 交付（新增訂閱點，非改既有模組）。
+
+Human Owner:
+- NOW：確認是否 commit + push（觸發 Render 自動部署）。Step 3 驗收 docs 也會一併帶上。
+
+Next:
+- Step 4 acceptance → Step 5（Notification / LINE Push，需 Messaging channel secret）。
+
+### 2026-08-15 — Phase 7 / Step 3 — ACCEPTED（Human Owner）
+
+Completed:
+- Human Owner 驗收 **Step 3（Event 串接：Outbox → Worker dispatch）** → ACCEPTED。依據：CI run 31862077030 綠（build + db + 新 docker-build job）;程式已上線（commit c1b335e，Render 自動部署）。
+- Tech debt「CI 未建置 Docker image」隨本步 docker-build job 一併 RESOLVED。
+
+Next:
+- **Step 4 — Message / Announcement / Notification（站內讀取端）**。Claude 先提計畫 → Human Owner 確認 → 實作。
 
 ### 2026-08-15 — Phase 7 / Step 3 — Event 串接（IMPLEMENTED）
 

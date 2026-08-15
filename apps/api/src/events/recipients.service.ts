@@ -43,6 +43,25 @@ export class RecipientsService {
       admins: unique(adminRoles.map((r) => r.userId)),
     };
   }
+
+  // 某班級的通知對象（班級公告用）：該班老師 + 該班所有學生的監護人。
+  async forClass(tx: Prisma.TransactionClient, classId: string): Promise<string[]> {
+    const assignments = await tx.teacherAssignment.findMany({
+      where: { classId },
+      select: { userId: true },
+    });
+    const guardianships = await tx.guardianship.findMany({
+      where: { student: { classId } },
+      select: { userId: true },
+    });
+    return unique([...assignments.map((a) => a.userId), ...guardianships.map((g) => g.userId)]);
+  }
+
+  // 全校所有使用者（全校公告用）。學生不是 User，故不含學生。
+  async allUsers(tx: Prisma.TransactionClient): Promise<string[]> {
+    const users = await tx.user.findMany({ select: { id: true } });
+    return users.map((u) => u.id);
+  }
 }
 
 function unique(ids: string[]): string[] {

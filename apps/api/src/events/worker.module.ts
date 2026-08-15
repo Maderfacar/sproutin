@@ -4,6 +4,8 @@ import { AuditModule } from '../core/audit/audit.module';
 import { RecipientsService } from './recipients.service';
 import { NotificationService } from './notification.service';
 import { LeaveEventHandler } from './leave-event.handler';
+import { MessageEventHandler } from './message-event.handler';
+import { AnnouncementEventHandler } from './announcement-event.handler';
 import { EventHandlersService } from './event-handlers.service';
 import { OutboxDispatcherService } from './outbox-dispatcher.service';
 
@@ -16,6 +18,8 @@ import { OutboxDispatcherService } from './outbox-dispatcher.service';
     RecipientsService,
     NotificationService,
     LeaveEventHandler,
+    MessageEventHandler,
+    AnnouncementEventHandler,
     EventHandlersService,
     OutboxDispatcherService,
   ],
