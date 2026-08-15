@@ -3,6 +3,7 @@ import { WorkerModule } from './events/worker.module';
 import { PrismaService } from './core/prisma/prisma.service';
 import { OutboxDispatcherService } from './events/outbox-dispatcher.service';
 import { EventHandlersService } from './events/event-handlers.service';
+import { AuditService } from './core/audit/audit.service';
 
 // Worker DI bootstrap smoke test（比照 app.module.spec）：編譯 WorkerModule 整個 DI 圖，
 // 攔截「CI 綠但 worker 啟動崩潰」的 wiring 錯誤（handler/dispatcher provider 缺依賴）。
@@ -16,6 +17,8 @@ describe('WorkerModule (DI bootstrap)', () => {
 
     expect(moduleRef.get(OutboxDispatcherService)).toBeInstanceOf(OutboxDispatcherService);
     expect(moduleRef.get(EventHandlersService)).toBeInstanceOf(EventHandlersService);
+    // Step 6：audit 佇列 consumer 依賴 AuditService.recordStandalone → 確認可解析。
+    expect(moduleRef.get(AuditService)).toBeInstanceOf(AuditService);
     await moduleRef.close();
   });
 });

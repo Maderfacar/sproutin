@@ -3,6 +3,8 @@ import { Reflector } from '@nestjs/core';
 import { SCOPE_KEY, ScopeMeta } from './scope.decorator';
 import type { AuthedRequest } from './jwt-auth.guard';
 import { ScopeResolver } from './scope-resolver.service';
+import { AuditEnqueuer } from '../core/audit/audit-enqueuer.service';
+import { buildDeniedAuditEntry, AuditRequestLike } from '../core/audit/audit.util';
 
 // request 帶 params（express）；擴充 AuthedRequest 供 scope 解析取資源 id。
 interface ScopedRequest extends AuthedRequest {
@@ -16,6 +18,7 @@ export class ScopeGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly resolver: ScopeResolver,
+    private readonly enqueuer: AuditEnqueuer,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -45,7 +48,10 @@ export class ScopeGuard implements CanActivate {
         : false;
 
     if (!allowed) {
-      // 註：DENIED 的 out-of-band audit 於 Phase 7（ADR-005）補上。
+      // DENIED out-of-band audit（ADR-005 類別二）;fire-and-forget，永不阻塞拒絕回應。
+      void this.enqueuer.enqueue(
+        buildDeniedAuditEntry(req as unknown as AuditRequestLike, 'out_of_scope'),
+      );
       throw new ForbiddenException('out_of_scope');
     }
     return true;

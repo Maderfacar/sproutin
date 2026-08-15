@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { JwtAuthGuard, AuthedRequest } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { AuditRead } from '../core/audit/audit-read.decorator';
 import { MessagesService, MessageView } from './messages.service';
 
 const sendMessageSchema = z.object({
@@ -42,8 +43,10 @@ export class MessagesController {
   }
 
   // GET /messages?studentId= — 該學生訊息（scope 過濾）。
+  // 敏感 READ（訊息內容）→ 記 out-of-band READ 稽核（ADR-005 白名單）。
   @Get()
   @Roles('OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN')
+  @AuditRead({ resourceType: 'Message', action: 'message.read', query: 'studentId' })
   async list(@Req() req: AuthedRequest, @Query('studentId') studentId?: string): Promise<MessageView[]> {
     if (!studentId) {
       throw new BadRequestException('studentId_required');

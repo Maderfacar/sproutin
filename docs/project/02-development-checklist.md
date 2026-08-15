@@ -174,7 +174,18 @@
     - [ ] **Human Owner 前置**：Render 填 Messaging access token;LINE 後台確認 Login/Messaging 同 provider（userId 一致）+ 收播者加 OA 好友 → 線上實測收到推播 → Human Acceptance
   - **決策（Human Owner）**：只推重點（核准/駁回/新訊息）;best-effort + BullMQ 重試（不加第二層 outbox）。**無新 migration、無架構變更**（沿用 Step 3 dispatcher，新增一條 push 佇列）。
   - **Deliverables**：`apps/api/src/events/{line-push.client,push-notification.service}.ts`、`apps/api/src/worker.ts`、`apps/api/src/events/worker.module.ts`、`render.yaml`。
-- [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
+- [~] **Step 6 — Audit out-of-band durable path + 稽核查詢端點** — `IMPLEMENTED / VERIFICATION_PENDING`
+    - [x] **API 端 `audit` 佇列 producer**（`core/audit/audit-enqueuer.service.ts`）：DENIED/FAILURE/敏感 READ → enqueue durable BullMQ `audit`（Redis + retry/backoff + DLQ）;**無 REDIS_URL → 降級記 structured ERROR log、lazy 連線、永不丟出/阻塞**（ADR-005 last-resort）。決策 1 = 佇列。
+    - [x] **DENIED 落地**：`RolesGuard`/`ScopeGuard` 擋下 → `enqueue(result=DENIED)`（actor/action/resource/scope，fire-and-forget）;`AuthModule` re-export `AuditModule` 讓 guards 在 consumer context 解析 `AuditEnqueuer`
+    - [x] **FAILURE 攔截**：全域 `AuditFailureInterceptor`——狀態變更請求（POST/PUT/PATCH/DELETE）的 5xx → `enqueue(result=FAILURE)`;**刻意不記 4xx**（驗證/衝突噪音）
+    - [x] **敏感 READ 白名單**：`@AuditRead` 裝飾器 + 全域 `AuditReadInterceptor`，僅掛 `GET /students/:id`（`student.read`）、`GET /messages`（`message.read`）;清單類不記（決策 3）
+    - [x] **稽核查詢端點** `GET /audit-logs`（`audit-logs/**`）：`@Roles('OWNER','ADMIN')`;篩選 resourceType/resourceId/actor/from/to;分頁 limit(≤100)/offset + `meta.total`;查詢本身記 `audit.read`（決策 4）
+    - [x] **Worker `audit` consumer**（`worker.ts`）：INSERT 進 AuditLog（`AuditService.recordStandalone`，append-only）;丟出→BullMQ 重試→failed set 作 DLQ。boot guard 未動（無 Redis 仍 exit 1）
+    - [x] 本機：typecheck ✓、jest **126 tests** ✓（+13）、build ✓、`node dist/main.js` boot（`/audit-logs` mapped）✓、`worker.js` 無 Redis exit 1 ✓;`app.module.spec`+`worker.boot.spec` DI smoke 涵蓋新 provider/攔截器/consumer。e2e 403 案例自然觸發 DENIED enqueue（降級 log 可見）
+    - [ ] CI 綠（build+db+docker-build）→ Render 線上（無權限請求→AuditLog 有 DENIED 列;`GET /audit-logs` OWNER token 回列）→ Human Acceptance
+  - **append-only DB 層強制（決策 2 = MVP 先程式自律）**：本版**不動基礎設施**——程式碼無改/刪 AuditLog 路徑（`AuditService` 只 create）+ 測試斷言。真正 DB 層鎖死（least-privilege app role + REVOKE UPDATE/DELETE + 換連線字串 + 新 secret）依 ADR-003 拆**下一版獨立 release**，屆時以 §D 提案。owner 連線 REVOKE 無效，故本版不出假 migration。
+  - **無新 migration、無新 library（沿用 BullMQ/ioredis/rxjs）、無架構變更。**
+  - **Deliverables**：`apps/api/src/core/audit/{audit.service,audit-enqueuer.service,audit.util,audit-read.decorator,audit-read.interceptor,audit-failure.interceptor,audit.module}.ts`、`apps/api/src/audit-logs/**`、guards（roles/scope）、`auth.module.ts`、`app.module.ts`、`students`/`messages` controller（`@AuditRead`）、`worker.ts`。
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
 
 ## Phase 8 — Integration / Hardening  ⬜

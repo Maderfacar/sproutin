@@ -69,7 +69,7 @@ function makeScope(): ScopeMock {
 
 function makeService(prisma: PrismaMock, scope: ScopeMock): LeavesService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new LeavesService(prisma as any, scope as any, new AuditService());
+  return new LeavesService(prisma as any, scope as any, new AuditService(prisma as any));
 }
 
 const role = (r: AuthUser['roles'][number]['role'], scopeId: string | null = null) => ({

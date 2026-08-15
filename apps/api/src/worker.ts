@@ -7,16 +7,20 @@ import { WorkerModule } from './events/worker.module';
 import { OutboxDispatcherService, type ClaimedEvent } from './events/outbox-dispatcher.service';
 import { EventHandlersService } from './events/event-handlers.service';
 import { PushNotificationService } from './events/push-notification.service';
+import { AuditService, type AuditEntry } from './core/audit/audit.service';
 
 // Sproutin Worker entrypoint（同一 image、不同 CMD，§20 / docs/04）。
 // Phase 7 Step 3：消費 Transactional Outbox → 派發領域事件到 handler（投影/回滾/通知）。
 //   1) Nest standalone context（WorkerModule）取得 dispatcher + handler（重用業務碼，決策 2）。
 //   2) Outbox poller：claim PENDING → enqueue BullMQ `events`（jobId=outbox.id 去重，決策 1）。
 //   3) BullMQ consumer：跑 handler → 成功標 DISPATCHED;retry/backoff/DLQ 由 BullMQ 提供。
-// TODO(Step 5): LINE Push consumer;(Step 6) out-of-band audit consumer（ADR-005）。
+// Step 5：line-push 佇列/consumer（best-effort 推播）。
+// Step 6：audit 佇列 consumer（out-of-band 稽核落地，ADR-005 類別二）——
+//   API 端 DENIED/FAILURE/敏感 READ enqueue 到 `audit` 佇列，這裡 INSERT 進 AuditLog（append-only）。
 
 const EVENTS_QUEUE = 'events';
 const LINE_PUSH_QUEUE = 'line-push';
+const AUDIT_QUEUE = 'audit';
 const POLL_INTERVAL_MS = 5_000;
 const MAX_ATTEMPTS = 5;
 const PUSH_ATTEMPTS = 3;
@@ -41,6 +45,7 @@ async function bootstrap(): Promise<void> {
   const dispatcher = app.get(OutboxDispatcherService);
   const handlers = app.get(EventHandlersService);
   const pushService = app.get(PushNotificationService);
+  const auditService = app.get(AuditService);
 
   // BullMQ 要求 maxRetriesPerRequest = null。
   const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
@@ -86,6 +91,21 @@ async function bootstrap(): Promise<void> {
   );
   pushWorker.on('failed', (job: Job<PushJob> | undefined, err: Error) => {
     console.error(`[worker] LINE push failed event=${job?.data?.eventType}: ${err.message}`);
+  });
+
+  // out-of-band 稽核 consumer（ADR-005 類別二）：INSERT 進 AuditLog（append-only）。
+  // job.data = AuditEntry（API 端 AuditEnqueuer 送出）。丟出 → BullMQ 重試;耗盡進 failed set 作 DLQ。
+  const auditWorker = new Worker<AuditEntry>(
+    AUDIT_QUEUE,
+    async (job: Job<AuditEntry>): Promise<void> => {
+      await auditService.recordStandalone(job.data);
+    },
+    { connection },
+  );
+  auditWorker.on('failed', (job: Job<AuditEntry> | undefined, err: Error) => {
+    console.error(
+      `[worker] audit write failed action=${job?.data?.action} result=${job?.data?.result}: ${err.message}`,
+    );
   });
 
   // 啟動 reaper：退回上次遺留的 PROCESSING（崩潰復原）。

@@ -49,7 +49,7 @@ function makeHandler(tx: Tx): LeaveEventHandler {
     $transaction: jest.fn(async (cb: (t: Tx) => Promise<unknown>) => cb(tx)),
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new LeaveEventHandler(prisma as any, new RecipientsService(), new NotificationService(), new AuditService());
+  return new LeaveEventHandler(prisma as any, new RecipientsService(), new NotificationService(), new AuditService(prisma as any));
 }
 
 const APPROVED = {

@@ -50,7 +50,7 @@ function makePrisma(tx: TxMock): PrismaMock {
 
 function makeService(prisma: PrismaMock): AnnouncementsService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new AnnouncementsService(prisma as any, new AuditService());
+  return new AnnouncementsService(prisma as any, new AuditService(prisma as any));
 }
 
 const role = (r: AuthUser['roles'][number]['role'], scopeId: string | null = null) => ({

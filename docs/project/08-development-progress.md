@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-15（Phase 7 Step 3 — Event 串接 IMPLEMENTED;待 CI + Render 線上 + Human Acceptance）
+> Last updated: 2026-08-16（Phase 7 Step 6 — Audit out-of-band durable path + 稽核查詢端點 IMPLEMENTED;待 CI + Render 線上 + Human Acceptance）
 
 ---
 
@@ -13,7 +13,8 @@ Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（
 
 **Milestone:**
 Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。
-Step 5（Notification / LINE Push）→ **IMPLEMENTED**（2026-08-15;本機 typecheck / jest 113 / build / worker-boot 綠;線上驗證卡 Human Owner 填 Messaging token + LINE 好友/provider）。
+Step 5（LINE Push）→ **IMPLEMENTED**（線上驗證卡 Human Owner 填 Messaging token + LINE 好友/provider）。
+Step 6（Audit out-of-band durable path + 稽核查詢端點）→ **IMPLEMENTED**（2026-08-16;本機 typecheck / jest 126 / build / API+worker boot 綠;待 push + CI + Render 線上 + Human Acceptance）。
 
 **Status:**
 ```text
@@ -25,7 +26,8 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
   Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 4 Message / Announcement / Notification（站內讀取端）    → ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 5 Notification / LINE Push                              → IMPLEMENTED（待 push + CI;線上驗卡 Human Owner 填 Messaging token + LINE 設定）
-  Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
+  Step 6 Audit out-of-band durable path + 稽核查詢端點          → IMPLEMENTED（2026-08-16;待 push + CI + Render 線上 + Human Acceptance）
+    └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（本版先程式自律）
   Step 7 Dashboard / Branding / Feature Flag                   → NOT_STARTED
 ```
 
@@ -33,17 +35,18 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Objective
 
-**Phase 7 Step 3 — Event 串接（下一步，先計畫→確認→實作）。** Worker 消費 Transactional Outbox
-（BullMQ dispatcher）→ `LeaveApproved` 投影 `Attendance(source=LEAVE_EVENT)`（override 感知，ADR-002）、
-`LeaveRejected/Cancelled` 回滾（僅動 LEAVE_EVENT 列;override 過的 MANUAL 列不觸碰、發衝突通知）、
-各事件 → Notification。Step 1/2 已把事件寫進 OutboxEvent（PENDING），本步把它們真正消費掉。
+**Phase 7 Step 6 — Audit out-of-band durable path + 稽核查詢端點（IMPLEMENTED，待驗收）。**
+把 Audit 從「只有 transactional」補成完整可靠稽核（ADR-005 類別二）：DENIED / FAILURE / 敏感 READ
+→ enqueue durable BullMQ `audit` 佇列（Redis + retry/backoff + DLQ、無 Redis 降級記 log）→ Worker consumer
+寫入 AuditLog;新增 `GET /audit-logs`（OWNER/ADMIN、篩選、分頁）。append-only DB 層鎖死依決策 2 先「程式自律」，
+真正 role 分離拆下一版。**本版純程式碼，不動基礎設施。**
 
 ---
 
 ## Current Task
 
-Phase 7 Step 5 — Notification / LINE Push — **IMPLEMENTED**（2026-08-15）。本機 typecheck / jest 113 / build / worker-boot 綠。
-下一步 = commit/push（需 Human Owner 同意）→ CI 綠 → **Human Owner 前置**（Render 填 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` + LINE 後台確認 Login/Messaging 同 provider + 收播者加 OA 好友）→ 線上實測收到推播 → Human Acceptance。
+Phase 7 Step 6 — Audit out-of-band + 稽核查詢端點 — **IMPLEMENTED**（2026-08-16）。本機 typecheck / jest **126** / build / API boot（`/audit-logs` mapped）/ worker boot（無 Redis exit 1）綠。
+下一步 = commit/push（需 Human Owner 同意）→ CI 綠（build + db + docker-build）→ Render 部署 → 線上打無權限請求驗 AuditLog 有 DENIED 列 + `GET /audit-logs`（OWNER token）回列 → Human Acceptance。
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -135,6 +138,15 @@ Required decision:
    - Required before: Phase 8 — MVP Release Candidate（R7）
    - Owner: Claude(impl) / Human(accept)
    - Note: 目前 CI 暫略 lint；不得因換 Phase 而遺忘。
+
+2. AuditLog append-only 未於 DB 權限層強制（Phase 7 Step 6 決策 2）
+   - Priority: Medium
+   - Required before: 合規／正式營運前（Phase 8+）
+   - Owner: Claude(§D 提案 + impl) / Human(定案 + deploy)
+   - Note: 本版先「程式自律」（AuditService 只 create、無改/刪路徑 + 測試斷言）。
+     真正 DB 層鎖死需 least-privilege app role + REVOKE UPDATE/DELETE + 換連線字串 + 新 secret
+     （infra／ADR-003 破壞性變更）→ 拆下一版獨立 release，屆時以 06 §D 提案。
+     owner 連線 REVOKE 無效，故本版刻意不出假 migration。
 ```
 
 ---
@@ -178,13 +190,14 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 5 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→ Render 部署。
-  程式層驗證由 CI + 單元測試覆蓋（推播邏輯、只推重點、未綁略過）。
-  線上「真的收到 LINE 推播」需 Human Owner 前置：
-    ① Render 填 LINE_MESSAGING_CHANNEL_ACCESS_TOKEN
-    ② LINE 後台確認 Login(2011106015)/Messaging(2011106146) 同 provider（userId 一致）
-    ③ 收播帳號加 OA 好友
-  完成後線上實測 → Human Acceptance。通過後才進 Step 6（Audit out-of-band durable path + REVOKE）。
+Step 6 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→ Render 部署。
+  程式層驗證由 CI + 單元測試覆蓋（DENIED/FAILURE/READ enqueue、降級記 log、查詢授權/過濾/分頁、worker consumer 寫入）。
+  線上驗（Human Owner 或 Claude 皆可，帶 token）：
+    ① 打一個會被擋的請求（無權限）→ 查 AuditLog 有 result=DENIED 列
+    ② GET /audit-logs（OWNER token）→ 回稽核列（含剛才那筆 DENIED）
+  → Human Acceptance。
+  平行未了項：Step 5 線上「真的收到 LINE 推播」仍卡 Human Owner 前置（Messaging token + LINE 好友/provider）——不擋 Step 6。
+  下一版獨立 release：append-only DB 層鎖死（決策 2，§D 提案）。之後進 Step 7（Dashboard/Branding/Feature Flag）。
 ```
 
 ---
@@ -289,6 +302,30 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 / Step 6 — Audit out-of-band durable path + 稽核查詢端點（IMPLEMENTED）
+
+Completed:
+- **API 端 out-of-band audit producer**（`core/audit/audit-enqueuer.service.ts`）：DENIED/FAILURE/敏感 READ → enqueue durable BullMQ `audit` 佇列（Redis + retry/backoff + DLQ）。**永不阻塞/永不丟出**;`REDIS_URL` 未設定或 enqueue 失敗 → 降級輸出 structured ERROR log（ADR-005 last-resort）;Redis 連線 lazy（無 Redis 環境啟動不連線）。沿用既有 `bullmq`/`ioredis`，**無新 library**。
+- **DENIED 落地**：`RolesGuard`/`ScopeGuard` 擋下 → `enqueue(result=DENIED)`（actor/action/resource/scope，fire-and-forget）。`AuditService` 加 `recordStandalone`（out-of-band 單筆 INSERT）+ 注入 PrismaService;`AuditModule` 加 `AuditEnqueuer`;`AuthModule` re-export `AuditModule`（guards 在 consumer 模組 context 需解析 `AuditEnqueuer`，比照既有 JwtModule re-export）。
+- **FAILURE 攔截**：全域 `AuditFailureInterceptor`（`APP_INTERCEPTOR`）——狀態變更請求（POST/PUT/PATCH/DELETE）的 5xx → `enqueue(result=FAILURE)` 後原樣 rethrow;**刻意不記 4xx**（驗證/衝突噪音）。
+- **敏感 READ 白名單**：`@AuditRead` 裝飾器 + 全域 `AuditReadInterceptor`，僅掛 `GET /students/:id`（`student.read`）與 `GET /messages`（`message.read`）;一般清單/GET 不記（ADR-005，決策 3）。
+- **稽核查詢端點**（`audit-logs/**`）：`GET /audit-logs`，`@Roles('OWNER','ADMIN')`;篩選 resourceType/resourceId/actor/from/to;分頁 limit（≤100）/offset + `meta.total`;查詢本身記 `audit.read`（決策 4）。
+- **Worker `audit` consumer**（`worker.ts`）：新增第三條佇列 consumer → `AuditService.recordStandalone` INSERT 進 AuditLog（append-only）;丟出→BullMQ 重試→failed set 作 DLQ。boot guard 未動。
+- **設計決策（Human Owner，全選建議）**：1=佇列（非請求路徑直寫）;2=append-only 本版先「程式自律」（DB 層鎖死拆下一版）;3=只記 students/:id + messages;4=查稽核記 audit.read。
+
+Verification:
+- 本機：typecheck ✓;jest **126 tests** ✓（+13：enqueuer 降級、DENIED×2 guard、FAILURE 攔截×3、READ 攔截×3、audit-logs 查詢×4、worker consumer wiring;`recordStandalone`）;`pnpm build` ✓;`node dist/main.js` boot ✓（`/audit-logs` route mapped、DI 無誤）;`node dist/worker.js` 無 REDIS_URL → exit 1 ✓（新 audit consumer 在 boot guard 之後，無回歸）;`app.module.spec` + `worker.boot.spec` DI smoke 涵蓋新 provider/攔截器/consumer。**e2e 的 403 案例自然觸發 DENIED enqueue**（無 Redis → 降級 log 可見，等於端到端證明 guard→enqueue 線通）。
+- 待：push → CI 綠（build + db + docker-build）→ Render 線上（無權限請求→AuditLog DENIED 列;`GET /audit-logs` OWNER 回列）→ Human Acceptance。
+
+Architecture:
+- **無變更**。無新 migration（AuditLog/OutboxEvent 已在 `0001_init`）、無新 library（BullMQ/ioredis/rxjs 既有）、**不動基礎設施**。append-only DB 層強制（least-privilege app role + REVOKE + 新 secret + 換連線）屬 infra/ADR-003 破壞性變更 → 依決策 2 拆**下一版獨立 release**，屆時以 06 §D 提案由 Human Owner 定案（列入 Technical Debt）。
+
+Human Owner:
+- NOW：確認是否 commit + push（push main 觸發 Render/Vercel 自動部署）。
+
+Next:
+- Step 6 acceptance → append-only 鎖死（下一版 §D 提案）/ Step 7（Dashboard·Branding·Feature Flag）。
 
 ### 2026-08-15 — Phase 7 / Step 5 — Notification / LINE Push（IMPLEMENTED）
 

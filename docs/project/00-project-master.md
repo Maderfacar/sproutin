@@ -28,8 +28,9 @@ Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 
   CI 綠（run 31840973966）;Render 線上 `/leaves`、`/attendance` 回 401;API 級 e2e（真實 JWT）覆蓋帶登入流程。
 - Step 3 — Event 串接（Outbox → Worker dispatch）→ ✅ **ACCEPTED**（2026-08-15, Human Owner;含 docker-build job 清 tech debt）。
 - Step 4 — Message / Announcement / Notification（站內讀取端）→ ✅ **ACCEPTED**（2026-08-15, Human Owner;CI 綠 + 線上三路由 401）。
-- Step 5 — Notification / LINE Push → **IMPLEMENTED**（2026-08-15;只推重點事件、best-effort+重試;本機 jest 113 綠）。線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider。
-- 下一步 Step 6 — Audit out-of-band durable path + append-only REVOKE。（Phase 6 全數 ACCEPTED。）
+- Step 5 — Notification / LINE Push → **IMPLEMENTED**（2026-08-15;只推重點事件、best-effort+重試）。線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider。
+- Step 6 — Audit out-of-band durable path + 稽核查詢端點 → **IMPLEMENTED**（2026-08-16;DENIED/FAILURE/敏感 READ → durable `audit` 佇列 + DLQ、Worker 寫入;`GET /audit-logs` OWNER/ADMIN;本機 jest 126 綠;不動基礎設施）。append-only DB 層鎖死（決策 2）拆下一版。待 CI + Render 線上 + Human Acceptance。
+- 下一步 Step 6 收尾驗收 → append-only 鎖死（下一版 §D）/ Step 7（Dashboard·Branding·Feature Flag）。（Phase 6 全數 ACCEPTED。）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）

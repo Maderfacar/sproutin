@@ -1,13 +1,13 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-15（Phase 7 Step 3 IMPLEMENTED — Event 串接 Outbox→Worker dispatch;Step 1/2 ACCEPTED）
+> Last updated: 2026-08-16（Phase 7 Step 6 IMPLEMENTED — Audit out-of-band durable path + 稽核查詢端點;Step 1–4 ACCEPTED、Step 5 IMPLEMENTED）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。Step 5（Notification / LINE Push）→ **IMPLEMENTED**（本機 jest 113 綠;線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider）。下一步 Step 6 — Audit out-of-band。
+Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。Step 5（LINE Push）→ **IMPLEMENTED**（線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider）。**Step 6（Audit out-of-band + 稽核查詢端點）→ IMPLEMENTED**（本機 jest 126 綠;待 CI + Render 線上 + Human Acceptance）。append-only DB 層鎖死依決策 2 拆下一版。
 
 Status:
 ```text
@@ -51,6 +51,7 @@ Blocked:
 Technical Debt:
 - **ESLint flat config 未建** → CI 暫略 `lint`。列為 DEFERRED；**MVP Release Candidate（Phase 8）前必須完成**，不得永久忽略。
 - ~~**CI 未建置 Docker image**~~ → ✅ RESOLVED（Phase 7 Step 3）：CI 新增 `docker-build` job（同一 Dockerfile.api，push:false）。待 CI 綠驗證。
+- **AuditLog append-only 尚未於 DB 權限層強制**（Phase 7 Step 6 決策 2）→ 本版先「程式自律」（`AuditService` 只 create、無改/刪路徑 + 測試斷言）;真正 DB 層鎖死（least-privilege app role + REVOKE UPDATE/DELETE + 換連線字串 + 新 secret，屬 infra/ADR-003 破壞性變更）延至**下一版獨立 release**，屆時以 §D 提案由 Human Owner 定案。Owner=Claude(提案+impl)/Human(定案+deploy)。
 
 Architecture Questions:
 - **AQ-1 / AQ-2 — DECIDED（2026-08-14, ADR-006）**：架構不變，僅定部署位置 → Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL。

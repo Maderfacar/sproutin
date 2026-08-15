@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrismaModule } from './core/prisma/prisma.module';
 import { HealthModule } from './core/health/health.module';
 import { PublicConfigModule } from './core/config/public-config.module';
@@ -9,14 +10,25 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { MessagesModule } from './messages/messages.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { AuditModule } from './core/audit/audit.module';
+import { AuditReadInterceptor } from './core/audit/audit-read.interceptor';
+import { AuditFailureInterceptor } from './core/audit/audit-failure.interceptor';
 
 // 核心橫切模組 + Phase 6 vertical slice + Phase 7 domain：
 // AuthModule（Step 2：LINE/LIFF 登入 → JWT）+ StudentsModule（Step 3：RBAC 示範端點）
 // + LeavesModule（Step 1：Leave 狀態機）+ AttendanceModule（Step 2：手動 SoT + ADR-002 override）
-// + MessagesModule / AnnouncementsModule / NotificationsModule（Step 4：訊息 / 公告 / 站內通知讀取端）。
+// + MessagesModule / AnnouncementsModule / NotificationsModule（Step 4：訊息 / 公告 / 站內通知讀取端）
+// + AuditLogsModule（Step 6：稽核查詢端點）。
+//
+// Step 6 out-of-band audit（ADR-005 類別二）以兩個全域攔截器落地（enqueuer 由 AuditModule 提供）：
+//   - AuditReadInterceptor：僅對標了 @AuditRead 的敏感 READ 端點記錄。
+//   - AuditFailureInterceptor：狀態變更請求的 5xx 失敗記 FAILURE。
+// DENIED 由 guards（AuthModule）直接 enqueue。
 @Module({
   imports: [
     PrismaModule,
+    AuditModule,
     HealthModule,
     PublicConfigModule,
     AuthModule,
@@ -26,6 +38,11 @@ import { NotificationsModule } from './notifications/notifications.module';
     MessagesModule,
     AnnouncementsModule,
     NotificationsModule,
+    AuditLogsModule,
+  ],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: AuditReadInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: AuditFailureInterceptor },
   ],
 })
 export class AppModule {}

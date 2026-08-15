@@ -4,6 +4,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { ScopeGuard } from '../auth/scope.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Scope } from '../auth/scope.decorator';
+import { AuditRead } from '../core/audit/audit-read.decorator';
 import { StudentsService, StudentView } from './students.service';
 
 // Step 3 示範端點：GET /students/:id
@@ -14,9 +15,11 @@ import { StudentsService, StudentView } from './students.service';
 export class StudentsController {
   constructor(private readonly students: StudentsService) {}
 
+  // 敏感 READ（學生 PII 詳情）→ 記 out-of-band READ 稽核（ADR-005 白名單）。
   @Get(':id')
   @Roles('OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN')
   @Scope('student', 'id')
+  @AuditRead({ resourceType: 'Student', action: 'student.read', param: 'id' })
   async getOne(@Param('id') id: string): Promise<StudentView> {
     return this.students.getById(id);
   }
