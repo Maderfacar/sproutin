@@ -6,6 +6,7 @@ import IORedis from 'ioredis';
 import { WorkerModule } from './events/worker.module';
 import { OutboxDispatcherService, type ClaimedEvent } from './events/outbox-dispatcher.service';
 import { EventHandlersService } from './events/event-handlers.service';
+import { PushNotificationService } from './events/push-notification.service';
 
 // Sproutin Worker entrypoint（同一 image、不同 CMD，§20 / docs/04）。
 // Phase 7 Step 3：消費 Transactional Outbox → 派發領域事件到 handler（投影/回滾/通知）。
@@ -15,8 +16,16 @@ import { EventHandlersService } from './events/event-handlers.service';
 // TODO(Step 5): LINE Push consumer;(Step 6) out-of-band audit consumer（ADR-005）。
 
 const EVENTS_QUEUE = 'events';
+const LINE_PUSH_QUEUE = 'line-push';
 const POLL_INTERVAL_MS = 5_000;
 const MAX_ATTEMPTS = 5;
+const PUSH_ATTEMPTS = 3;
+
+// line-push job 承載：站內通知 commit 後，據事件型別推播（PushNotificationService 只推重點事件）。
+interface PushJob {
+  eventType: string;
+  payload: unknown;
+}
 
 async function bootstrap(): Promise<void> {
   const redisUrl = process.env.REDIS_URL;
@@ -31,17 +40,26 @@ async function bootstrap(): Promise<void> {
   });
   const dispatcher = app.get(OutboxDispatcherService);
   const handlers = app.get(EventHandlersService);
+  const pushService = app.get(PushNotificationService);
 
   // BullMQ 要求 maxRetriesPerRequest = null。
   const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
   const queue = new Queue<ClaimedEvent>(EVENTS_QUEUE, { connection });
+  const pushQueue = new Queue<PushJob>(LINE_PUSH_QUEUE, { connection });
 
-  // Consumer：跑 handler → 成功標 DISPATCHED。丟出 → BullMQ 依 attempts/backoff 重試。
+  // Consumer：跑 handler（站內通知）→ 成功標 DISPATCHED → enqueue LINE 推播（Step 5）。
+  // 丟出 → BullMQ 依 attempts/backoff 重試。
   const worker = new Worker<ClaimedEvent>(
     EVENTS_QUEUE,
     async (job: Job<ClaimedEvent>): Promise<void> => {
       await handlers.handle(job.data.eventType, job.data.payload);
       await dispatcher.markDispatched(job.data.id);
+      // 站內通知已 commit → 交由 line-push 佇列 best-effort 推播（PushNotificationService 過濾重點事件）。
+      await pushQueue.add(
+        job.data.eventType,
+        { eventType: job.data.eventType, payload: job.data.payload },
+        { attempts: PUSH_ATTEMPTS, backoff: { type: 'exponential', delay: 2_000 }, removeOnComplete: true, removeOnFail: false },
+      );
     },
     { connection },
   );
@@ -56,6 +74,18 @@ async function bootstrap(): Promise<void> {
     if (job && job.attemptsMade >= (job.opts.attempts ?? 1)) {
       void dispatcher.markFailed(job.data.id);
     }
+  });
+
+  // LINE 推播 consumer（best-effort + BullMQ 重試;失敗進 failed set 作 DLQ）。
+  const pushWorker = new Worker<PushJob>(
+    LINE_PUSH_QUEUE,
+    async (job: Job<PushJob>): Promise<void> => {
+      await pushService.push(job.data.eventType, job.data.payload);
+    },
+    { connection },
+  );
+  pushWorker.on('failed', (job: Job<PushJob> | undefined, err: Error) => {
+    console.error(`[worker] LINE push failed event=${job?.data?.eventType}: ${err.message}`);
   });
 
   // 啟動 reaper：退回上次遺留的 PROCESSING（崩潰復原）。

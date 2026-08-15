@@ -156,7 +156,7 @@
   - **無新 migration**（`OutboxEvent.status` 為自由 String，新增 PROCESSING/DISPATCHED/FAILED 值零 migration;Attendance/Notification 已在 `0001_init`）;**無架構變更**。
   - **設計決策（Human Owner 確認）**：1=Outbox+BullMQ relay、2=Nest context 重用、3=收件人規則如上、4=day-key UTC 午夜（對齊 seed）。
   - **Deliverables**：`apps/api/src/events/**`、`apps/api/src/worker.ts`、`apps/api/src/worker.boot.spec.ts`、`.github/workflows/ci.yml`。
-- [~] **Step 4 — Message · Announcement · Notification（站內讀取端）** — `IMPLEMENTED / VERIFICATION_PENDING`
+- [x] **Step 4 — Message · Announcement · Notification（站內讀取端）** — `ACCEPTED`（2026-08-15, Human Owner;CI run 31863276030 綠 + 線上 /messages·/announcements·/notifications 皆 401）
     - [x] **Notifications**（`notifications/**`）：`GET /notifications?unread=`（本人）+ `PATCH /notifications/:id/read`（idempotent）;只需登入、service 以 userId 過濾
     - [x] **Messages**（`messages/**`，雙向）：`POST /messages`（校方↔家長，綁 student，classId 由 DB 推導）、`GET /messages?studentId=`（+ 本人 isRead）、`PATCH /messages/:id/read`（MessageRead upsert）;授權 `canAccessStudent`;同交易寫 Message + `OutboxEvent(MessageSent)` + `AuditLog(message.send)`
     - [x] **Announcements**（`announcements/**`）：`POST /announcements`（SCHOOL→OWNER/ADMIN;CLASS→OWNER/ADMIN 或 TEACHER 自班）、`GET /announcements`（可見範圍：全校 + 相關班級）;同交易寫 Announcement + `OutboxEvent(AnnouncementPublished)` + `AuditLog(announcement.publish)`
@@ -165,7 +165,15 @@
     - [ ] CI 綠 → Render 線上（路由 401）→ Human Acceptance
   - **雙向決策（Human Owner）**：訊息雙向;公告權限/可見範圍照建議。**無新 migration**（Message/MessageRead/Announcement/Notification 已在 `0001_init`）;**無架構變更**。
   - **Deliverables**：`apps/api/src/{messages,announcements,notifications}/**`、`apps/api/src/events/{message,announcement}-event.handler.ts`（+ event-handlers/recipients/worker.module 擴充）、`apps/api/src/app.module.ts`。
-- [ ] Step 5 — Notification / LINE Push（需 Messaging secret）— `NOT_STARTED`
+- [~] **Step 5 — Notification / LINE Push** — `IMPLEMENTED / VERIFICATION_PENDING`（卡 Human Owner 於 Render 填 Messaging access token + LINE 好友/provider 才能線上驗）
+    - [x] `LinePushClient`（`events/line-push.client.ts`）：呼叫 LINE Messaging push API;token 來自 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（未設定→略過，不丟出）;非 2xx→丟出交 BullMQ 重試
+    - [x] `PushNotificationService`：**只推重點事件**（Human Owner 決策）—— `LeaveApproved`/`LeaveRejected`→家長;`MessageSent`→家長+老師（排除發訊者）;其餘不推。收件人沿用 `RecipientsService`;userId→lineUserId 由 `LineIdentity` 對映;未綁 LINE 略過
+    - [x] `worker.ts`：新增 `line-push` BullMQ 佇列 + consumer;events consumer 於 `markDispatched` 後 enqueue 推播（best-effort + 重試;失敗進 failed set 作 DLQ）
+    - [x] `render.yaml`：`sproutin-worker` 加 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（sync:false）
+    - [x] 本機：typecheck ✓、jest **113 tests** ✓（+4：只推重點 / 排除發訊者 / 未綁 LINE 略過 / 非重點不推）、build ✓、worker DI smoke ✓
+    - [ ] **Human Owner 前置**：Render 填 Messaging access token;LINE 後台確認 Login/Messaging 同 provider（userId 一致）+ 收播者加 OA 好友 → 線上實測收到推播 → Human Acceptance
+  - **決策（Human Owner）**：只推重點（核准/駁回/新訊息）;best-effort + BullMQ 重試（不加第二層 outbox）。**無新 migration、無架構變更**（沿用 Step 3 dispatcher，新增一條 push 佇列）。
+  - **Deliverables**：`apps/api/src/events/{line-push.client,push-notification.service}.ts`、`apps/api/src/worker.ts`、`apps/api/src/events/worker.module.ts`、`render.yaml`。
 - [ ] Audit（out-of-band durable path + append-only REVOKE + 查詢端點）— `NOT_STARTED`
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`
 

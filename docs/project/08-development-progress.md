@@ -12,8 +12,8 @@
 Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
 
 **Milestone:**
-Phase 7 Step 1/2/3 → ✅ **ACCEPTED**。
-Step 4（Message / Announcement / Notification 站內讀取端）→ **IMPLEMENTED**（2026-08-15;本機 typecheck / jest 109 / build / boot 綠;待 push → CI + 線上 + Human Acceptance）。
+Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。
+Step 5（Notification / LINE Push）→ **IMPLEMENTED**（2026-08-15;本機 typecheck / jest 113 / build / worker-boot 綠;線上驗證卡 Human Owner 填 Messaging token + LINE 好友/provider）。
 
 **Status:**
 ```text
@@ -23,8 +23,8 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
   Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → ✅ ACCEPTED（2026-08-15, Human Owner）
   Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 4 Message / Announcement / Notification（站內讀取端）    → IMPLEMENTED（待 push + CI + 線上 + Human Acceptance）
-  Step 5 Notification / LINE Push（需 Messaging secret）        → NOT_STARTED
+  Step 4 Message / Announcement / Notification（站內讀取端）    → ✅ ACCEPTED（2026-08-15, Human Owner）
+  Step 5 Notification / LINE Push                              → IMPLEMENTED（待 push + CI;線上驗卡 Human Owner 填 Messaging token + LINE 設定）
   Step 6 Audit out-of-band durable path + append-only REVOKE   → NOT_STARTED
   Step 7 Dashboard / Branding / Feature Flag                   → NOT_STARTED
 ```
@@ -42,9 +42,8 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Task
 
-Phase 7 Step 4 — Message / Announcement / Notification（站內讀取端）— **IMPLEMENTED**（2026-08-15）。
-本機 typecheck / jest 109 / build / boot 全綠。下一步 = commit/push（需 Human Owner 同意;觸發 Render 部署）→ CI 綠 → 線上路由 401 + Human Acceptance。
-（Step 3 已 ACCEPTED;Step 3 的驗收 docs 也會與 Step 4 一起 push。）
+Phase 7 Step 5 — Notification / LINE Push — **IMPLEMENTED**（2026-08-15）。本機 typecheck / jest 113 / build / worker-boot 綠。
+下一步 = commit/push（需 Human Owner 同意）→ CI 綠 → **Human Owner 前置**（Render 填 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` + LINE 後台確認 Login/Messaging 同 provider + 收播者加 OA 好友）→ 線上實測收到推播 → Human Acceptance。
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -179,9 +178,13 @@ NOW（Phase 7 前置；可並行準備）
 ## Next Task
 
 ```text
-Step 4 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→
-  Render 自動部署 → 線上 /messages · /announcements · /notifications 無 token 回 401（路由+guard）→
-  Human Acceptance。通過後才進 Step 5（Notification / LINE Push，需 Messaging secret）。
+Step 5 收尾：commit/push（Human Owner 同意後）→ CI 綠（build + db + docker-build）→ Render 部署。
+  程式層驗證由 CI + 單元測試覆蓋（推播邏輯、只推重點、未綁略過）。
+  線上「真的收到 LINE 推播」需 Human Owner 前置：
+    ① Render 填 LINE_MESSAGING_CHANNEL_ACCESS_TOKEN
+    ② LINE 後台確認 Login(2011106015)/Messaging(2011106146) 同 provider（userId 一致）
+    ③ 收播帳號加 OA 好友
+  完成後線上實測 → Human Acceptance。通過後才進 Step 6（Audit out-of-band durable path + REVOKE）。
 ```
 
 ---
@@ -286,6 +289,36 @@ Next: Phase 6 — Vertical Slice（於新 session 啟動）
 ---
 
 ## Recent Work Log
+
+### 2026-08-15 — Phase 7 / Step 5 — Notification / LINE Push（IMPLEMENTED）
+
+Completed:
+- **`LinePushClient`**（`events/line-push.client.ts`）：呼叫 LINE Messaging `push` API（純文字）;token 來自 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（ADR-004 secret）—— 未設定則略過（dev/CI 安全）;非 2xx→丟出交 BullMQ 重試。
+- **`PushNotificationService`**：**只推重點事件**（Human Owner 決策）—— `LeaveApproved`/`LeaveRejected`→家長;`MessageSent`→家長+老師（排除發訊者）;`LeaveSubmitted`/`LeaveCancelled`/`AnnouncementPublished`/`AttendanceMarked` 不推。收件人沿用 `RecipientsService`（與站內通知同源）;`userId`→`lineUserId` 由 `LineIdentity` 對映;未綁 LINE 自動略過。
+- **`worker.ts`**：新增 `line-push` BullMQ 佇列 + consumer;events consumer 於 `markDispatched` 後 enqueue 推播（**best-effort + BullMQ 重試**;失敗進 failed set 作 DLQ）—— 站內通知一定成立，LINE 推播盡力送（Human Owner 決策）。
+- **`render.yaml`**：`sproutin-worker` 加 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（sync:false）。
+- **設計決策（Human Owner）**：只推重點（核准/駁回/新訊息）;可靠度=盡力送+重試（不加第二層 outbox）。
+
+Verification:
+- 本機：typecheck ✓;jest **113 tests** ✓（+4：只推重點、排除發訊者、未綁 LINE 略過、非重點不推）;`pnpm build` ✓;worker DI smoke（`worker.boot.spec`）涵蓋新 provider;`node dist/worker.js` boot guard ✓。
+- **線上驗證卡 Human Owner 前置**（程式無法自證收到推播）：① Render 填 Messaging access token ② LINE 後台確認 Login/Messaging 同 provider（userId 一致）③ 收播者加 OA 好友。
+
+Architecture:
+- **無變更**。無新 migration、無新 library（沿用 BullMQ;`fetch` 為 Node 20 內建）。沿用 Step 3 dispatcher，新增一條 `line-push` 佇列（docs/06 §1 async 副作用）。
+
+Human Owner:
+- NOW：確認是否 commit + push。之後備妥 Messaging token + LINE 好友/provider → 線上實測收到推播 → Acceptance。
+
+Next:
+- Step 5 acceptance → Step 6（Audit out-of-band durable path + append-only REVOKE + 稽核查詢端點）。
+
+### 2026-08-15 — Phase 7 / Step 4 — ACCEPTED（Human Owner）
+
+Completed:
+- Human Owner 驗收 **Step 4（Message / Announcement / Notification 站內讀取端）** → ACCEPTED。依據：CI run 31863276030 綠（build + db + docker-build）;commit aa48a36 上線;線上 `/messages`、`/announcements`、`/notifications` 無 token 皆回 401（路由部署 + guard 生效）。
+
+Next:
+- **Step 5 — Notification / LINE Push**。先計畫 → Human Owner 確認 + 於 Render 填 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` + 確認 Messaging OA 好友/provider（userId 一致）→ 實作。
 
 ### 2026-08-15 — Phase 7 / Step 4 — Message / Announcement / Notification（IMPLEMENTED）
 

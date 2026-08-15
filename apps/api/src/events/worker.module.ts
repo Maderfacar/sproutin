@@ -8,6 +8,8 @@ import { MessageEventHandler } from './message-event.handler';
 import { AnnouncementEventHandler } from './announcement-event.handler';
 import { EventHandlersService } from './event-handlers.service';
 import { OutboxDispatcherService } from './outbox-dispatcher.service';
+import { LinePushClient } from './line-push.client';
+import { PushNotificationService } from './push-notification.service';
 
 // Worker 專用精簡 DI 圖（worker.ts 以 NestFactory.createApplicationContext 啟動）。
 // 只含 Outbox dispatch + 事件 handler 所需 provider;不 import HTTP/Auth 控制器（worker 無 web 層）。
@@ -22,6 +24,8 @@ import { OutboxDispatcherService } from './outbox-dispatcher.service';
     AnnouncementEventHandler,
     EventHandlersService,
     OutboxDispatcherService,
+    LinePushClient,
+    PushNotificationService,
   ],
 })
 export class WorkerModule {}

@@ -90,6 +90,10 @@ services:
           type: keyvalue
           name: sproutin-redis
           property: connectionString
+      # --- LINE Messaging API（Step 5 推播）---
+      # Worker 呼叫 LINE push API 需要 access token。未設定 → 自動略過推播（不影響站內通知）。
+      - key: LINE_MESSAGING_CHANNEL_ACCESS_TOKEN
+        sync: false # Human Owner 於 Render 後台填（Phase 7 Step 5）
 
   # ---------- Redis（Render Key Value，Redis 相容）----------
   # ⚠ TEST/DEV ONLY：plan=free 僅供測試/開發，**不代表 Production configuration**。
