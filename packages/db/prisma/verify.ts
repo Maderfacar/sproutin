@@ -20,6 +20,16 @@ function check(name: string, cond: boolean, detail?: unknown): void {
   }
 }
 
+// 斷言某操作「應該被擋下」：成功丟出 → 通過；未丟出（竟然成功）→ 失敗。
+async function expectBlocked(name: string, fn: () => Promise<unknown>): Promise<void> {
+  try {
+    await fn();
+    check(name, false, '未被擋下（append-only 失效！）');
+  } catch {
+    check(name, true);
+  }
+}
+
 async function main(): Promise<void> {
   console.log('[verify] 斷言 Demo seed 資料圖…');
 
@@ -103,6 +113,23 @@ async function main(): Promise<void> {
     userCount,
     lineCount,
   });
+
+  // 8) ADR-005：AuditLog append-only 由 DB 層 trigger 強制（migration 0002）。
+  //    INSERT 允許；UPDATE / DELETE / TRUNCATE 皆應被 DB 擋下（即使以 owner 連線）。
+  const probe = await prisma.auditLog.create({
+    data: { action: 'verify.probe', resourceType: 'Verify', result: 'SUCCESS' },
+  });
+  check('AuditLog INSERT 允許（append-only 只擋改/刪/清空）', Boolean(probe.id), probe.id);
+
+  await expectBlocked('AuditLog UPDATE 被 DB 擋下', () =>
+    prisma.auditLog.update({ where: { id: probe.id }, data: { action: 'tampered' } }),
+  );
+  await expectBlocked('AuditLog DELETE 被 DB 擋下', () =>
+    prisma.auditLog.delete({ where: { id: probe.id } }),
+  );
+  await expectBlocked('AuditLog TRUNCATE 被 DB 擋下', () =>
+    prisma.$executeRawUnsafe('TRUNCATE TABLE "AuditLog"'),
+  );
 
   if (failures > 0) {
     console.error(`\n[verify] 失敗 ${failures} 項 — CI 應為紅燈。`);

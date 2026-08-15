@@ -59,5 +59,13 @@ AuditLog 與業務變更寫在**同一 DB transaction**（同一校 DB）。二�
 - (+) DENIED/FAILURE/敏感 READ 以 durable BullMQ 佇列 + DLQ 保證不易遺失。
 - (−) Out-of-band 需 durable BullMQ 佇列 + DLQ 對帳，**MVP 即建**（非延後）；WORM/SIEM 明確排除。
 - Read audit 限敏感操作白名單，避免對一般 GET 產生洪流。
-- append-only 於 DB 權限層強制（不授予 UPDATE/DELETE）；metadata 禁存敏感明文。
+- append-only 於 DB 層強制；metadata 禁存敏感明文。
+
+### Append-only 的 DB 層強制手段（Phase 7 Step 6，決策 A）
+
+原設想「app role 只授 INSERT/SELECT、REVOKE UPDATE/DELETE」。但 MVP 部署（ADR-006）runtime 以 **DB owner** 連線，owner 無視 GRANT/REVOKE，故單純 REVOKE **對 owner 無效**。
+
+**MVP 採用（migration 0002）**：以 **trigger** 在 `AuditLog` 表本身強制 append-only —— `BEFORE UPDATE OR DELETE`（row-level）+ `BEFORE TRUNCATE`（statement-level）觸發 `RAISE EXCEPTION`。即使以 owner 連線，應用層也無法改/刪/清空稽核;`INSERT`/`SELECT` 不受影響。純 expand（只加 function + trigger），ADR-003 image-rollback 安全。
+
+**未來 hardening（非本強制之必要條件）**：least-privilege app role 分離（runtime 改用只授 `AuditLog` INSERT/SELECT 的受限連線、防到 superuser 層級 tampering）屬 infra/破壞性變更（新 secret + 換連線，ADR-003 兩階段），延至 Phase 8+ 正式營運/合規前評估。trigger 已擋住應用層威脅面（含以 owner 連線的程式 bug／誤用）。
 - 影響：01/03/05/06 文件更新；AuditService 定義兩條路徑。

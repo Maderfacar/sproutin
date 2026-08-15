@@ -51,7 +51,7 @@ Blocked:
 Technical Debt:
 - **ESLint flat config 未建** → CI 暫略 `lint`。列為 DEFERRED；**MVP Release Candidate（Phase 8）前必須完成**，不得永久忽略。
 - ~~**CI 未建置 Docker image**~~ → ✅ RESOLVED（Phase 7 Step 3）：CI 新增 `docker-build` job（同一 Dockerfile.api，push:false）。待 CI 綠驗證。
-- **AuditLog append-only 尚未於 DB 權限層強制**（Phase 7 Step 6 決策 2）→ 本版先「程式自律」（`AuditService` 只 create、無改/刪路徑 + 測試斷言）;真正 DB 層鎖死（least-privilege app role + REVOKE UPDATE/DELETE + 換連線字串 + 新 secret，屬 infra/ADR-003 破壞性變更）延至**下一版獨立 release**，屆時以 §D 提案由 Human Owner 定案。Owner=Claude(提案+impl)/Human(定案+deploy)。
+- ~~**AuditLog append-only 尚未於 DB 權限層強制**~~ → ✅ **RESOLVED（Phase 7 Step 6 決策 A，migration 0002）**：以 trigger 擋 `AuditLog` UPDATE/DELETE/TRUNCATE（即使 owner 連線也擋）。append-only 已在 DB 層強制。**未來 hardening（非必要）**：least-privilege app role 分離（防 superuser 層級，需新 secret + 換連線，ADR-003 破壞性變更）→ Phase 8+ 正式營運/合規前評估。
 
 Architecture Questions:
 - **AQ-1 / AQ-2 — DECIDED（2026-08-14, ADR-006）**：架構不變，僅定部署位置 → Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL。

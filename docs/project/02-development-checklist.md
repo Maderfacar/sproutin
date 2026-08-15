@@ -183,7 +183,7 @@
     - [x] **Worker `audit` consumer**（`worker.ts`）：INSERT 進 AuditLog（`AuditService.recordStandalone`，append-only）;丟出→BullMQ 重試→failed set 作 DLQ。boot guard 未動（無 Redis 仍 exit 1）
     - [x] 本機：typecheck ✓、jest **126 tests** ✓（+13）、build ✓、`node dist/main.js` boot（`/audit-logs` mapped）✓、`worker.js` 無 Redis exit 1 ✓;`app.module.spec`+`worker.boot.spec` DI smoke 涵蓋新 provider/攔截器/consumer。e2e 403 案例自然觸發 DENIED enqueue（降級 log 可見）
     - [x] CI 綠（build+db+docker-build，run 31904698836）→ Render 線上 `/audit-logs` 401 → Human Acceptance ✅（2026-08-16）;帶 token DENIED 列/查詢流程由 CI e2e + 單元測試覆蓋
-  - **append-only DB 層強制（決策 2 = MVP 先程式自律）**：本版**不動基礎設施**——程式碼無改/刪 AuditLog 路徑（`AuditService` 只 create）+ 測試斷言。真正 DB 層鎖死（least-privilege app role + REVOKE UPDATE/DELETE + 換連線字串 + 新 secret）依 ADR-003 拆**下一版獨立 release**，屆時以 §D 提案。owner 連線 REVOKE 無效，故本版不出假 migration。
+  - **append-only DB 層強制（決策 A，migration 0002）**：程式層——`AuditService` 只 create、無改/刪路徑 + 測試斷言;**DB 層——trigger** 擋 `AuditLog` UPDATE/DELETE/TRUNCATE（`RAISE EXCEPTION`;即使 owner 連線也擋）。純 expand migration、零 infra。CI db job（`verify.ts`）斷言 INSERT 允許 / 改·刪·清空被擋 + drift 需過。owner 連線 REVOKE 無效故不用 REVOKE。least-privilege role 分離屬未來 hardening（Phase 8+，非必要）。
   - **無新 migration、無新 library（沿用 BullMQ/ioredis/rxjs）、無架構變更。**
   - **Deliverables**：`apps/api/src/core/audit/{audit.service,audit-enqueuer.service,audit.util,audit-read.decorator,audit-read.interceptor,audit-failure.interceptor,audit.module}.ts`、`apps/api/src/audit-logs/**`、guards（roles/scope）、`auth.module.ts`、`app.module.ts`、`students`/`messages` controller（`@AuditRead`）、`worker.ts`。
 - [ ] Dashboard · Branding · Feature Flag — `NOT_STARTED`

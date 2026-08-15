@@ -248,7 +248,7 @@ enum AuditResult      { SUCCESS FAILURE DENIED }
 
 ## Audit 安全與可靠性（修正 C；ADR-005）
 
-- **append-only 強制於 DB 權限層**：app 的 DB role 只授予 AuditLog 的 `INSERT`/`SELECT`，**不授予 UPDATE/DELETE**（migration 內 `REVOKE`）。應用層無法違反。
+- **append-only 強制於 DB 層（migration 0002，Phase 7 Step 6）**：以 **trigger** 擋 `AuditLog` 的 UPDATE / DELETE / TRUNCATE（`RAISE EXCEPTION`）;即使以 DB owner 連線，應用層也無法改/刪/清空稽核。`INSERT`/`SELECT` 不受影響。（原「REVOKE UPDATE/DELETE」對 owner 連線無效 → 改用 trigger;least-privilege app role 分離屬未來 hardening，見 ADR-005。）
 - `metadata` **不得存放敏感明文**（健康細節、訊息全文）；只記操作類型與資源引用。
 - 特別覆蓋：學生資料、家長資料、（未來）健康資料、訊息讀取/發送、權限變更、Leave 審核。
 - **可靠性（ADR-005）**：狀態變更 → **transactional audit**（與業務同一交易，同校 DB，原子）；DENIED/FAILURE/敏感 READ → **out-of-band audit**（**MVP durable path**：durable BullMQ 佇列 `audit` + DLQ，Worker 寫入；Redis 掛才降級 structured log）。因 AuditLog 與業務同在該校 DB，transactional audit **不新增可用性依賴**，且不影響他校。

@@ -139,14 +139,11 @@ Required decision:
    - Owner: Claude(impl) / Human(accept)
    - Note: 目前 CI 暫略 lint；不得因換 Phase 而遺忘。
 
-2. AuditLog append-only 未於 DB 權限層強制（Phase 7 Step 6 決策 2）
-   - Priority: Medium
-   - Required before: 合規／正式營運前（Phase 8+）
-   - Owner: Claude(§D 提案 + impl) / Human(定案 + deploy)
-   - Note: 本版先「程式自律」（AuditService 只 create、無改/刪路徑 + 測試斷言）。
-     真正 DB 層鎖死需 least-privilege app role + REVOKE UPDATE/DELETE + 換連線字串 + 新 secret
-     （infra／ADR-003 破壞性變更）→ 拆下一版獨立 release，屆時以 06 §D 提案。
-     owner 連線 REVOKE 無效，故本版刻意不出假 migration。
+2. ~~AuditLog append-only 未於 DB 權限層強制~~ → ✅ RESOLVED（Phase 7 Step 6 決策 A，migration 0002）
+   - 手段: trigger 擋 AuditLog UPDATE/DELETE/TRUNCATE（RAISE EXCEPTION;即使 owner 連線也擋）。
+     純 expand migration、零 infra、對線上無風險。CI db job 斷言 INSERT 允許 / 改·刪·清空被擋。
+   - 未來 hardening（非必要）: least-privilege app role 分離（防 superuser 層級 tampering，
+     需新 secret + 換連線，ADR-003 破壞性變更）→ Phase 8+ 正式營運/合規前評估。
 ```
 
 ---
