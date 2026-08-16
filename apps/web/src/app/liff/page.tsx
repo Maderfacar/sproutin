@@ -40,15 +40,17 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <section className="rise-in mb-7">
-        <p className="text-sm font-semibold text-brand-primary">{greeting()} 👋</p>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-ink">{user.displayName}</h1>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+      <section className="rise-in mb-8">
+        <p className="eyebrow">{greeting()}</p>
+        <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-ink">
+          {user.displayName}
+        </h1>
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {roleLabels.length > 0 ? (
             roleLabels.map((label) => (
               <span
                 key={label}
-                className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink-soft shadow-soft"
+                className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink-soft"
               >
                 {label}
               </span>

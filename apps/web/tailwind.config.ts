@@ -1,11 +1,15 @@
 import type { Config } from 'tailwindcss';
 
-// 溫暖親和 tokens。品牌色以 CSS 變數承載（runtime per-school，ADR-001）;
-// 暖色中性 / 圓角 / 柔和陰影為固定基調。
+// 清葉 tokens。品牌色以 CSS 變數承載（runtime per-school，ADR-001）;
+// 米白中性 / 襯線標題 / 細線 / 柔和留白為固定基調。
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)'],
+        serif: ['var(--font-serif)'],
+      },
       colors: {
         brand: {
           DEFAULT: 'var(--brand-primary)',

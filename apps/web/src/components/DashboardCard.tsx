@@ -14,7 +14,10 @@ interface DashboardCardProps {
   variant?: 'grid' | 'list';
 }
 
-const iconChipStyle = { background: 'color-mix(in srgb, var(--brand-primary) 12%, #ffffff)' };
+const iconChipStyle = {
+  background: 'color-mix(in srgb, var(--brand-primary) 13%, var(--surface))',
+  color: 'var(--brand-primary)',
+};
 
 // 溫暖親和卡片。grid=直式（圖示在上）;list=橫式（圖示在左）。hover 輕抬、stagger 進場。
 export function DashboardCard({
@@ -36,7 +39,7 @@ export function DashboardCard({
 
   const iconChip = (
     <span
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl"
+      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl"
       style={iconChipStyle}
       aria-hidden
     >

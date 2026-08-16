@@ -1,40 +1,31 @@
-// per-school 主題模板（Phase 8）。每個主題是一組「暖色中性」CSS 變數 bundle;
+// per-school 主題模板。目前定案：先做一套「清葉」做到頂（單一主題）;
 // 品牌色（--brand-*）仍由該校 primaryColor/secondaryColor 疊上（BrandingProvider 設定）。
-// 新增主題＝在此加一組 + 後端 theme 允許值。
+// 未來要加第二套主題供園所選 → 在此加一組 + 後端 theme 允許值（架構已預留）。
 
 export type ThemeVars = Record<string, string>;
 
-const WARM: ThemeVars = {
-  '--bg': '#faf6ef',
-  '--bg-deep': '#f1e8da',
-  '--surface': '#ffffff',
-  '--ink': '#40382f',
-  '--ink-soft': '#8c8175',
-  '--line': '#ece2d3',
-  '--radius-card': '22px',
-  '--radius-md': '14px',
-  '--shadow-soft': '0 1px 2px rgba(94, 68, 40, 0.05), 0 10px 26px rgba(94, 68, 40, 0.07)',
-  '--shadow-lift': '0 10px 28px rgba(94, 68, 40, 0.16)',
+// 清葉（清新自然）：與 globals.css :root 對齊，避免載入時閃爍。
+const QINGYE: ThemeVars = {
+  '--bg': '#f4f2ea',
+  '--bg-deep': '#eeebe0',
+  '--surface': '#fbfaf4',
+  '--ink': '#23302a',
+  '--ink-soft': '#8a9188',
+  '--line': '#e1e0d2',
+  '--radius-card': '18px',
+  '--radius-md': '12px',
+  '--shadow-soft': '0 1px 2px rgba(35, 48, 42, 0.04), 0 14px 34px -22px rgba(35, 48, 42, 0.22)',
+  '--shadow-lift': '0 16px 34px -18px rgba(35, 48, 42, 0.28)',
 };
 
-const PROFESSIONAL: ThemeVars = {
-  '--bg': '#f4f6f8',
-  '--bg-deep': '#e8edf1',
-  '--surface': '#ffffff',
-  '--ink': '#1f2933',
-  '--ink-soft': '#66707b',
-  '--line': '#e2e6ea',
-  '--radius-card': '12px',
-  '--radius-md': '8px',
-  '--shadow-soft': '0 1px 2px rgba(30, 41, 51, 0.05), 0 8px 20px rgba(30, 41, 51, 0.06)',
-  '--shadow-lift': '0 8px 22px rgba(30, 41, 51, 0.14)',
-};
-
+// 單一主題：現有各校 SchoolConfig.theme（warm/professional）一律映射到清葉，
+// 直到未來正式推出多主題選擇。
 export const THEMES: Record<string, ThemeVars> = {
-  warm: WARM,
-  professional: PROFESSIONAL,
+  qingye: QINGYE,
+  warm: QINGYE,
+  professional: QINGYE,
 };
 
 export function themeVars(theme: string): ThemeVars {
-  return THEMES[theme] ?? WARM;
+  return THEMES[theme] ?? QINGYE;
 }

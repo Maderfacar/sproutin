@@ -2,29 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== 溫暖親和 設計系統 =====
+/* ===== 清葉 設計系統（清新自然 / editorial）=====
    品牌色（--brand-*）為 per-school，由 BrandingProvider 於 runtime 覆寫（ADR-001）。
-   暖色中性、圓角、柔和陰影為固定基調（全園一致的溫度）。 */
+   米白底、森綠、襯線標題、細線分隔、柔和留白為固定基調（全園一致的質感）。 */
 :root {
-  /* 品牌（per-school fallback） */
-  --brand-primary: #2e7d32;
-  --brand-secondary: #a5d6a7;
+  /* 品牌（per-school fallback；森綠） */
+  --brand-primary: #2f6b4f;
+  --brand-secondary: #74b48a;
 
-  /* 暖色中性 */
-  --bg: #faf6ef; /* 溫暖奶油底 */
-  --bg-deep: #f1e8da; /* 漸層深一階 */
-  --surface: #ffffff;
-  --ink: #40382f; /* 溫暖深字 */
-  --ink-soft: #8c8175; /* 柔和次要字 */
-  --line: #ece2d3; /* 暖色邊線 */
+  /* 清葉中性 */
+  --bg: #f4f2ea; /* 米白 parchment */
+  --bg-deep: #eeebe0; /* 漸層深一階 */
+  --surface: #fbfaf4; /* 卡面（微暖白） */
+  --ink: #23302a; /* 森綠深字 */
+  --ink-soft: #8a9188; /* 柔和次要字 */
+  --line: #e1e0d2; /* 細線 */
 
-  /* 形狀 / 陰影 */
-  --radius-card: 22px;
-  --radius-md: 14px;
-  --shadow-soft: 0 1px 2px rgba(94, 68, 40, 0.05), 0 10px 26px rgba(94, 68, 40, 0.07);
-  --shadow-lift: 0 10px 28px rgba(94, 68, 40, 0.16);
+  /* 形狀 / 陰影（清葉偏收斂、細） */
+  --radius-card: 18px;
+  --radius-md: 12px;
+  --shadow-soft: 0 1px 2px rgba(35, 48, 42, 0.04), 0 14px 34px -22px rgba(35, 48, 42, 0.22);
+  --shadow-lift: 0 16px 34px -18px rgba(35, 48, 42, 0.28);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 字體：襯線標題 + 清爽正文 */
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', 'Songti TC', 'Noto Serif TC', Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Noto Sans TC',
+    'Microsoft JhengHei', system-ui, sans-serif;
 }
 
 html,
@@ -35,18 +40,17 @@ body {
 body {
   color: var(--ink);
   background-color: var(--bg);
-  /* 溫暖氛圍：奶油底 + 品牌色極淡光暈 */
+  /* 清葉氛圍：米白底 + 品牌色極淡光暈（收斂、留白） */
   background-image:
-    radial-gradient(1100px 480px at 100% -10%, color-mix(in srgb, var(--brand-secondary) 26%, transparent), transparent),
-    radial-gradient(900px 420px at -10% 0%, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent),
+    radial-gradient(1100px 520px at 100% -12%, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 60%),
     linear-gradient(180deg, var(--bg), var(--bg-deep));
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
-  font-family: 'Nunito', ui-rounded, 'Segoe UI', system-ui, -apple-system, 'PingFang TC',
-    'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  text-rendering: optimizeLegibility;
+  font-family: var(--font-sans);
 }
 
-/* 可重用元件樣式（溫暖親和；全站一致） */
+/* 可重用元件樣式（清葉；全站一致） */
 @layer components {
   .card {
     @apply rounded-card border border-line bg-surface shadow-soft;
@@ -55,16 +59,20 @@ body {
     @apply w-full rounded-md2 border border-line bg-surface px-3.5 py-2.5 text-ink outline-none transition placeholder:text-ink-soft focus:border-brand-primary;
   }
   .btn-primary {
-    @apply rounded-full bg-brand-primary px-5 py-2.5 font-semibold text-white shadow-soft transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50;
+    @apply rounded-2xl bg-brand-primary px-5 py-3 font-semibold tracking-wide text-white shadow-soft transition hover:opacity-90 active:scale-[0.99] disabled:opacity-50;
   }
   .btn-secondary {
-    @apply rounded-full border border-line bg-surface px-4 py-2 font-medium text-ink transition hover:bg-black/[0.03] disabled:opacity-50;
+    @apply rounded-2xl border border-line bg-surface px-4 py-2.5 font-medium text-ink transition hover:bg-black/[0.02] disabled:opacity-50;
   }
   .field-label {
     @apply flex flex-col gap-1.5 text-sm text-ink-soft;
   }
   .section-title {
-    @apply text-lg font-extrabold text-ink;
+    @apply font-serif text-xl font-semibold text-ink;
+  }
+  /* 小寫字段標籤（清葉常用：大寫字距 eyebrow） */
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-ink-soft;
   }
   .chip {
     @apply rounded-full px-2.5 py-1 text-xs font-semibold;
