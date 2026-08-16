@@ -80,6 +80,16 @@ export interface AdminStudentView {
   status: StudentStatus;
 }
 
+export interface StudentDetailView extends AdminStudentView {
+  className: string;
+  guardians: {
+    userId: string;
+    displayName: string;
+    relation: GuardianRelation;
+    isPrimary: boolean;
+  }[];
+}
+
 export interface CreateStudentBody {
   name: string;
   classId: string;

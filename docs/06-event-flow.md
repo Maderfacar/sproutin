@@ -59,7 +59,7 @@ Parent → POST /leaves
 | `LeaveRejected` | Leave | Attendance(回滾), Notification | — |
 | `LeaveCancelled` | Leave | Attendance(回滾), Notification | Transportation |
 | `MessageSent` | Message | Notification | AI(draft/summary) |
-| `AnnouncementPublished` | Announcement | Notification | — |
+| `AnnouncementPublished` | Announcement | Notification, **LINE Push**（階段2 刀5） | — |
 | `AttendanceMarked` | Attendance | Notification(選配) | Report |
 
 ## 5. Audit 可靠性（修正 C；ADR-005）

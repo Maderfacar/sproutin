@@ -17,7 +17,7 @@ import { ScopeGuard } from '../auth/scope.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Scope } from '../auth/scope.decorator';
 import { AuditRead } from '../core/audit/audit-read.decorator';
-import { StudentsService, StudentView } from './students.service';
+import { StudentsService, StudentDetailView, StudentView } from './students.service';
 
 // 邊界輸入驗證（zod，比照 leaves/school controller 慣例）。
 const createStudentSchema = z.object({
@@ -60,6 +60,16 @@ export class StudentsController {
   @AuditRead({ resourceType: 'Student', action: 'student.read', param: 'id' })
   async getOne(@Param('id') id: string): Promise<StudentView> {
     return this.students.getById(id);
+  }
+
+  // GET /students/:id/detail — 學生整合視圖（基本資料 + 班名 + 監護人;階段2 刀5）。
+  // 與 GET /students/:id 同一條授權鏈與敏感 READ 稽核，只是回傳更完整。
+  @Get(':id/detail')
+  @Roles('OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN')
+  @Scope('student', 'id')
+  @AuditRead({ resourceType: 'Student', action: 'student.read_detail', param: 'id' })
+  async getDetail(@Param('id') id: string): Promise<StudentDetailView> {
+    return this.students.getDetail(id);
   }
 
   // POST /students — 新增學生（OWNER/ADMIN;階段2 刀2）。

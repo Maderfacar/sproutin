@@ -143,13 +143,13 @@ export default function StudentsAdminPage() {
                 >
                   {student.name.charAt(0)}
                 </span>
-                <div className="min-w-0 flex-1">
+                <Link href={`/liff/student/${student.id}`} className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">{student.name}</p>
                   <p className="truncate text-xs text-ink-soft">
                     {className(student.classId)}
                     {student.status !== 'ACTIVE' && ` · ${STUDENT_STATUS_LABEL[student.status]}`}
                   </p>
-                </div>
+                </Link>
                 <button
                   type="button"
                   aria-label={`編輯 ${student.name}`}

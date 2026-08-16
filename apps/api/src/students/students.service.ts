@@ -27,6 +27,20 @@ export interface UpdateStudentInput {
   status?: StudentStatus;
 }
 
+// 學生整合視圖（階段2 刀5）：一次帶回班名與監護人，讓「一個學生的全貌」不必打好幾支 API。
+// 授權沿用 GET /students/:id 的 ScopeGuard（老師自班 / 家長自己小孩 / OWNER·ADMIN 全校）+ 敏感 READ 稽核。
+export interface StudentGuardianView {
+  userId: string;
+  displayName: string;
+  relation: string;
+  isPrimary: boolean;
+}
+
+export interface StudentDetailView extends StudentView {
+  className: string;
+  guardians: StudentGuardianView[];
+}
+
 const STUDENT_VIEW = { id: true, name: true, classId: true, status: true } as const;
 
 @Injectable()
@@ -45,6 +59,41 @@ export class StudentsService {
       throw new NotFoundException('student_not_found');
     }
     return student;
+  }
+
+  // GET /students/:id/detail — 學生整合視圖（基本資料 + 班名 + 監護人）。
+  async getDetail(id: string): Promise<StudentDetailView> {
+    const student = await this.prisma.student.findUnique({
+      where: { id },
+      select: {
+        ...STUDENT_VIEW,
+        class: { select: { name: true } },
+        guardianships: {
+          select: {
+            relation: true,
+            isPrimary: true,
+            userId: true,
+            user: { select: { displayName: true } },
+          },
+        },
+      },
+    });
+    if (!student) {
+      throw new NotFoundException('student_not_found');
+    }
+    return {
+      id: student.id,
+      name: student.name,
+      classId: student.classId,
+      status: student.status,
+      className: student.class.name,
+      guardians: student.guardianships.map((g) => ({
+        userId: g.userId,
+        displayName: g.user.displayName,
+        relation: g.relation,
+        isPrimary: g.isPrimary,
+      })),
+    };
   }
 
   // Step 4 讀取切片：後端依角色/scope 回「這個使用者能看到的學生」（docs/05 §2-3）。

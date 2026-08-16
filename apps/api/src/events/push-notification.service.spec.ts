@@ -6,9 +6,10 @@ import { RecipientsService } from './recipients.service';
 type PrismaMock = {
   lineIdentity: { findMany: jest.Mock };
   student: { findUnique: jest.Mock };
+  announcement: { findUnique: jest.Mock };
 };
 type ClientMock = { push: jest.Mock };
-type RecipientsMock = { forStudent: jest.Mock };
+type RecipientsMock = { forStudent: jest.Mock; forClass?: jest.Mock; allUsers?: jest.Mock };
 
 function makePrisma(): PrismaMock {
   return {
@@ -18,6 +19,7 @@ function makePrisma(): PrismaMock {
       ),
     },
     student: { findUnique: jest.fn(async () => ({ name: '范小星' })) },
+    announcement: { findUnique: jest.fn(async () => ({ title: '本週五校外教學' })) },
   };
 }
 
@@ -28,6 +30,10 @@ function makeService(prisma: PrismaMock, recipients: RecipientsMock, client: Cli
 
 function pushedTo(client: ClientMock): string[] {
   return client.push.mock.calls.map((c) => c[0] as string);
+}
+
+function pushedText(client: ClientMock): string[] {
+  return client.push.mock.calls.map((c) => c[1] as string);
 }
 
 describe('PushNotificationService.push', () => {
@@ -56,11 +62,65 @@ describe('PushNotificationService.push', () => {
     expect(pushedTo(client)).toEqual(['L-u-teacher']); // 發訊者 u-parent 被排除
   });
 
-  it('非重點事件（AnnouncementPublished）→ 不推', async () => {
+  // 階段2 刀5：公告改為會推播（Human Owner 2026-08-17 同意納入）。
+  it('全校公告 → 推給全體，文字帶公告標題', async () => {
+    const prisma = makePrisma();
+    const recipients = {
+      forStudent: jest.fn(),
+      allUsers: jest.fn(async () => ['u-parent', 'u-teacher']),
+      forClass: jest.fn(),
+    };
+    const client = { push: jest.fn(async (_to: string, _text: string) => undefined) };
+    await makeService(prisma, recipients, client).push('AnnouncementPublished', {
+      announcementId: 'a1',
+      schoolId: 's1',
+      classId: null,
+    });
+
+    expect(pushedTo(client).sort()).toEqual(['L-u-parent', 'L-u-teacher']);
+    expect(pushedText(client)[0]).toBe('【全校公告】本週五校外教學');
+    expect(recipients.forClass).not.toHaveBeenCalled();
+  });
+
+  it('班級公告 → 只推該班（該班老師 + 該班家長）', async () => {
+    const prisma = makePrisma();
+    const recipients = {
+      forStudent: jest.fn(),
+      allUsers: jest.fn(),
+      forClass: jest.fn(async () => ['u-parent']),
+    };
+    const client = { push: jest.fn(async (_to: string, _text: string) => undefined) };
+    await makeService(prisma, recipients, client).push('AnnouncementPublished', {
+      announcementId: 'a1',
+      schoolId: 's1',
+      classId: 'class-sun',
+    });
+
+    expect(pushedTo(client)).toEqual(['L-u-parent']);
+    expect(pushedText(client)[0]).toBe('【班級公告】本週五校外教學');
+    expect(recipients.allUsers).not.toHaveBeenCalled();
+  });
+
+  it('公告已被刪除（查無標題）→ 不推空洞訊息', async () => {
+    const prisma = makePrisma();
+    prisma.announcement.findUnique.mockResolvedValue(null);
+    const recipients = { forStudent: jest.fn(), allUsers: jest.fn(), forClass: jest.fn() };
+    const client = { push: jest.fn(async (_to: string, _text: string) => undefined) };
+    await makeService(prisma, recipients, client).push('AnnouncementPublished', {
+      announcementId: 'gone',
+      schoolId: 's1',
+      classId: null,
+    });
+
+    expect(client.push).not.toHaveBeenCalled();
+    expect(recipients.allUsers).not.toHaveBeenCalled();
+  });
+
+  it('其餘非重點事件（AttendanceMarked）→ 不推', async () => {
     const prisma = makePrisma();
     const recipients = { forStudent: jest.fn() };
     const client = { push: jest.fn(async (_to: string, _text: string) => undefined) };
-    await makeService(prisma, recipients, client).push('AnnouncementPublished', { announcementId: 'a1', schoolId: 's1', classId: null });
+    await makeService(prisma, recipients, client).push('AttendanceMarked', { studentId: 'stu-1' });
 
     expect(client.push).not.toHaveBeenCalled();
     expect(recipients.forStudent).not.toHaveBeenCalled();

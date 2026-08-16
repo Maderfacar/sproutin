@@ -2,7 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { apiGet, apiSend } from '../../lib/api';
-import type { AdminStudentView, CreateStudentBody, UpdateStudentBody } from '../../lib/types';
+import type {
+  AdminStudentView,
+  CreateStudentBody,
+  StudentDetailView,
+  UpdateStudentBody,
+} from '../../lib/types';
 
 // 學生管理（OWNER/ADMIN;階段2 刀2）。授權走 httpOnly cookie，實際權限由後端 Guard 判定。
 
@@ -13,6 +18,16 @@ export function useAdminStudents(classId?: string): UseQueryResult<AdminStudentV
       apiGet<AdminStudentView[]>(
         classId ? `/api/students?classId=${encodeURIComponent(classId)}` : '/api/students',
       ),
+  });
+}
+
+// 學生整合視圖（基本資料 + 班名 + 監護人）。授權沿用後端 ScopeGuard：
+// 老師只看得到自班、家長只看得到自己小孩、園長/行政全校。
+export function useStudentDetail(id: string | undefined): UseQueryResult<StudentDetailView> {
+  return useQuery({
+    queryKey: ['studentDetail', id],
+    queryFn: () => apiGet<StudentDetailView>(`/api/students/${id}/detail`),
+    enabled: Boolean(id),
   });
 }
 

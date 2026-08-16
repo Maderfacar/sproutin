@@ -32,6 +32,7 @@ POST /auth/line/login
 | GET | `/me/dashboard` | 動態 card 清單（後端過濾） | auth | – |
 | GET | `/students?classId=` | 學生清單（scope 過濾；classId 只縮小不放寬） | Roles | – |
 | GET | `/students/:id` | 學生詳情 | Roles+Scope | ✔(讀敏感) |
+| **GET** | **`/students/:id/detail`** | 學生整合視圖（+ 班名 + 監護人清單） | Roles+Scope | ✔(讀敏感) |
 | **POST** | **`/students`** | 新增學生（name + classId） | OWNER/ADMIN | ✔ |
 | **PATCH** | **`/students/:id`** | 改姓名 / 換班 / 改在學狀態（**無刪除**，離校畢業改 status） | OWNER/ADMIN | ✔ |
 | GET | `/classes` | 班級清單（含 studentCount） | Roles | – |

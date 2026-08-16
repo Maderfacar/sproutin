@@ -1,12 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import type { LeaveApprovedPayload, LeaveRejectedPayload, MessageSentPayload } from '@sproutin/shared';
+import type {
+  AnnouncementPublishedPayload,
+  LeaveApprovedPayload,
+  LeaveRejectedPayload,
+  MessageSentPayload,
+} from '@sproutin/shared';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { RecipientsService } from './recipients.service';
 import { LinePushClient } from './line-push.client';
 
 // LINE 推播（Step 5，best-effort + BullMQ 重試）。**只推重點事件**（Human Owner 決策）：
-//   LeaveApproved / LeaveRejected → 通知家長;MessageSent → 通知家長+老師（排除發訊者）。
-// 其餘事件（LeaveSubmitted / LeaveCancelled / AnnouncementPublished / AttendanceMarked）只留站內、不推 LINE。
+//   LeaveApproved / LeaveRejected → 通知家長;MessageSent → 通知家長+老師（排除發訊者）;
+//   **AnnouncementPublished → 通知公告對象**（階段2 刀5 加入;園所發公告時家長 LINE 立即收到）。
+// 其餘事件（LeaveSubmitted / LeaveCancelled / AttendanceMarked）只留站內、不推 LINE。
 // 收件人沿用 RecipientsService（與站內通知一致）;userId → lineUserId 由 LineIdentity 對映;
 // 未綁 LINE（無 LineIdentity）或無 token 者自動略過。
 // 推播文字（帶學生姓名,讓家長一眼看出是哪個小孩）。
@@ -15,6 +21,8 @@ const PUSH_TEXT: Record<string, (studentName: string) => string> = {
   LeaveRejected: (name) => `${name} 的請假申請未通過，請開啟應用程式查看詳情。`,
   MessageSent: (name) => `${name} 有一則新訊息，請開啟應用程式查看。`,
 };
+
+const ANNOUNCEMENT_EVENT = 'AnnouncementPublished';
 
 @Injectable()
 export class PushNotificationService {
@@ -26,6 +34,10 @@ export class PushNotificationService {
 
   // 依事件型別推播。非重點事件 → no-op。失敗丟出 → BullMQ 重試。
   async push(eventType: string, payload: unknown): Promise<void> {
+    if (eventType === ANNOUNCEMENT_EVENT) {
+      return this.pushAnnouncement(payload as AnnouncementPublishedPayload);
+    }
+
     const build = PUSH_TEXT[eventType];
     if (!build) {
       return; // 非重點事件 → 不推
@@ -33,6 +45,30 @@ export class PushNotificationService {
     const studentId = (payload as { studentId?: string }).studentId;
     const text = build(await this.studentName(studentId));
     const userIds = await this.recipientsFor(eventType, payload);
+    await this.sendTo(userIds, text);
+  }
+
+  // 公告推播：文字帶公告標題（家長不必開 App 就知道是什麼事）。
+  // 對象與站內通知一致——全校公告→全體;班級公告→該班老師 + 該班學生家長。
+  // 公告已刪除（查無標題）→ 不推，避免推出空洞訊息。
+  private async pushAnnouncement(payload: AnnouncementPublishedPayload): Promise<void> {
+    const announcement = await this.prisma.announcement.findUnique({
+      where: { id: payload.announcementId },
+      select: { title: true },
+    });
+    if (!announcement) {
+      return;
+    }
+    const scopeLabel = payload.classId ? '班級公告' : '全校公告';
+    const text = `【${scopeLabel}】${announcement.title}`;
+
+    const userIds = payload.classId
+      ? await this.recipients.forClass(this.prisma, payload.classId)
+      : await this.recipients.allUsers(this.prisma);
+    await this.sendTo(userIds, text);
+  }
+
+  private async sendTo(userIds: string[], text: string): Promise<void> {
     const lineUserIds = await this.lineIdsFor(userIds);
     for (const to of lineUserIds) {
       await this.client.push(to, text);

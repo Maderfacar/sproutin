@@ -10,7 +10,8 @@
 
 **Phase:**
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
-階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯）＝ IMPLEMENTED，待線上驗收**（含 migration 0004 User.status）；刀 4（每日聯絡簿，需 migration）→ 刀 5（學生整合視圖 + 公告推播）尚未開始。
+階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）與刀 5（學生整合視圖 + 公告推播）＝ IMPLEMENTED，待線上驗收**；
+**刀 4（每日聯絡簿本）尚未開始 —— Human Owner 決定另開新視窗執行**（需新 model + migration + 老師填寫端與家長閱讀端，為五刀中最大的一刀）。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
 **Milestone:**
@@ -224,13 +225,12 @@ LATER（正式上線前）
 ## Next Task
 
 ```text
-刀 1 ✅ ACCEPTED;**刀 2（班級 + 學生管理）IMPLEMENTED，待線上驗收**。
-下一個 Task = 刀 3（人員帳號與關聯）：
-  GET/POST/PATCH /users（老師·家長帳號）、POST/DELETE /guardianships（家長↔學生）、
-  POST/DELETE /teacher-assignments（老師↔班級）。
-  預期需要一個小 migration（User 加「停用」欄位，對齊「只停用不刪除」）。
-  LINE 綁定機制**不在刀 3**（demo 不做，開賣前另提 §D）。
-  —— 待 Human Owner 驗收刀 2 後再開工，不跨步。
+刀 1、刀 2 ✅ ACCEPTED;刀 3、刀 5 IMPLEMENTED 待驗收。
+**下一個 Task = 刀 4（每日聯絡簿本）—— 於新視窗執行（Human Owner 決定）。**
+  範圍：新 model `CommunicationBookEntry`（每生每日一筆：到校時間 / 用餐 / 午睡 / 如廁 / 心情 / 老師留言 /
+  家長回覆）+ migration + 老師填寫端（以勾選為主，整班快速完成）+ 家長閱讀端 + 卡片改為 enabled。
+  需先出設計提案（欄位定義由 Human Owner 拍板）→ 確認 → 實作。
+  接手方式：讀本檔最上方工作紀錄 + docs/03/05/07 + 本機記憶。
 
 （歷史）Phase 7 + Phase 8 主體完成;原 Phase 9 Pilot 已由 Human Owner 改定調為 Demo。
   Phase 9 多為 infra/ops + Human Owner 前置（正式 DB provisioning、每校 instance、LINE 正式 channel、
@@ -344,7 +344,26 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-17 — Phase 9 階段2 刀3 / 人員帳號與關聯（IMPLEMENTED，待線上驗收）
+### 2026-08-17 — Phase 9 階段2 刀5 / 學生整合視圖 + 公告 LINE 推播（IMPLEMENTED，待線上驗收）
+
+**MVP 缺口 #10 學生整合視圖**
+- 後端 `GET /students/:id/detail`：在既有 `/students/:id` 的授權鏈（ScopeGuard）與敏感 READ 稽核之上，
+  多帶「班名 + 監護人清單（姓名/關係/是否主要聯絡人）」，讓一頁看完一個孩子的全貌。
+- 前端 `/liff/student/[id]`：基本資料 → 本月出缺勤統計 + 最近 5 筆 → 家長/監護人 → 最近請假。
+  入口：學生管理清單點姓名。授權完全交給後端（老師只開得了自班、家長只開得了自己小孩）。
+
+**MVP 缺口 #12 公告 LINE 推播**
+- `PushNotificationService` 新增 `AnnouncementPublished`：文字 `【全校公告/班級公告】<標題>`;
+  對象與站內通知一致（全校→全體;班級→該班老師 + 該班家長）;**公告已刪除（查無標題）→ 不推**。
+- **這推翻了 Step 5 當時「只推重點事件、公告不推」的設定**（Human Owner 2026-08-17 同意納入刀5）。
+- docs/06 訂閱表同步標註。
+
+**誠實提醒**：全校公告會推給全園所有已綁 LINE 的人。demo 規模無妨，**正式營運需注意 LINE 推播訊息量與費用**
+（列入上線前評估;若要更細緻，未來可在園所設定加「公告是否推播」開關）。
+
+Verification：本機 lint ✓ / typecheck ✓ / test ✓（api 179 + shared 10 + web 16 = **205**）/ build ✓。
+
+### 2026-08-17 — Phase 9 階段2 刀3 / 人員帳號與關聯（IMPLEMENTED，待線上驗收;CI ✅ run 31970653250，含 migration 0004 套用 + drift 檢查）
 
 **migration 0004_user_status（expand-only，ADR-003）**：`User.status`（enum `UserStatus` ACTIVE|INACTIVE，預設 ACTIVE）。
 既有列自動 ACTIVE，線上零風險。**這是階段2 唯一到目前為止的 DB 變更**（Human Owner 事前已知會）。
