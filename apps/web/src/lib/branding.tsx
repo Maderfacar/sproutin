@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import type { PublicConfig } from '@sproutin/shared';
-import { themeVars } from './theme';
+import { THEMES, themeVars } from './theme';
 
 // 園方品牌（ADR-001，runtime 套用；bundle 不含 per-school 值）。
 // primaryColor/secondaryColor → CSS 變數（Tailwind 以 var() 引用）；brandName/logo/banner 供 AppShell。
@@ -25,8 +25,11 @@ export function BrandingProvider({
 }) {
   useEffect(() => {
     const root = document.documentElement;
+    // 預覽覆蓋（?theme=）：只影響當次瀏覽,不動資料。用於對比不同主題。
+    const previewTheme = new URLSearchParams(window.location.search).get('theme');
+    const effectiveTheme = previewTheme && THEMES[previewTheme] ? previewTheme : config.theme;
     // 主題模板（per-school）：套一組暖色中性變數。
-    const vars = themeVars(config.theme);
+    const vars = themeVars(effectiveTheme);
     for (const [key, value] of Object.entries(vars)) {
       root.style.setProperty(key, value);
     }

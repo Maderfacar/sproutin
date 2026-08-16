@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { selectDashboardCards } from '@sproutin/shared';
 import { useSession } from '../../lib/session';
 import { usePublicConfig } from '../../lib/queries';
@@ -31,7 +32,18 @@ export default function DashboardPage() {
   const roles = user.roles.map((r) => r.role);
   const cards = selectDashboardCards(roles, config?.featureFlags ?? {}, config?.cardOrder ?? []);
   const roleLabels = [...new Set(roles.map((r) => ROLE_LABEL[r] ?? r))];
-  const layout = config?.dashboardLayout === 'list' ? 'list' : 'grid';
+
+  // 預覽覆蓋（?layout=grid|list）：mount 後才讀,避免 hydration mismatch。不動資料。
+  const [layoutOverride, setLayoutOverride] = useState<string | null>(null);
+  useEffect(() => {
+    setLayoutOverride(new URLSearchParams(window.location.search).get('layout'));
+  }, []);
+  const layout =
+    layoutOverride === 'list' || layoutOverride === 'grid'
+      ? layoutOverride
+      : config?.dashboardLayout === 'list'
+        ? 'list'
+        : 'grid';
 
   return (
     <div>
