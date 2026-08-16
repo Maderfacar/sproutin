@@ -54,6 +54,16 @@ export function useClassPendingLeaves(classId: string | undefined): UseQueryResu
   });
 }
 
+// 全校待審請假（園長/行政全校視角,Step 7d）。enabled 由呼叫端依角色控制。
+export function useSchoolPendingLeaves(enabled: boolean): UseQueryResult<LeaveView[]> {
+  const { accessToken } = useSession();
+  return useQuery({
+    queryKey: ['leaves', 'school', 'PENDING'],
+    queryFn: () => apiGet<LeaveView[]>('/api/leaves?status=PENDING', accessToken),
+    enabled,
+  });
+}
+
 // 審核（approve/reject）。成功後讓所有請假清單重取。
 export function useSetLeaveStatus() {
   const { accessToken } = useSession();

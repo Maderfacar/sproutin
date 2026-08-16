@@ -28,6 +28,12 @@ describe('selectDashboardCards', () => {
     expect(ownerAndParent).toContain('message');
   });
 
+  it('稽核卡只給 OWNER/ADMIN（家長看不到）', () => {
+    expect(selectDashboardCards(['OWNER'], {}, []).map((c) => c.id)).toContain('audit');
+    expect(selectDashboardCards(['ADMIN'], {}, []).map((c) => c.id)).toContain('audit');
+    expect(selectDashboardCards(['PARENT'], {}, []).map((c) => c.id)).not.toContain('audit');
+  });
+
   it('cardOrder 覆寫預設排序；未列入者置後並依 CardDescriptor.order', () => {
     const ids = selectDashboardCards(
       ['PARENT'],

@@ -7,6 +7,9 @@ export interface RoleFlags {
   canReviewLeave: boolean; // ADMIN/TEACHER → 審核請假（POST /leaves/:id/status）
   canMarkAttendance: boolean; // ADMIN/TEACHER → 點名（POST/PATCH /attendance）
   canAnnounce: boolean; // OWNER/ADMIN/TEACHER → 發公告（POST /announcements）
+  canAnnounceSchool: boolean; // OWNER/ADMIN → 發全校公告（scope=SCHOOL）
+  canViewSchoolLeaves: boolean; // OWNER/ADMIN → 全校待審請假總覽（GET /leaves 無 classId）
+  canViewAudit: boolean; // OWNER/ADMIN → 稽核查詢（GET /audit-logs）
   isStaff: boolean; // 任一校方角色（需要班級清單/班名）
 }
 
@@ -15,11 +18,15 @@ export function roleFlags(roles: AuthUser['roles']): RoleFlags {
   const isTeacher = names.has('TEACHER');
   const isAdmin = names.has('ADMIN');
   const isOwner = names.has('OWNER');
+  const isOwnerOrAdmin = isOwner || isAdmin;
   return {
     isGuardian: names.has('PARENT') || names.has('GUARDIAN'),
     canReviewLeave: isAdmin || isTeacher,
     canMarkAttendance: isAdmin || isTeacher,
     canAnnounce: isOwner || isAdmin || isTeacher,
+    canAnnounceSchool: isOwnerOrAdmin,
+    canViewSchoolLeaves: isOwnerOrAdmin,
+    canViewAudit: isOwnerOrAdmin,
     isStaff: isOwner || isAdmin || isTeacher || names.has('BUS_TEACHER'),
   };
 }

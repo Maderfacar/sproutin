@@ -160,6 +160,19 @@ export class LeavesService {
     });
   }
 
+  // GET /leaves?status= — 全校請假紀錄（園長/行政全校視角，Step 7d）。OWNER/ADMIN 限定。
+  async listForSchool(actor: LeaveActor, status?: LeaveStatus): Promise<LeaveView[]> {
+    const roleNames = new Set(actor.roles.map((r) => r.role));
+    if (!roleNames.has('OWNER') && !roleNames.has('ADMIN')) {
+      throw new ForbiddenException('out_of_scope');
+    }
+    return this.prisma.leave.findMany({
+      where: { ...(status ? { status } : {}) },
+      select: LEAVE_VIEW,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // PATCH /leaves/:id/status — 審核 approve/reject（僅 PENDING 可審核）。班級管理者（TEACHER 自班 / ADMIN）。
   async setStatus(
     actor: LeaveActor,

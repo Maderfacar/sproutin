@@ -17,6 +17,7 @@ export const MVP_CARDS: readonly CardDescriptor[] = [
   { id: 'message', requiredRoles: ['ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 40 },
   { id: 'communication-book', requiredRoles: ['TEACHER', 'PARENT', 'GUARDIAN'], order: 50 },
   { id: 'transportation', requiredRoles: ['BUS_TEACHER', 'PARENT', 'GUARDIAN'], requiredFeature: 'bus', order: 60 },
+  { id: 'audit', requiredRoles: ['OWNER', 'ADMIN'], order: 70 },
 ] as const;
 
 const ORDER_FALLBACK = Number.MAX_SAFE_INTEGER;

@@ -6,6 +6,7 @@ import { useSelectedStudent } from '../../../features/students/useSelectedStuden
 import { LeaveForm } from '../../../features/leave/LeaveForm';
 import { LeaveList } from '../../../features/leave/LeaveList';
 import { TeacherLeaveReviewPanel } from '../../../features/leave/TeacherLeaveReviewPanel';
+import { SchoolLeaveOverviewPanel } from '../../../features/leave/SchoolLeaveOverviewPanel';
 import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
 
@@ -20,7 +21,12 @@ export default function LeavePage() {
     <div className="flex flex-col gap-5">
       <PageHeader title="請假" />
 
-      {flags.canReviewLeave && <TeacherLeaveReviewPanel />}
+      {/* 園長/行政 → 全校待審總覽（含行政可審核）;純老師 → 班級待審審核 */}
+      {flags.canViewSchoolLeaves ? (
+        <SchoolLeaveOverviewPanel />
+      ) : (
+        flags.canReviewLeave && <TeacherLeaveReviewPanel />
+      )}
 
       {flags.isGuardian && (
         <>
@@ -44,7 +50,7 @@ export default function LeavePage() {
         </>
       )}
 
-      {!flags.isGuardian && !flags.canReviewLeave && (
+      {!flags.isGuardian && !flags.canReviewLeave && !flags.canViewSchoolLeaves && (
         <p className="text-sm text-gray-500">此功能目前沒有你可操作的項目。</p>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-16（Phase 7 Step 7a/7b 已上線待手機實測;Step 7c — 老師端[審核請假/點名/班級訊息/班級公告] + 兩支輕量後端端點[GET /classes、GET /leaves?classId=] IMPLEMENTED,本機 typecheck/test[143]/build 綠,待 push）
+> Last updated: 2026-08-16（Phase 7 Step 7a/7b/7c 手機實測通過;Step 7d — 園長/ADMIN[稽核查詢頁 + 全校公告 + 全校待審總覽] IMPLEMENTED,本機 typecheck/test[146]/build 綠,待 push。7d 完成即 Phase 7 完成。）
 
 ---
 
@@ -28,11 +28,11 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
   Step 5 Notification / LINE Push                              → IMPLEMENTED（待 push + CI;線上驗卡 Human Owner 填 Messaging token + LINE 設定）
   Step 6 Audit out-of-band durable path + 稽核查詢端點          → ✅ ACCEPTED（2026-08-16, Human Owner）
     └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（§D 提案;本版先程式自律）
-  Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → IN_PROGRESS（切子步驟:先家長→老師→園長）
-    ├ 7a 前端地基（Tailwind+TanStack Query+品牌主題）+ 家長「請假」端到端 → 已上線（CI run 31913609567 綠 + Production 路由 200/401）,待 Human 手機實測驗收
-    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → 已上線（CI run 31926435249 綠 + Production 200/401）,待 Human 手機實測
-    ├ 7c 老師端（審核請假/點名/班級訊息·公告）+ 補 GET /classes、GET /leaves?classId= → IMPLEMENTED（本機 typecheck/test[143]/build 綠;待 push→CI + Vercel + Human 手機實測）
-    └ 7d 園長·ADMIN（全校視角 + 稽核查詢頁）                   → NOT_STARTED
+  Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → IN_PROGRESS（切子步驟:家長→老師→園長;7a–7c 已驗收,剩 7d 待 push）
+    ├ 7a 前端地基 + 家長「請假」端到端                          → ✅ ACCEPTED（2026-08-16, Human Owner 手機實測）
+    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → ✅ ACCEPTED（2026-08-16, Human Owner 手機實測）
+    ├ 7c 老師端（審核/點名/班級訊息·公告）+ GET /classes、GET /leaves?classId= → ✅ ACCEPTED（2026-08-16, Human Owner 手機實測）
+    └ 7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）+ GET /leaves 全校 → IMPLEMENTED（本機 typecheck/test[146]/build 綠;待 push→CI + Vercel + Human 手機實測）
 ```
 
 > Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（先家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留下一版（§D）。多重身份（同帳號兼園長/老師/家長）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
@@ -41,17 +41,17 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Objective
 
-**Phase 7 Step 7c — IMPLEMENTED（2026-08-16）。** 老師端四項:審核請假（整班待審 → 核准/駁回）、點名（一天一班,逐生標 出席/缺席/請假/遲到）、班級訊息（重用 7b 訊息串）、發班級公告。並依 Human Owner 決策**補兩支輕量後端唯讀端點**:`GET /classes`（我的班級+班名）、`GET /leaves?classId=&status=`（整班待審清單）。前端採聯集視圖:各功能頁依角色顯示對應面板（老師看點名/審核,家長看自己小孩）。（7a/7b 已上線,待你手機實測。）
-**下一步（等 Human Owner）**:確認是否 commit + push 7c。之後 7d（園長/ADMIN:全校視角 + 稽核查詢頁）。
+**Phase 7 Step 7d — IMPLEMENTED（2026-08-16）。Phase 7 最後一個子步驟。** 園長/ADMIN 全校視角三塊:① 稽核查詢頁（`/liff/audit`,篩選 資源/操作者/日期 + 分頁,端點 GET /audit-logs 已備）② 全校公告（發布面板加「全校/班級」範圍選擇,scope=SCHOOL）③ 全校待審請假總覽（跨班一次看;補後端 `GET /leaves` 全校模式,OWNER/ADMIN 唯讀,ADMIN 可直接核准/駁回）。Dashboard 新增「稽核」卡（只 OWNER/ADMIN 可見）。7a–7c 已由 Human Owner 手機實測 ACCEPTED。
+**下一步（等 Human Owner）**:確認是否 commit + push 7d。push + 驗收後 → **Phase 7 完成**。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 7c — 老師端 + 兩支輕量後端端點 — **IMPLEMENTED**（2026-08-16）。
-後端:`ClassesModule`（GET /classes,scope 過濾）、`LeavesService.listForClass` + controller classId/status、`ScopeResolver.canManageClass`;+10 單元測試。前端:`/api/classes`、`/api/leaves/[id]/status`、`/api/attendance`(POST)+`/[id]`(PATCH)、`/api/announcements`(POST) proxy;teacher 面板（審核/點名/發公告）+ 角色旗標 `lib/roles`,role-gated 併入 leave/attendance/announcement 頁。
-本機驗證:typecheck ✓、test ✓（api 136 + shared 7 = 143）、`pnpm build` ✓。
-待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（老師帳號）。**commit/push 前先問 Human Owner。**
+Phase 7 Step 7d — 園長/ADMIN 全校視角 + 稽核查詢頁 — **IMPLEMENTED**（2026-08-16）。
+後端:`LeavesService.listForSchool`（OWNER/ADMIN 全校待審）+ controller 無 classId/studentId 分支;+2 單元測試（api 138）。前端:proxy `/api/audit-logs`;`features/audit`（`useAuditLogs` + 稽核查詢頁 `/liff/audit`,篩選+分頁+result 標籤）;`SchoolLeaveOverviewPanel`（全校待審）;`TeacherAnnouncePanel` 加全校/班級範圍選擇;`shared.MVP_CARDS` 加 `audit` 卡（+單元測試,shared 8）;`lib/roles` 加 canAnnounceSchool/canViewSchoolLeaves/canViewAudit。
+本機驗證:typecheck ✓、test ✓（api 138 + shared 8 = 146）、`pnpm build` ✓（`/liff/audit`、`/api/audit-logs` 產出）。
+待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（園長帳號）。**commit/push 前先問 Human Owner。**
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -306,6 +306,28 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 / Step 7d — 園長/ADMIN 全校視角 + 稽核查詢頁（IMPLEMENTED）
+
+Completed（Human Owner 決策:稽核頁 + 全校公告 + 全校待審總覽;7a–7c 手機實測 ACCEPTED）:
+- **後端**:`LeavesService.listForSchool`（OWNER/ADMIN 全校待審,service 內授權）+ `LeavesController` 無 studentId/classId → 全校分支;+2 單元測試（api 138）。稽核端點 `GET /audit-logs`（Step 6 已備,直接沿用）。**無 migration、無新 library。**
+- **稽核查詢頁**（`/liff/audit`,OWNER/ADMIN）:`features/audit`（`useAuditLogs` 信封回應 + `keepPreviousData` 換頁不閃）;篩選 資源類型/操作者/日期區間 + 分頁（limit 50 + 上一頁/下一頁）;result 標籤（成功/失敗/拒絕）;proxy `/api/audit-logs`;頁面 role gate（非 OWNER/ADMIN → 提示無權限）。
+- **全校公告**:`TeacherAnnouncePanel` 加「全校/班級」範圍選擇（OWNER/ADMIN 可選 SCHOOL;老師固定 CLASS）;沿用既有 `POST /announcements`。
+- **全校待審請假總覽**:`SchoolLeaveOverviewPanel`（`useSchoolPendingLeaves` → `/api/leaves?status=PENDING`）;OWNER 唯讀、ADMIN 可核准/駁回。併入 `/liff/leave`:OWNER/ADMIN 顯示全校總覽（取代班級面板避免重複）、純老師顯示班級審核、家長顯示申請。
+- **Dashboard**:`shared.MVP_CARDS` 加 `audit` 卡（requiredRoles OWNER/ADMIN;+單元測試,shared 8）;`cardMeta` audit → `/liff/audit`。`lib/roles` 加 `canAnnounceSchool`/`canViewSchoolLeaves`/`canViewAudit`（皆 OWNER/ADMIN）。
+
+Verification:
+- 本機:`pnpm typecheck` ✓;`pnpm test` ✓（api 138 + shared 8 = 146）;`pnpm build` ✓（新增 `/liff/audit`、`/api/audit-logs`）。
+- 待:push → CI 綠 → Vercel Preview → **Human Owner 手機實測（園長帳號）**。
+
+Architecture:
+- **無變更**。全校待審為既有 `GET /leaves` 的唯讀擴充;稽核沿用 Step 6 端點;無 migration、無新 library。多重身份沿用聯集視圖。
+
+Human Owner:
+- NOW:確認是否 commit + push 7d。push + 驗收 → **Phase 7 完成**。
+
+Next:
+- 7d acceptance → **Phase 7 COMPLETE**。之後:Phase 8（Integration/Hardening;含 ESLint tech debt、append-only DB 鎖死 §D、Step 5 LINE 推播線上實測前置）—— 先計畫 → 確認。
 
 ### 2026-08-16 — Phase 7 / Step 7c — 老師端 + 兩支輕量後端端點（IMPLEMENTED）
 

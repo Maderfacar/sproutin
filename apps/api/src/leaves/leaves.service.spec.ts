@@ -82,6 +82,7 @@ const role = (r: AuthUser['roles'][number]['role'], scopeId: string | null = nul
 
 const parent: LeaveActor = { id: 'u-parent', roles: [role('PARENT')] };
 const teacher: LeaveActor = { id: 'u-teacher', roles: [role('TEACHER', 'class-sun')] };
+const owner: LeaveActor = { id: 'u-owner', roles: [role('OWNER')] };
 
 const CREATE_INPUT = {
   studentId: 'stu-sun-1',
@@ -341,6 +342,27 @@ describe('LeavesService.listForClass', () => {
     scope.canManageClass.mockResolvedValue(false);
     const service = makeService(prisma, scope);
     await expect(service.listForClass(teacher, 'class-tulip')).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.leave.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('LeavesService.listForSchool', () => {
+  it('OWNER + status → 全校查詢（status 過濾、createdAt desc）', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.leave.findMany.mockResolvedValue([leaveRow()]);
+    const service = makeService(prisma, makeScope());
+
+    const list = await service.listForSchool(owner, 'PENDING');
+    expect(list).toHaveLength(1);
+    expect(prisma.leave.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'PENDING' }, orderBy: { createdAt: 'desc' } }),
+    );
+  });
+
+  it('非 OWNER/ADMIN（老師）→ Forbidden;不查詢', async () => {
+    const prisma = makePrisma(makeTx());
+    const service = makeService(prisma, makeScope());
+    await expect(service.listForSchool(teacher)).rejects.toBeInstanceOf(ForbiddenException);
     expect(prisma.leave.findMany).not.toHaveBeenCalled();
   });
 });

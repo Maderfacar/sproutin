@@ -90,6 +90,37 @@ export interface CreateAnnouncementBody {
   body: string;
 }
 
+export type AuditResult = 'SUCCESS' | 'FAILURE' | 'DENIED';
+
+export interface AuditLogView {
+  id: string;
+  actorUserId: string | null;
+  actorRole: string | null;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  result: AuditResult;
+  scopeType: string | null;
+  scopeId: string | null;
+  metadata: unknown;
+  createdAt: string; // ISO
+}
+
+// 稽核查詢端點回應為信封（與其他端點不同）。
+export interface AuditLogPage {
+  data: AuditLogView[];
+  meta: { total: number; limit: number; offset: number };
+}
+
+export interface AuditLogFilters {
+  resourceType?: string;
+  actor?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export interface AnnouncementView {
   id: string;
   schoolId: string;

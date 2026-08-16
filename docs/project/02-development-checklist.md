@@ -186,8 +186,8 @@
   - **append-only DB 層強制（決策 A，migration 0002）**：程式層——`AuditService` 只 create、無改/刪路徑 + 測試斷言;**DB 層——trigger** 擋 `AuditLog` UPDATE/DELETE/TRUNCATE（`RAISE EXCEPTION`;即使 owner 連線也擋）。純 expand migration、零 infra。CI db job（`verify.ts`）斷言 INSERT 允許 / 改·刪·清空被擋 + drift 需過。owner 連線 REVOKE 無效故不用 REVOKE。least-privilege role 分離屬未來 hardening（Phase 8+，非必要）。
   - **無新 migration、無新 library（沿用 BullMQ/ioredis/rxjs）、無架構變更。**
   - **Deliverables**：`apps/api/src/core/audit/{audit.service,audit-enqueuer.service,audit.util,audit-read.decorator,audit-read.interceptor,audit-failure.interceptor,audit.module}.ts`、`apps/api/src/audit-logs/**`、guards（roles/scope）、`auth.module.ts`、`app.module.ts`、`students`/`messages` controller（`@AuditRead`）、`worker.ts`。
-- [~] **Step 7 — Dashboard · Branding · Feature Flag（前端可操作頁面）** — `IN_PROGRESS`（切子步驟:先家長→老師→園長）
-  - [~] **7a — 前端地基 + 家長「請假」端到端** — `IMPLEMENTED`（本機 typecheck ✓ / test ✓[api 126 + shared 7 = 133] / build ✓;待 push→CI + Vercel + Human 手機實測）
+- [~] **Step 7 — Dashboard · Branding · Feature Flag（前端可操作頁面）** — `IN_PROGRESS`（7a–7c ✅ ACCEPTED;剩 7d 待 push）
+  - [x] **7a — 前端地基 + 家長「請假」端到端** — ✅ **ACCEPTED**（2026-08-16, Human Owner 手機實測）
     - [x] 前端地基:Tailwind（`tailwind.config.ts`/`postcss.config.js`/`globals.css`,品牌色走 CSS 變數）+ TanStack Query（`providers.tsx`）+ `next.config.mjs` `extensionAlias`（webpack 解析 shared NodeNext `.js`）
     - [x] runtime 品牌（ADR-001）:`BrandingProvider`（primary/secondary→CSS 變數、logo/banner→`AppShell`）;bundle 零 per-school 值
     - [x] session + 外框:`SessionProvider`（LIFF→JWT）、`StatusScreen`、`AppShell`、`/liff/layout.tsx`
@@ -196,7 +196,7 @@
     - [x] 設計決策（Human Owner）:Tailwind+自建元件、TanStack Query（皆 §D 核准）、品牌=色/logo/banner、切子步驟先家長、版型模板留下一版;多重身份採聯集視圖（架構本就支援,零 schema 變更）
     - [x] push（commit 195cbfc）→ CI 綠（run 31913609567,build+db+docker-build）→ Production 路由 200/401 驗證
     - [ ] Human Owner 手機實測 acceptance（+ 家長 LINE 帳號對映前置）
-  - [~] **7b 家長其餘卡片（出缺勤/訊息/通知/公告）** — `IMPLEMENTED`（本機 typecheck/test[133]/build 綠;待 push→CI + Vercel + Human 手機實測）
+  - [x] **7b 家長其餘卡片（出缺勤/訊息/通知/公告）** — ✅ **ACCEPTED**（2026-08-16, Human Owner 手機實測）
     - [x] 出缺勤（唯讀,依日期清單）:`/api/attendance` proxy、`features/attendance`、`/liff/attendance`
     - [x] 訊息（雙向）:`/api/messages`(+`/[id]/read`)、`features/message`（`MessageThread` 發訊+標已讀）、`/liff/message`
     - [x] 通知:`/api/notifications`(+`/[id]/read`)、`features/notification`、`/liff/notification`;入口為頁首 🔔（非 MVP_CARD）
@@ -204,14 +204,13 @@
     - [x] 共用抽出 `useSelectedStudent`/`StudentSelect`/`PageHeader`;啟用 attendance/message/announcement 卡片;leave 頁重構沿用
     - [x] push（commit f550589）→ CI 綠（run 31926435249）→ Production 200/401 驗證
     - [ ] Human Owner 手機實測 acceptance
-  - [~] **7c 老師端（審核請假/點名/班級訊息·公告）+ 補後端** — `IMPLEMENTED`（本機 typecheck/test[143]/build 綠;待 push→CI + Vercel + Human 手機實測）
-    - [x] 後端:`ScopeResolver.canManageClass`、`GET /classes`（ClassesModule）、`GET /leaves?classId=&status=`（listForClass）;+10 單元測試（api 136）
-    - [x] proxy:`/api/classes`、`/api/leaves/[id]/status`、`/api/attendance`(POST)+`/[id]`(PATCH)、`/api/announcements`(POST)
-    - [x] `lib/roles` 角色旗標;`features/classes`+`ClassSelect`
-    - [x] 審核請假 `TeacherLeaveReviewPanel`、點名 `TeacherRosterPanel`、發公告 `TeacherAnnouncePanel`;班級訊息重用 7b MessageThread
-    - [x] role-gated 併入 `/liff/{leave,attendance,announcement}`（聯集視圖）
-    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance（需老師 LINE 帳號對映）
-  - [ ] 7d 園長·ADMIN（全校視角 + 稽核查詢頁）— `NOT_STARTED`
+  - [x] **7c 老師端（審核請假/點名/班級訊息·公告）+ 補後端** — ✅ **ACCEPTED**（2026-08-16, Human Owner 手機實測;CI run 31933632543 綠）
+    - [x] 後端:`ScopeResolver.canManageClass`、`GET /classes`、`GET /leaves?classId=&status=`;proxy;teacher 面板（審核/點名/發公告）;role-gated 併入頁面
+  - [~] **7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）** — `IMPLEMENTED`（本機 typecheck/test[146]/build 綠;待 push→CI + Vercel + Human 手機實測）
+    - [x] 後端:`LeavesService.listForSchool`（OWNER/ADMIN 全校待審）+ controller 全校分支;+2 單元測試（api 138）
+    - [x] 稽核查詢頁 `/liff/audit`（`features/audit`,篩選+分頁+result 標籤）+ proxy `/api/audit-logs`;`MVP_CARDS` 加 audit 卡（shared 8）
+    - [x] 全校公告（`TeacherAnnouncePanel` 加全校/班級範圍）;全校待審總覽 `SchoolLeaveOverviewPanel`;`lib/roles` 加 canAnnounceSchool/canViewSchoolLeaves/canViewAudit
+    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance → **Phase 7 完成**
 
 ## Phase 8 — Integration / Hardening  ⬜
 - [ ] 多校隔離 / secret exposure / 錯誤處理 / 效能 — `NOT_STARTED`

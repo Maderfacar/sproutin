@@ -61,15 +61,18 @@ export class LeavesController {
     @Query('status') status?: string,
   ): Promise<LeaveView[]> {
     const user = req.user!;
+    const allowedStatus = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+    const parsedStatus =
+      status && allowedStatus.includes(status) ? (status as LeaveStatus) : undefined;
+
     if (studentId) {
       return this.leaves.listForStudent(user, studentId);
     }
     if (classId) {
-      const allowed = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
-      const parsedStatus = status && allowed.includes(status) ? (status as LeaveStatus) : undefined;
       return this.leaves.listForClass(user, classId, parsedStatus);
     }
-    throw new BadRequestException('studentId_or_classId_required');
+    // 無 studentId/classId → 全校視角（OWNER/ADMIN;service 內授權，Step 7d）。
+    return this.leaves.listForSchool(user, parsedStatus);
   }
 
   // PATCH /leaves/:id/status — 審核 approve/reject（TEACHER 自班 / ADMIN）。

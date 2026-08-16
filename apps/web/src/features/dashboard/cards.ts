@@ -17,6 +17,7 @@ export const CARD_META: Record<string, DashboardCardMeta> = {
   message: { title: '訊息', description: '與老師/家長溝通', icon: '💬', href: '/liff/message', enabled: true },
   'communication-book': { title: '聯絡簿', description: '每日聯絡事項', icon: '📓', enabled: false },
   transportation: { title: '接送', description: '乘車與路線', icon: '🚌', enabled: false },
+  audit: { title: '稽核', description: '查詢操作紀錄', icon: '🛡️', href: '/liff/audit', enabled: true },
 };
 
 export function cardMeta(id: string): DashboardCardMeta {

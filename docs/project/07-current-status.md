@@ -1,13 +1,13 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-16（Phase 7 Step 7a/7b 已上線待手機實測;Step 7c — 老師端[審核/點名/班級訊息·公告] + 兩支輕量後端端點 IMPLEMENTED,本機 typecheck/test[143]/build 綠,待 push）
+> Last updated: 2026-08-16（Phase 7 Step 7a/7b/7c ✅ ACCEPTED（手機實測）;Step 7d — 園長/ADMIN[稽核查詢頁 + 全校公告 + 全校待審總覽] IMPLEMENTED,本機 typecheck/test[146]/build 綠,待 push。7d 完成即 Phase 7 完成。）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;Step 7 = 前端可操作頁面 + 品牌 + Feature Flag,切子步驟先家長→老師→園長）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Step 7a/7b**（前端地基 + 家長五卡）→ **已上線待驗收**（7a run 31913609567、7b run 31926435249 綠 + Production 200/401;待 Human 手機實測）。**Step 7c**（老師端:審核請假/點名/班級訊息/班級公告 + 補 GET /classes、GET /leaves?classId=）→ **IMPLEMENTED**（本機 typecheck ✓ / test ✓[143] / build ✓;待 push→CI + Vercel + Human 手機實測,需老師 LINE 帳號對映）。設計決策:Tailwind + 自建元件、TanStack Query（§D 核准）、品牌=色/logo/banner、多重身份採聯集視圖、老師端補兩支輕量後端唯讀端點。下一步:7d（園長/ADMIN:全校視角 + 稽核查詢頁）。
+Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Step 7a/7b/7c**（前端地基 + 家長五卡 + 老師端）→ ✅ **ACCEPTED**（2026-08-16, Human Owner 手機實測）。**Step 7d**（園長/ADMIN:稽核查詢頁 + 全校公告 + 全校待審總覽 + 補 GET /leaves 全校模式）→ **IMPLEMENTED**（本機 typecheck ✓ / test ✓[146] / build ✓;待 push→CI + Vercel + Human 手機實測,需園長帳號）。設計決策:Tailwind + 自建元件、TanStack Query（§D 核准）、品牌=色/logo/banner、多重身份採聯集視圖。**7d 完成即 Phase 7 COMPLETE**。下一步:push 7d → 驗收 → Phase 8（Integration/Hardening）。
 
 Status:
 ```text
