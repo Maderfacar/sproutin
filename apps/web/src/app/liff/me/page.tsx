@@ -4,17 +4,9 @@ import Link from 'next/link';
 import { useBranding } from '../../../lib/branding';
 import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
+import { ROLE_LABEL } from '../../../lib/roleLabels';
 import { logout } from '../../../lib/auth';
 import { Icon } from '../../../components/Icon';
-
-const ROLE_LABEL: Record<string, string> = {
-  OWNER: '園長',
-  ADMIN: '行政',
-  TEACHER: '老師',
-  BUS_TEACHER: '隨車老師',
-  PARENT: '家長',
-  GUARDIAN: '監護人',
-};
 
 async function handleLogout(): Promise<void> {
   await logout();

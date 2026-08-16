@@ -1,7 +1,14 @@
 'use client';
 
-import { MVP_CARDS, cardFlagKey, type CardDescriptor, type SchoolAdminConfig } from '@sproutin/shared';
+import {
+  MVP_CARDS,
+  cardFlagKey,
+  type CardDescriptor,
+  type Role,
+  type SchoolAdminConfig,
+} from '@sproutin/shared';
 import { Icon } from '../../components/Icon';
+import { audienceLabels } from '../../lib/roleLabels';
 import { cardMeta } from '../dashboard/cards';
 
 type Draft = SchoolAdminConfig;
@@ -9,6 +16,8 @@ type Draft = SchoolAdminConfig;
 interface CardsSectionProps {
   draft: Draft;
   onChange: (patch: Partial<Draft>) => void;
+  /** 目前登入者的角色 —— 用來提示「這張卡你自己的身分看不到」。 */
+  viewerRoles?: readonly Role[];
 }
 
 // 依 cardOrder 排出目前順序；未列入 cardOrder 者置後並依 CardDescriptor.order（與 selectDashboardCards 同規則）。
@@ -29,8 +38,9 @@ function isVisible(card: CardDescriptor, flags: Record<string, boolean>): boolea
 
 // 功能卡片：園所自行決定家長頁上出現哪些功能、以什麼順序出現。
 // 規劃中的功能打開後會顯示為「即將推出」並連到預告頁 —— 要不要向家長預告，園所自己決定。
-export function CardsSection({ draft, onChange }: CardsSectionProps) {
+export function CardsSection({ draft, onChange, viewerRoles = [] }: CardsSectionProps) {
   const cards = orderedCards(draft.cardOrder);
+  const viewerRoleSet = new Set<Role>(viewerRoles);
 
   const toggle = (card: CardDescriptor): void => {
     const key = cardFlagKey(card);
@@ -58,6 +68,8 @@ export function CardsSection({ draft, onChange }: CardsSectionProps) {
         {cards.map((card, i) => {
           const meta = cardMeta(card.id);
           const visible = isVisible(card, draft.featureFlags);
+          const audience = audienceLabels(card.requiredRoles).join(' · ');
+          const viewerSees = card.requiredRoles.some((r) => viewerRoleSet.has(r));
           return (
             <li key={card.id} className="flex items-center gap-3 border-b border-line py-3">
               <Icon
@@ -69,6 +81,10 @@ export function CardsSection({ draft, onChange }: CardsSectionProps) {
                 <p className="truncate text-sm font-semibold text-ink">{meta.title}</p>
                 <p className="truncate text-xs text-ink-soft">
                   {meta.enabled ? meta.description : '規劃中 · 顯示為即將推出'}
+                </p>
+                <p className="truncate text-xs text-ink-soft">
+                  給：{audience}
+                  {visible && !viewerSees && '（你的身分看不到）'}
                 </p>
               </div>
 

@@ -370,6 +370,10 @@ Verification:
 - 本機 `pnpm lint` ✓、`pnpm typecheck` ✓、`pnpm test` ✓（api 148 + shared 10 + web 15 = **173**）、`pnpm build` ✓。
 - 待：push → CI 全綠 → 線上手機實測（園長改外觀 → 全站即時變樣）。
 
+**線上驗收回饋修正（2026-08-17，Human Owner 實測）**
+- **娃娃車開了但首頁沒出現**＝卡片觀眾名單原本不含 OWNER/ADMIN（`transportation` 只給 BUS_TEACHER/PARENT/GUARDIAN），園長自然看不到。修正：① `transportation.requiredRoles` 加入 OWNER/ADMIN（與 payment/health/portfolio 一致）② **設定頁每張卡片標示「給：家長 · 老師 …」，且若目前登入者的身分看不到該卡會明確提示**（`lib/roleLabels.ts`;`me` 頁的角色標籤一併改用共用表）。根因是設定頁只給開關卻沒說觀眾是誰 → UI 資訊不足，非資料錯誤（線上 `featureFlags.bus` 確實為 true）。
+- **上傳仍 503**：線上探測顯示 web runtime 取不到 `BLOB_STORE_ID`/`BLOB_READ_WRITE_TOKEN` → Blob Store 已建立但**尚未 Connect to Project**（或連上後未重新部署）。程式無誤。
+
 **誠實提醒**：① 設定頁未開放 `theme`/`dashboardLayout`——目前單一主題（清葉）、首頁已重建不再讀 dashboardLayout，開放會是假選項。② `components/DashboardCard.tsx` 已無人使用（清葉首頁改為內嵌列表）＝ 死碼，待清理。③ `lib/preview.tsx`（sessionStorage 外觀預覽）在單一主題下亦已無作用。
 
 ### 2026-08-17 — Phase 9（Demo 設計）/ 「清葉」方向落地 + 家長 App 全面改版（IMPLEMENTED，已上線 demo）

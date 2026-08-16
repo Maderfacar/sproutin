@@ -84,7 +84,7 @@ export default function AppearancePage() {
       </p>
 
       <BrandSection draft={draft} onChange={change} />
-      <CardsSection draft={draft} onChange={change} />
+      <CardsSection draft={draft} onChange={change} viewerRoles={user.roles.map((r) => r.role)} />
 
       <section className="rise-in card p-5" style={{ animationDelay: '0.1s' }}>
         <p className="section-title">請假流程</p>

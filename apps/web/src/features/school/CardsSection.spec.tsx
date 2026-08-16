@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { SchoolAdminConfig } from '@sproutin/shared';
+import type { Role, SchoolAdminConfig } from '@sproutin/shared';
 import { CardsSection } from './CardsSection';
 
 // 園所自訂「家長頁上出現哪些功能、順序如何」的行為（Human Owner 2026-08-17）：
@@ -19,9 +19,11 @@ const baseDraft: SchoolAdminConfig = {
   dashboardLayout: 'grid',
 };
 
-function renderSection(draft: Partial<SchoolAdminConfig> = {}) {
+function renderSection(draft: Partial<SchoolAdminConfig> = {}, viewerRoles: Role[] = []) {
   const onChange = vi.fn();
-  render(<CardsSection draft={{ ...baseDraft, ...draft }} onChange={onChange} />);
+  render(
+    <CardsSection draft={{ ...baseDraft, ...draft }} onChange={onChange} viewerRoles={viewerRoles} />,
+  );
   return onChange;
 }
 
@@ -53,6 +55,16 @@ describe('CardsSection', () => {
     const toggle = screen.getByRole('switch', { name: '收費繳費 顯示於家長頁' });
     expect(toggle.getAttribute('aria-checked')).toBe('true');
     expect(screen.getAllByText('規劃中 · 顯示為即將推出').length).toBeGreaterThan(0);
+  });
+
+  it('每張卡片標示觀眾;開啟後若自己的身分看不到，明確提示（避免誤以為壞掉）', () => {
+    renderSection({ featureFlags: { bus: true } }, ['OWNER']);
+    // 娃娃車現在包含園長 → 不該出現「看不到」提示
+    expect(screen.queryByText(/娃娃車[\s\S]*你的身分看不到/)).toBeNull();
+    // 聯絡簿只給老師/家長 → 園長開啟後會看到提示
+    renderSection({ featureFlags: {} }, ['OWNER']);
+    expect(screen.getAllByText(/給：/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/你的身分看不到/).length).toBeGreaterThan(0);
   });
 
   it('往下移會送出新的完整順序，且第一張卡片不能再往上移', () => {

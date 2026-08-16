@@ -22,7 +22,13 @@ export const MVP_CARDS: readonly CardDescriptor[] = [
   { id: 'leave', requiredRoles: ['OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 30 },
   { id: 'message', requiredRoles: ['ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 40 },
   { id: 'communication-book', requiredRoles: ['TEACHER', 'PARENT', 'GUARDIAN'], order: 50 },
-  { id: 'transportation', requiredRoles: ['BUS_TEACHER', 'PARENT', 'GUARDIAN'], requiredFeature: 'bus', order: 60 },
+  {
+    id: 'transportation',
+    // 園長/行政需看得到娃娃車入口（管理路線與名單）;與 payment/health/portfolio 的對象一致。
+    requiredRoles: ['OWNER', 'ADMIN', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'],
+    requiredFeature: 'bus',
+    order: 60,
+  },
   { id: 'audit', requiredRoles: ['OWNER', 'ADMIN'], order: 70 },
   // --- 規劃中（Architecture Reserved，docs/08 §B）---
   { id: 'payment', requiredRoles: ['OWNER', 'ADMIN', 'PARENT', 'GUARDIAN'], requiredFeature: 'payment', order: 80 },
