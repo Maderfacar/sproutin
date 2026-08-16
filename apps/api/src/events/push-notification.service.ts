@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type {
   AnnouncementPublishedPayload,
   LeaveApprovedPayload,
@@ -7,7 +7,7 @@ import type {
 } from '@sproutin/shared';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { RecipientsService } from './recipients.service';
-import { LinePushClient } from './line-push.client';
+import { LinePushClient, LinePushError } from './line-push.client';
 
 // LINE 推播（Step 5，best-effort + BullMQ 重試）。**只推重點事件**（Human Owner 決策）：
 //   LeaveApproved / LeaveRejected → 通知家長;MessageSent → 通知家長+老師（排除發訊者）;
@@ -26,6 +26,8 @@ const ANNOUNCEMENT_EVENT = 'AnnouncementPublished';
 
 @Injectable()
 export class PushNotificationService {
+  private readonly logger = new Logger('PushNotification');
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly recipients: RecipientsService,
@@ -68,10 +70,30 @@ export class PushNotificationService {
     await this.sendTo(userIds, text);
   }
 
+  // 逐一推播，**單一收件人失敗不得拖垮其他人**（2026-08-17 線上教訓：
+  // demo 種子帶假 LINE ID，LINE 回 400 'to' is invalid，原本的迴圈在第一個假 ID 就中斷，
+  // 排在後面的真實收件人永遠收不到，且每次重試都卡在同一處）。
+  //   4xx＝這個收件人永遠不會成功（無效 ID / 封鎖 OA）→ 記錄後跳過，不重試。
+  //   5xx / 網路＝暫時性 → 迴圈結束後丟出，交由 BullMQ 重試整個 job（at-least-once：
+  //   已成功者可能收到重複訊息，取捨上優於整批漏發）。
   private async sendTo(userIds: string[], text: string): Promise<void> {
     const lineUserIds = await this.lineIdsFor(userIds);
+    let transientError: unknown = null;
+
     for (const to of lineUserIds) {
-      await this.client.push(to, text);
+      try {
+        await this.client.push(to, text);
+      } catch (error: unknown) {
+        if (error instanceof LinePushError && error.status >= 400 && error.status < 500) {
+          this.logger.warn(`略過收件人（LINE 拒絕，HTTP ${error.status}）：${error.body}`);
+          continue;
+        }
+        transientError = error;
+      }
+    }
+
+    if (transientError) {
+      throw transientError;
     }
   }
 

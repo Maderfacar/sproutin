@@ -11,7 +11,7 @@
 **Phase:**
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
 階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）＝ ✅ ACCEPTED**；
-**刀 5：學生整合視圖 ✅ ACCEPTED；公告 LINE 推播 ⚠ 手機未收到，未結案**（診斷步驟見工作紀錄最上方）。
+**刀 5：學生整合視圖 ✅ ACCEPTED；公告 LINE 推播 — 根因已查明並修復（單一無效收件人中斷整批推播），待 Human Owner 複測確認**。
 **刀 4（每日聯絡簿本）尚未開始 —— Human Owner 決定另開新視窗執行**（需新 model + migration + 老師填寫端與家長閱讀端，為五刀中最大的一刀）。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
@@ -211,8 +211,9 @@ DONE
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
 NOW
-- **複測公告 LINE 推播**（未結案）：發一則**全校公告** → ①看 App 鈴鐺有無該則通知 ②看手機有無收到 LINE。
-  兩者都無 → 事件流程問題；只有鈴鐺有 → 推播段問題（查 Render `sproutin-worker` log）。
+- **等 Render 重新部署完成後，複測公告 LINE 推播**（根因已修復：單一無效收件人不再中斷整批）。
+  發一則全校公告 → 手機應收到 `【全校公告】<標題>`。log 會出現「略過收件人（LINE 拒絕，HTTP 400）」，
+  那是 demo 假帳號，屬正常。
 
 DONE
 - ~~建立 Vercel Blob Store（access mode 選 Public）並連到 web 專案~~ ✅ 已完成，上傳實測通過（刀1 ACCEPTED）。
@@ -351,6 +352,35 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — 🔎 公告/請假 LINE 推播收不到 — **根因查明並修復**
+
+**決定性證據（Human Owner 提供 Render worker log）**
+```text
+[worker] LINE push: ENABLED（已讀到 LINE_MESSAGING_CHANNEL_ACCESS_TOKEN）
+[worker] LINE push failed event=AnnouncementPublished: HTTP 400
+   {"message":"The property, 'to', in the request body is invalid"}
+[worker] LINE push failed event=LeaveApproved: HTTP 400 （同上）
+```
+→ token 正常;是**收件人 LINE ID 無效**。
+
+**根因（兩個因素疊加）**
+1. demo seed 的非園長帳號帶**假 LINE ID**（`Udemo_admin` / `Udemo_parent` / `Udemo_teacher_*`…），LINE 回 400。
+2. ★ `PushNotificationService.sendTo` 原本是**逐一 await、任一失敗即整批中斷**
+   → 只要名單中排在前面的是假 ID，**後面的真實收件人永遠收不到**，且 BullMQ 每次重試都卡在同一處。
+
+**為何 2026-08-16 會動、2026-08-17 不會**：當時核准的是 `stu-sun-2`（范小陽），**該生唯一監護人就是園長**
+（`SEED_PUSH_DEMO` fixture 刻意設計「無雜訊」），名單裡沒有假 ID。全校公告則會把所有假帳號一起帶進名單。
+
+**修復（本次）**
+- `LinePushClient` 改丟帶狀態碼的 `LinePushError`。
+- `sendTo` 逐一推播並隔離失敗：**4xx（無效 ID / 封鎖 OA）→ 記 warn 後跳過，不重試**；
+  **5xx / 網路 → 其他人照送完，最後才丟出讓 BullMQ 重試整個 job**（at-least-once：
+  已成功者可能重複收到，優於整批漏發）。
+- 測試 +2（400 略過續送、500 續送後仍丟出）。api 179 → **181**。
+
+**這是韌性缺陷，非資料問題**：即使正式環境沒有假 ID，任何一位家長封鎖 OA（403）也會造成
+「全班其他家長都收不到」。修復後不再有此風險。
 
 ### 2026-08-17 — Bug fix / 請假清單不自動更新（Human Owner 實測回報）
 

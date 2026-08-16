@@ -1,4 +1,5 @@
 import { PushNotificationService } from './push-notification.service';
+import { LinePushError } from './line-push.client';
 import { RecipientsService } from './recipients.service';
 
 // LINE 推播：只推重點事件、收件人對映 lineUserId、排除發訊者、未綁 LINE 略過。mocked Prisma + client。
@@ -124,6 +125,59 @@ describe('PushNotificationService.push', () => {
 
     expect(client.push).not.toHaveBeenCalled();
     expect(recipients.forStudent).not.toHaveBeenCalled();
+  });
+
+  // 2026-08-17 線上教訓：demo 種子帶假 LINE ID → LINE 回 400，原本整批中斷，
+  // 排在後面的真實收件人永遠收不到（且每次重試都卡在同一處）。
+  it('某收件人被 LINE 拒絕（400 無效 ID）→ 略過他，其他人照樣送達', async () => {
+    const prisma = makePrisma();
+    const recipients = {
+      forStudent: jest.fn(),
+      allUsers: jest.fn(async () => ['u-fake', 'u-real']),
+      forClass: jest.fn(),
+    };
+    const client = {
+      push: jest.fn(async (to: string) => {
+        if (to === 'L-u-fake') {
+          throw new LinePushError(400, `{"message":"The property, 'to', in the request body is invalid"}`);
+        }
+      }),
+    };
+
+    await makeService(prisma, recipients, client).push('AnnouncementPublished', {
+      announcementId: 'a1',
+      schoolId: 's1',
+      classId: null,
+    });
+
+    expect(pushedTo(client)).toEqual(['L-u-fake', 'L-u-real']); // 兩個都試過
+    // 未丟出 → BullMQ 不會重試（永久性錯誤重試也不會成功）
+  });
+
+  it('暫時性失敗（500）→ 其他人照送，最後仍丟出讓 BullMQ 重試', async () => {
+    const prisma = makePrisma();
+    const recipients = {
+      forStudent: jest.fn(),
+      allUsers: jest.fn(async () => ['u-down', 'u-real']),
+      forClass: jest.fn(),
+    };
+    const client = {
+      push: jest.fn(async (to: string) => {
+        if (to === 'L-u-down') {
+          throw new LinePushError(500, 'internal');
+        }
+      }),
+    };
+
+    await expect(
+      makeService(prisma, recipients, client).push('AnnouncementPublished', {
+        announcementId: 'a1',
+        schoolId: 's1',
+        classId: null,
+      }),
+    ).rejects.toBeInstanceOf(LinePushError);
+
+    expect(pushedTo(client)).toEqual(['L-u-down', 'L-u-real']); // 沒有因為一個掛掉就跳過其他人
   });
 
   it('收件人未綁 LINE（無 LineIdentity）→ 不推', async () => {

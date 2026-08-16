@@ -5,6 +5,18 @@ import { Injectable, Logger } from '@nestjs/common';
 // 未設定 token（dev / CI）→ 略過（不丟出）—— 讓無金鑰環境也能安全運行。
 const LINE_PUSH_URL = 'https://api.line.me/v2/bot/message/push';
 
+// 帶狀態碼的推播錯誤，讓呼叫端能分辨「這個收件人永遠不會成功」（4xx，如無效 LINE ID、
+// 對方封鎖 OA）與「暫時性失敗」（5xx / 網路）——前者略過、後者才值得重試。
+export class LinePushError extends Error {
+  constructor(
+    readonly status: number,
+    readonly body: string,
+  ) {
+    super(`LINE push failed: HTTP ${status} ${body}`);
+    this.name = 'LinePushError';
+  }
+}
+
 @Injectable()
 export class LinePushClient {
   private readonly logger = new Logger('LinePush');
@@ -31,7 +43,7 @@ export class LinePushClient {
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      throw new Error(`LINE push failed: HTTP ${res.status} ${body}`);
+      throw new LinePushError(res.status, body);
     }
   }
 }
