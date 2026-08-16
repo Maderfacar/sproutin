@@ -23,6 +23,21 @@ async function toApiError(res: Response): Promise<ApiError> {
   }
 }
 
+// 通用錯誤碼→中文訊息（各功能可再包一層處理專屬碼，如 leave 的 LEAVE_INVALID_TRANSITION）。
+export function apiErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.code) {
+      case 'out_of_scope':
+        return '你沒有這筆資料的權限。';
+      case 'invalid_input':
+        return '輸入內容有誤，請檢查後再送出。';
+      default:
+        return `操作失敗（${error.code}）。`;
+    }
+  }
+  return '操作失敗，請稍後再試。';
+}
+
 function authHeaders(accessToken: string): Record<string, string> {
   return { Authorization: `Bearer ${accessToken}` };
 }

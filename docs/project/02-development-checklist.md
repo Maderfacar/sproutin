@@ -194,8 +194,15 @@
     - [x] config-driven 卡片牆:`shared.selectDashboardCards`（角色聯集 + featureFlags + cardOrder,+7 單元測試）;`/liff` Dashboard,未實作功能顯示「即將推出」
     - [x] 家長請假端到端:proxy `/api/leaves`(+`/[id]/cancel`,`proxyToApi` helper)、`features/leave`（`LeaveForm`/`LeaveList`/hooks/labels）、`/liff/leave`（多小孩選擇器）
     - [x] 設計決策（Human Owner）:Tailwind+自建元件、TanStack Query（皆 §D 核准）、品牌=色/logo/banner、切子步驟先家長、版型模板留下一版;多重身份採聯集視圖（架構本就支援,零 schema 變更）
-    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance（+ 家長 LINE 帳號對映前置）
-  - [ ] 7b 家長其餘卡片（出缺勤/訊息/通知/公告）— `NOT_STARTED`
+    - [x] push（commit 195cbfc）→ CI 綠（run 31913609567,build+db+docker-build）→ Production 路由 200/401 驗證
+    - [ ] Human Owner 手機實測 acceptance（+ 家長 LINE 帳號對映前置）
+  - [~] **7b 家長其餘卡片（出缺勤/訊息/通知/公告）** — `IMPLEMENTED`（本機 typecheck/test[133]/build 綠;待 push→CI + Vercel + Human 手機實測）
+    - [x] 出缺勤（唯讀,依日期清單）:`/api/attendance` proxy、`features/attendance`、`/liff/attendance`
+    - [x] 訊息（雙向）:`/api/messages`(+`/[id]/read`)、`features/message`（`MessageThread` 發訊+標已讀）、`/liff/message`
+    - [x] 通知:`/api/notifications`(+`/[id]/read`)、`features/notification`、`/liff/notification`;入口為頁首 🔔（非 MVP_CARD）
+    - [x] 公告（唯讀）:`/api/announcements`、`features/announcement`、`/liff/announcement`
+    - [x] 共用抽出 `useSelectedStudent`/`StudentSelect`/`PageHeader`;啟用 attendance/message/announcement 卡片;leave 頁重構沿用
+    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance
   - [ ] 7c 老師端（審核請假/點名/班級訊息·公告）— `NOT_STARTED`
   - [ ] 7d 園長·ADMIN（全校視角 + 稽核查詢頁）— `NOT_STARTED`
 

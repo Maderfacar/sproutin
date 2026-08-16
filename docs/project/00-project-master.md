@@ -31,8 +31,9 @@ Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 
 - Step 5 — Notification / LINE Push → **IMPLEMENTED**（2026-08-15;只推重點事件、best-effort+重試）。線上驗卡 Human Owner 填 Messaging token + LINE 好友/provider。
 - Step 6 — Audit out-of-band durable path + 稽核查詢端點 → ✅ **ACCEPTED**（2026-08-16, Human Owner;CI run 31904698836 綠 + Render 線上 `/audit-logs` 401 + CI e2e 覆蓋帶 token 流程;DENIED/FAILURE/敏感 READ → durable `audit` 佇列 + DLQ、Worker 寫入;不動基礎設施）。append-only DB 層鎖死（決策 2）拆下一版。
 - Step 7 — Dashboard·Branding·Feature Flag（前端可操作頁面,切子步驟先家長→老師→園長）→ **IN_PROGRESS**。
-  - 7a 前端地基（Tailwind + TanStack Query + runtime 品牌）+ 家長「請假」端到端 → **IMPLEMENTED**（2026-08-16;本機 typecheck/test[133]/build 綠;待 push→CI + Vercel + Human 手機實測）。UI/資料抓取新 library 經 §D 核准;多重身份採聯集視圖（架構本就支援）。
-- 下一步：7a 手機實測 acceptance → 7b（家長其餘卡片）。平行未了:append-only 鎖死（下一版 §D）、Step 5 LINE 推播線上實測前置。（Phase 6 全數 ACCEPTED。）
+  - 7a 前端地基（Tailwind + TanStack Query + runtime 品牌）+ 家長「請假」端到端 → **已上線待驗收**（2026-08-16;CI run 31913609567 綠 + Production 路由 200/401;待 Human 手機實測）。UI/資料抓取新 library 經 §D 核准;多重身份採聯集視圖。
+  - 7b 家長其餘四張卡片（出缺勤/訊息/通知/公告）→ **IMPLEMENTED**（2026-08-16;本機 typecheck/test[133]/build 綠;待 push→CI + Vercel + Human 手機實測）。
+- 下一步：7a/7b 手機實測 acceptance → 7c（老師端:審核請假/點名/班級訊息·公告）。平行未了:append-only 鎖死（下一版 §D）、Step 5 LINE 推播線上實測前置。（Phase 6 全數 ACCEPTED。）
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）

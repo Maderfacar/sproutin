@@ -1,13 +1,13 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-16（Phase 7 Step 7a IMPLEMENTED — 前端地基[Tailwind/TanStack Query/品牌] + 家長「請假」端到端;本機 typecheck/test/build 綠;待 push→CI + Vercel + Human 手機實測）
+> Last updated: 2026-08-16（Phase 7 Step 7a 已上線[CI run 31913609567 綠]待手機實測;Step 7b — 家長其餘四張卡片[出缺勤/訊息/通知/公告] IMPLEMENTED,本機 typecheck/test[133]/build 綠,待 push）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;Step 7 = 前端可操作頁面 + 品牌 + Feature Flag,切子步驟先家長→老師→園長）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Step 7a**（前端地基 + 家長請假端到端）→ **IMPLEMENTED**（本機 typecheck ✓ / test ✓ [api 126 + shared 7 = 133] / build ✓;待 push→CI + Vercel Preview + Human Owner 手機實測）。設計決策:Tailwind + 少量自建元件、TanStack Query（皆 §D 核准）、品牌=色/logo/banner、切子步驟先家長;多重身份採聯集視圖（架構本就支援）。下一步:7b（家長其餘卡片）。
+Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Step 7a**（前端地基 + 家長請假端到端）→ **已上線待驗收**（CI run 31913609567 綠 + Production 路由 200/401;待 Human 手機實測）。**Step 7b**（家長其餘四張卡片:出缺勤/訊息/通知/公告）→ **IMPLEMENTED**（本機 typecheck ✓ / test ✓[133] / build ✓;待 push→CI + Vercel + Human 手機實測）。設計決策:Tailwind + 自建元件、TanStack Query（皆 §D 核准）、品牌=色/logo/banner、切子步驟先家長;多重身份採聯集視圖。下一步:7c（老師端）。
 
 Status:
 ```text

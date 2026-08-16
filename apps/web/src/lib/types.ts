@@ -22,3 +22,58 @@ export interface CreateLeaveBody {
   dateTo: string; // ISO datetime
   reason: string;
 }
+
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LEAVE' | 'LATE';
+export type AttendanceSource = 'MANUAL' | 'LEAVE_EVENT';
+
+export interface AttendanceView {
+  id: string;
+  studentId: string;
+  date: string; // ISO
+  status: AttendanceStatus;
+  source: AttendanceSource;
+  sourceRef: string | null;
+  derivedFrom: string | null;
+  overriddenAt: string | null;
+  overriddenBy: string | null;
+}
+
+export type MessageCategory = 'GENERAL' | 'HEALTH' | 'BEHAVIOR' | 'ADMIN';
+
+export interface MessageView {
+  id: string;
+  studentId: string;
+  classId: string;
+  senderId: string;
+  category: MessageCategory;
+  body: string;
+  createdAt: string; // ISO
+  isRead: boolean;
+}
+
+export interface SendMessageBody {
+  studentId: string;
+  category?: MessageCategory;
+  body: string;
+}
+
+export interface NotificationView {
+  id: string;
+  type: string;
+  payload: unknown;
+  readAt: string | null;
+  createdAt: string; // ISO
+}
+
+export type AnnouncementScope = 'SCHOOL' | 'CLASS';
+
+export interface AnnouncementView {
+  id: string;
+  schoolId: string;
+  classId: string | null;
+  scope: AnnouncementScope;
+  title: string;
+  body: string;
+  createdBy: string;
+  createdAt: string; // ISO
+}

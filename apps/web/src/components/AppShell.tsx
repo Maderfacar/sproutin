@@ -30,7 +30,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
             <span className="text-lg font-semibold">{branding.brandName}</span>
           </Link>
-          <span className="ml-auto text-sm text-white/80">{user.displayName}</span>
+          <Link
+            href="/liff/notification"
+            className="ml-auto text-xl"
+            aria-label="通知"
+            title="通知"
+          >
+            🔔
+          </Link>
+          <span className="text-sm text-white/80">{user.displayName}</span>
         </div>
       </header>
 

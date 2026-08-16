@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-16（Phase 7 Step 7a — 前端地基[Tailwind/TanStack Query/品牌] + 家長「請假」端到端 IMPLEMENTED;本機 typecheck/test/build 綠;待 push→CI + Vercel Preview + Human 手機實測）
+> Last updated: 2026-08-16（Phase 7 Step 7a 已上線[CI run 31913609567 綠]待手機實測;Step 7b — 家長其餘四張卡片[出缺勤/訊息/通知/公告] IMPLEMENTED,本機 typecheck/test/build 綠,待 push）
 
 ---
 
@@ -29,8 +29,8 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
   Step 6 Audit out-of-band durable path + 稽核查詢端點          → ✅ ACCEPTED（2026-08-16, Human Owner）
     └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（§D 提案;本版先程式自律）
   Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → IN_PROGRESS（切子步驟:先家長→老師→園長）
-    ├ 7a 前端地基（Tailwind+TanStack Query+品牌主題）+ 家長「請假」端到端 → IMPLEMENTED（待 push→CI + Vercel + Human 手機實測）
-    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → NOT_STARTED
+    ├ 7a 前端地基（Tailwind+TanStack Query+品牌主題）+ 家長「請假」端到端 → 已上線（CI run 31913609567 綠 + Production 路由 200/401）,待 Human 手機實測驗收
+    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → IMPLEMENTED（本機 typecheck/test[133]/build 綠;待 push→CI + Vercel + Human 手機實測）
     ├ 7c 老師端（審核請假/點名/班級訊息·公告）                 → NOT_STARTED
     └ 7d 園長·ADMIN（全校視角 + 稽核查詢頁）                   → NOT_STARTED
 ```
@@ -41,16 +41,16 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Objective
 
-**Phase 7 Step 7a — IMPLEMENTED（2026-08-16）。** 第一次做前端可操作頁面:建立前端地基（Tailwind + TanStack Query + runtime 品牌主題 + LIFF session + AppShell + config-driven 卡片牆）並打通**家長「請假」一條端到端**（申請 / 查詢狀態 / 取消）。
-**下一步（等 Human Owner）**:① 確認是否 commit + push（push main 觸發 Vercel/Render）② 家長手機實測前置二選一（A 你先把一個 LINE 帳號對映 seed 家長 User 直接實測 / B 先用園長帳號驗品牌+版面，家長流程靠 CI）。之後進 7b（家長其餘卡片）。
+**Phase 7 Step 7b — IMPLEMENTED（2026-08-16）。** 補齊家長其餘四張卡片:出缺勤（依日期清單,唯讀）、訊息（雙向訊息串 + 發訊 + 標已讀）、通知（站內清單 + 標已讀,入口為頁首 🔔）、公告（唯讀清單）。沿用 7a 地基,無新 library、無架構變更、無 migration。（7a 已上線,CI run 31913609567 綠,待你手機實測。）
+**下一步（等 Human Owner）**:確認是否 commit + push 7b（push main 觸發 Vercel/Render）。之後 7c（老師端:審核請假/點名/班級訊息·公告）。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 7a — 前端地基 + 家長請假端到端 — **IMPLEMENTED**（2026-08-16）。
-本機驗證:typecheck ✓、test ✓（api 126 + shared 7 = 133）、`pnpm build` ✓（`/liff`、`/liff/leave`、`/api/leaves(+/[id]/cancel)` 路由產出;First Load JS 151/140kB）。
-待:push → CI 綠（build + db + docker-build）→ Vercel Preview → Human Owner 手機實測（家長 LINE 登入看到套品牌畫面 + 請假整條跑通）。**commit/push 前先問 Human Owner。**
+Phase 7 Step 7b — 家長其餘四張卡片 — **IMPLEMENTED**（2026-08-16）。
+本機驗證:typecheck ✓、test ✓（api 126 + shared 7 = 133;7b 為 UI,未新增後端/shared 測試）、`pnpm build` ✓（新增 `/liff/{attendance,message,notification,announcement}` + `/api/{attendance,messages(+/[id]/read),notifications(+/[id]/read),announcements}` 路由;各頁 First Load JS 137–141kB）。
+待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（家長全貌）。**commit/push 前先問 Human Owner。**
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -272,11 +272,11 @@ Backend（Render 部署 2026-08-14，已驗證）
 ## Latest CI
 
 ```text
-Commit:  b4f8446（feat(audit): Phase 7 Step 6 — out-of-band durable audit + 稽核查詢端點）
-Run:     31904698836
+Commit:  195cbfc（feat(web): Phase 7 Step 7a — 前端地基 + 家長請假端到端）
+Run:     31913609567
 Status:  ✅ SUCCESS（build + db + docker-build 全綠）
 Date:    2026-08-16
-Note:    僅 Node 20 deprecation 警告（非致命）。線上 /audit-logs → 401 missing_token/invalid_token。
+Note:    僅 Node 20 deprecation 警告（非致命）。待 Vercel Preview + Human Owner 手機實測（家長流程前置 B:先用園長帳號驗品牌+版面）。
 ```
 
 ---
@@ -305,6 +305,28 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 / Step 7b — 家長其餘四張卡片（IMPLEMENTED）
+
+Completed（沿用 7a 地基,無新 library、無架構變更、無 migration）:
+- **出缺勤**（唯讀,依日期清單 — Human Owner 決策）:proxy `/api/attendance`、`features/attendance`（`useAttendance` / `AttendanceList` / 狀態標籤 出席·缺席·請假·遲到）、`/liff/attendance`。
+- **訊息**（雙向）:proxy `/api/messages`(+`/[id]/read`)、`features/message`（`useMessages`/`useSendMessage`/`useMarkMessageRead`、`MessageThread` 自己靠右/校方靠左 + 未讀可點標已讀 + 底部發訊）、`/liff/message`。
+- **通知**:proxy `/api/notifications`(+`/[id]/read`)、`features/notification`（`useNotifications`/`useMarkNotificationRead`、`NotificationList` 未讀點 + 標已讀、type→中文標籤含 fallback）、`/liff/notification`;入口為 `AppShell` 頁首 🔔（通知非 MVP_CARD,採頁首鈴鐺,符合慣例）。
+- **公告**（唯讀）:proxy `/api/announcements`、`features/announcement`（`useAnnouncements`/`AnnouncementList` 全校/班級標籤）、`/liff/announcement`。
+- **共用抽出**:`useSelectedStudent`（載入可查看學生 + 預設第一位）+ `StudentSelect` + `PageHeader`;leave 頁一併重構沿用（DRY）。Dashboard `CARD_META` 啟用 attendance/message/announcement（leave 已啟用;communication-book/transportation 仍「即將推出」）。`lib/api` 加通用 `apiErrorMessage`。
+
+Verification:
+- 本機:`pnpm typecheck` ✓;`pnpm test` ✓（api 126 + shared 7 = 133,7b 為 UI 未加測試）;`pnpm build` ✓（新增 5 個 `/liff/*` 頁 + 6 條 proxy;各頁 First Load JS 137–141kB,符合預算）。
+- 待:push → CI 綠 → Vercel Preview → **Human Owner 手機實測**（家長全貌:四張卡 + 通知鈴鐺）。
+
+Architecture:
+- **無變更**。無新 migration、無新 library;全部消費 Step 1–4 既有端點（授權仍在後端 Guard,前端只呈現）。多重身份沿用聯集視圖。
+
+Human Owner:
+- NOW:確認是否 commit + push 7b（push main 觸發 Vercel/Render）。
+
+Next:
+- 7b acceptance → 7c（老師端:審核請假/點名/班級訊息·公告）。
 
 ### 2026-08-16 — Phase 7 / Step 7a — 前端地基 + 家長請假端到端（IMPLEMENTED）
 
