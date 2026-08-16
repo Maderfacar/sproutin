@@ -230,7 +230,7 @@
   - [x] 多校隔離：架構性（DB-per-school、單 instance 單校，ADR-006）— 無新程式
   - [x] secret exposure：`/config/public` 為 PublicConfig 型別（無機密）;API_INTERNAL_URL server-only（ADR-001）
   - [ ] 後續（需裝置實測 / 決策）：CSP + X-Frame-Options（LIFF 風險）、rate limiting（proxy 後 client IP 議題,宜在 edge 做）
-- [ ] P5 demo 資料收尾（seed 園長 ADMIN+監護 hack 移除/改測試帳號）— `NOT_STARTED`
+- [x] **P5 demo 資料收尾** — seed 的園長 ADMIN+監護 push-test fixture 改 **opt-in（`SEED_PUSH_DEMO=true`）**,標準/正式 seed 不再污染園長;要再測推播才帶旗標重跑。（現有 dev DB 既有列無害保留,正式為 fresh DB。）
 
 ## Phase 9–10 — Pilot / Production  ⬜  `NOT_STARTED`
 ## Phase 11+ — Future domains  ⬜  `DEFERRED`（需明確批准）

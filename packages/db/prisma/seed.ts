@@ -146,11 +146,15 @@ async function main(): Promise<void> {
     { id: 'role-teacher-tul', userId: 'user-teacher-tul', role: 'TEACHER', scopeType: 'CLASS', scopeId: 'class-tulip' },
     { id: 'role-parent', userId: 'user-parent', role: 'PARENT', scopeType: 'SCHOOL', scopeId: null },
     { id: 'role-guardian', userId: 'user-guardian', role: 'GUARDIAN', scopeType: 'SCHOOL', scopeId: null },
-    // P5 LINE 推播 demo（Phase 7 Step 5 線上實測）：讓已綁真 LINE 的園長帳號能「自測」推播——
-    // 額外給 ADMIN（可核准請假）+ 下方掛一個監護關係（成為推播收件人）。核准請假不排除操作者，
-    // 故園長核准自己監護小孩的請假 → 自己手機收到 LINE 推播。屬 demo 資料（SEED_DEMO 保護）。
-    { id: 'role-owner-admin', userId: 'user-owner', role: 'ADMIN', scopeType: 'SCHOOL', scopeId: null },
   ];
+
+  // P5 LINE 推播「單帳號自測」demo fixture（opt-in;預設不建,避免污染標準/正式 seed）。
+  // 設 SEED_PUSH_DEMO=true 才給園長額外 ADMIN（可核准）+ 監護 stu-sun-2（成為推播收件人）;
+  // 核准請假不排除操作者 → 園長核准自己監護小孩的請假 → 自己手機收到 LINE 推播。
+  const pushDemo = process.env.SEED_PUSH_DEMO === 'true';
+  if (pushDemo) {
+    roles.push({ id: 'role-owner-admin', userId: 'user-owner', role: 'ADMIN', scopeType: 'SCHOOL', scopeId: null });
+  }
   for (const r of roles) {
     await prisma.userRole.upsert({
       where: { id: r.id },
@@ -185,9 +189,13 @@ async function main(): Promise<void> {
     { id: 'g-parent-tul1', userId: 'user-parent', studentId: 'stu-tul-1', relation: 'MOTHER', isPrimary: true },
     // 張爺爺：同一小孩（stu-sun-1）的第二位監護人（測 multiple guardianship）
     { id: 'g-guardian-sun1', userId: 'user-guardian', studentId: 'stu-sun-1', relation: 'GRANDPARENT', isPrimary: false },
-    // P5 推播 demo：園長監護 stu-sun-2（范小陽，無其他監護人）→ 核准其請假時只有園長真 LINE 收播,無雜訊。
-    { id: 'g-owner-push', userId: 'user-owner', studentId: 'stu-sun-2', relation: 'GUARDIAN', isPrimary: false },
   ];
+
+  // P5 推播 demo（opt-in,同上 SEED_PUSH_DEMO）：園長監護 stu-sun-2（范小陽,無其他監護人）→
+  // 核准其請假時只有園長真 LINE 收播,無雜訊。
+  if (pushDemo) {
+    guardianships.push({ id: 'g-owner-push', userId: 'user-owner', studentId: 'stu-sun-2', relation: 'GUARDIAN', isPrimary: false });
+  }
   for (const g of guardianships) {
     await prisma.guardianship.upsert({
       where: { id: g.id },

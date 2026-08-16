@@ -35,9 +35,9 @@ Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner
   1. ESLint flat config（CI lint gate）                        → ✅ 上線（CI 綠 run 31941929773）
   2. 全域 exception filter（統一錯誤信封,不洩漏內部）           → ✅ 上線（CI 綠 run 31942307892）
   3. web 元件測試（vitest + RTL;web 8 tests）                  → ✅ 上線（CI 綠 run 31942641153）
-  4. hardening（web 安全標頭 + 錯誤/隔離/secret 檢視）          → PARTIAL（標頭本機綠待 push;CSP/rate-limit 列後續）
-  5. P5 demo 資料收尾                                          → NOT_STARTED
-  6. append-only DB 層鎖死（§D 提案,需 Human Owner 定案）      → NOT_STARTED（最後,不自行做）
+  4. hardening（web 安全標頭 + 錯誤/隔離/secret 檢視）          → ✅ 上線（CI 綠 + 線上標頭生效;CSP/rate-limit 列後續）
+  5. P5 demo 資料收尾（園長 ADMIN+監護 fixture 改 opt-in）      → IMPLEMENTED（本機綠;待 push）
+  6. append-only DB 層鎖死（§D 提案,需 Human Owner 定案）      → 待提案（最後,不自行做）
 ```
 
 > Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留 Phase 8（§D）。多重身份（同帳號兼多角色）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
@@ -311,6 +311,20 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 8 / P5 demo 資料收尾（IMPLEMENTED）
+
+Completed:
+- seed 的「園長單帳號自測推播」fixture（`user-owner` 加 ADMIN + 監護 `stu-sun-2`）改為 **opt-in**：僅 `SEED_PUSH_DEMO=true` 時建立。標準 `pnpm db:seed`（含 CI db job）不再給園長 admin/監護 → canonical/正式 seed 乾淨。
+- 現有線上 dev DB 既有的那兩列**無害保留**（upsert 不刪;正式部署為 fresh DB,不設旗標即乾淨）。要再測推播 → `SEED_PUSH_DEMO=true pnpm db:seed`。
+- verify.ts 不需改（斷言針對 user-parent/stu-sun-1,未觸及）。
+
+Verification:
+- seed type-scan ✓;CI db job（無 SEED_PUSH_DEMO）→ 不建 P5 列、verify 不受影響。
+- 待:push → CI 綠。
+
+Next:
+- Phase 8 #6 append-only DB 層鎖死 —— **以 06 §D 格式提案,停下等 Human Owner 定案**（infra/ADR-003 破壞性:新 app role + 新 secret + 換連線）。
 
 ### 2026-08-16 — Phase 8 / hardening（web 安全標頭 + 隔離/secret/錯誤檢視）（PARTIAL）
 
