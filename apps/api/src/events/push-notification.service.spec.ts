@@ -5,6 +5,7 @@ import { RecipientsService } from './recipients.service';
 
 type PrismaMock = {
   lineIdentity: { findMany: jest.Mock };
+  student: { findUnique: jest.Mock };
 };
 type ClientMock = { push: jest.Mock };
 type RecipientsMock = { forStudent: jest.Mock };
@@ -16,6 +17,7 @@ function makePrisma(): PrismaMock {
         where.userId.in.map((userId) => ({ lineUserId: `L-${userId}` })),
       ),
     },
+    student: { findUnique: jest.fn(async () => ({ name: '范小星' })) },
   };
 }
 
@@ -37,6 +39,7 @@ describe('PushNotificationService.push', () => {
 
     expect(pushedTo(client)).toEqual(['L-u-parent']); // 只有家長、老師不推
     expect(client.push.mock.calls[0]![1]).toContain('核准');
+    expect(client.push.mock.calls[0]![1]).toContain('范小星'); // 帶學生姓名
   });
 
   it('MessageSent → 推家長+老師，排除發訊者本人', async () => {

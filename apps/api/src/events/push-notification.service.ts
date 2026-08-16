@@ -9,10 +9,11 @@ import { LinePushClient } from './line-push.client';
 // 其餘事件（LeaveSubmitted / LeaveCancelled / AnnouncementPublished / AttendanceMarked）只留站內、不推 LINE。
 // 收件人沿用 RecipientsService（與站內通知一致）;userId → lineUserId 由 LineIdentity 對映;
 // 未綁 LINE（無 LineIdentity）或無 token 者自動略過。
-const PUSH_TEXT: Record<string, string> = {
-  LeaveApproved: '您好，學生的請假申請已核准。',
-  LeaveRejected: '您好，學生的請假申請未通過，請開啟應用程式查看詳情。',
-  MessageSent: '您有一則新訊息，請開啟應用程式查看。',
+// 推播文字（帶學生姓名,讓家長一眼看出是哪個小孩）。
+const PUSH_TEXT: Record<string, (studentName: string) => string> = {
+  LeaveApproved: (name) => `${name} 的請假申請已核准。`,
+  LeaveRejected: (name) => `${name} 的請假申請未通過，請開啟應用程式查看詳情。`,
+  MessageSent: (name) => `${name} 有一則新訊息，請開啟應用程式查看。`,
 };
 
 @Injectable()
@@ -25,15 +26,29 @@ export class PushNotificationService {
 
   // 依事件型別推播。非重點事件 → no-op。失敗丟出 → BullMQ 重試。
   async push(eventType: string, payload: unknown): Promise<void> {
-    const text = PUSH_TEXT[eventType];
-    if (!text) {
+    const build = PUSH_TEXT[eventType];
+    if (!build) {
       return; // 非重點事件 → 不推
     }
+    const studentId = (payload as { studentId?: string }).studentId;
+    const text = build(await this.studentName(studentId));
     const userIds = await this.recipientsFor(eventType, payload);
     const lineUserIds = await this.lineIdsFor(userIds);
     for (const to of lineUserIds) {
       await this.client.push(to, text);
     }
+  }
+
+  // 取學生姓名供推播文字使用;查無（極少數,如已刪除）→ 回退「學生」。
+  private async studentName(studentId?: string): Promise<string> {
+    if (!studentId) {
+      return '學生';
+    }
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      select: { name: true },
+    });
+    return student?.name ?? '學生';
   }
 
   // 推播收件人（與站內通知同源:RecipientsService）。

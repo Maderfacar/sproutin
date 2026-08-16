@@ -9,6 +9,13 @@ function byCreatedDesc(a: NotificationView, b: NotificationView): number {
   return b.createdAt.localeCompare(a.createdAt);
 }
 
+// ISO（UTC）→ 使用者本地時間 YYYY-MM-DD HH:MM:SS（顯示到秒）。
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export function NotificationList() {
   const { data, isLoading, isError, error } = useNotifications();
   const markRead = useMarkNotificationRead();
@@ -37,7 +44,7 @@ export function NotificationList() {
             <div className="flex items-center gap-2">
               {unread && <span className="h-2 w-2 rounded-full bg-brand-primary" aria-label="未讀" />}
               <span className="font-medium text-gray-900">{notificationLabel(n.type)}</span>
-              <span className="ml-auto text-xs text-gray-400">{n.createdAt.slice(0, 10)}</span>
+              <span className="ml-auto text-xs text-gray-400">{formatDateTime(n.createdAt)}</span>
             </div>
             {unread && (
               <button
