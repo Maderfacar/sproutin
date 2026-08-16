@@ -17,16 +17,15 @@ export const CARD_META: Record<string, DashboardCardMeta> = {
   announcement: { title: '公告', description: '學校與班級公告', icon: 'mega', href: '/liff/announcement', enabled: true },
   attendance: { title: '出缺勤', description: '查看每日出席狀況', icon: 'cal', href: '/liff/attendance', enabled: true },
   leave: { title: '請假', description: '申請與查詢請假', icon: 'doc', href: '/liff/leave', enabled: true },
-  message: { title: '訊息', description: '與老師/家長溝通', icon: 'chat', href: '/liff/message', enabled: true },
-  audit: { title: '稽核', description: '查詢操作紀錄', icon: 'shield', href: '/liff/audit', enabled: true },
-  // --- 規劃中（連到預告頁）---
   'communication-book': {
     title: '聯絡簿',
-    description: '每日聯絡事項',
+    description: '當日狀態與親師對話',
     icon: 'book',
-    href: '/liff/soon/communication-book',
-    enabled: false,
+    href: '/liff/communication-book',
+    enabled: true,
   },
+  audit: { title: '稽核', description: '查詢操作紀錄', icon: 'shield', href: '/liff/audit', enabled: true },
+  // --- 規劃中（連到預告頁）---
   transportation: {
     title: '娃娃車',
     description: '乘車與接送',

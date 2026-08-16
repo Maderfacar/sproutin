@@ -18,6 +18,7 @@
 | Leave | **SoT** | 請假意圖唯一來源 |
 | Attendance | **混合** | `source=MANUAL`→SoT；`source=LEAVE_EVENT`→Derived。override 後所有權轉 MANUAL（ADR-002） |
 | Message, MessageRead, Announcement | **SoT** | |
+| CommunicationBookEntry | **SoT** | 老師記錄的當日觀察（每生每日一筆）。出缺勤/請假/親師對話**不複製**進本表 |
 | Notification | **Derived** | 由事件產生 |
 | AuditLog | **SoT (append-only)** | 只增不改不刪 |
 | OutboxEvent | 基礎設施 | 事件可靠交付 |
@@ -222,6 +223,37 @@ model AuditLog {
   @@index([createdAt])
 }
 
+// ---------- 每日聯絡簿（SoT；Phase 9 階段2 刀4）----------
+// 每個學生、每一天一筆。「一個孩子的頁面」＝ 本表的當日狀態 + Message 的親師對話。
+// 邊界（刻意不放進本表）：
+//   - 出缺勤 / 請假 → Attendance / Leave 各自為 SoT；本表只借 arrivalTime 記到校時刻。
+//   - 親師對話 → Message（Student-centered）；本表只存老師的當日留言。
+//   - 過敏原 / 用藥委託 / 成長曲線 → 未來「幼兒健康」模組的長期資料（修正 B，不預建）。
+// 沒有列 = 當日未記錄；publishedAt = null 代表老師尚未送出（家長看不到）。
+model CommunicationBookEntry {
+  id          String          @id @default(cuid())
+  studentId   String
+  student     Student         @relation(fields: [studentId], references: [id])
+  date        DateTime        // 當日零點（UTC），與 Attendance 同慣例
+  arrivalTime String?         // "HH:mm"；由點名（check-in）帶入
+  lunch       MealAmount?
+  snack       MealAmount?
+  nap         NapQuality?
+  toilet      ToiletState?
+  mood        Mood?
+  symptoms    HealthSymptom[] // 可複選；空陣列 = 無異狀
+  temperature Float?          // 攝氏，選填；只有實際量過才有值
+  pickup      PickupMethod?
+  teacherNote String?
+  filledBy    String?
+  filledAt    DateTime?
+  publishedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  @@unique([studentId, date])
+  @@index([date])
+}
+
 // ---------- Transactional Outbox（事件可靠交付，§4）----------
 model OutboxEvent {
   id           String    @id @default(cuid())
@@ -244,6 +276,15 @@ enum AttendanceSource { MANUAL LEAVE_EVENT }
 enum MessageCategory  { GENERAL HEALTH BEHAVIOR ADMIN }
 enum AnnouncementScope{ SCHOOL CLASS }
 enum AuditResult      { SUCCESS FAILURE DENIED }
+
+// 每日聯絡簿的選項（刀4）。順序即 UI 由「最順利」到「最需注意」；
+// 直欄模式的「全班預設」取每個清單的第一項（例外導向：預設正常，只點不一樣的）。
+enum MealAmount       { ALL MOST HALF LITTLE NONE }
+enum NapQuality       { WELL SHORT NONE }
+enum ToiletState      { NORMAL LOOSE HARD NONE }
+enum Mood             { HAPPY CALM SLEEPY LOW }
+enum HealthSymptom    { COUGH RUNNY_NOSE SORE_THROAT DIARRHEA VOMITING POOR_APPETITE LOW_ENERGY RASH }
+enum PickupMethod     { FAMILY SCHOOL_BUS }
 ```
 
 ## 移除的 model（修正 B）

@@ -56,16 +56,17 @@ model Class {
 
 // ---------- 學生（核心聚合根，SoT）----------
 model Student {
-  id            String         @id @default(cuid())
+  id            String                   @id @default(cuid())
   classId       String
-  class         Class          @relation(fields: [classId], references: [id])
+  class         Class                    @relation(fields: [classId], references: [id])
   name          String
-  status        StudentStatus  @default(ACTIVE)
+  status        StudentStatus            @default(ACTIVE)
   guardianships Guardianship[]
   attendances   Attendance[]
   leaves        Leave[]
   messages      Message[]
-  createdAt     DateTime       @default(now())
+  bookEntries   CommunicationBookEntry[]
+  createdAt     DateTime                 @default(now())
 }
 
 // ---------- 身分 / 使用者（SoT；LINE ID 僅認證，修正 D）----------
@@ -184,6 +185,37 @@ model Announcement {
   createdAt DateTime          @default(now())
 }
 
+// ---------- 每日聯絡簿（SoT；Phase 9 階段2 刀4）----------
+// 每個學生、每一天一筆（@@unique）。**只存「老師記錄的當日觀察」**：
+//   - 出缺勤 / 請假不存在這裡（各自為 SoT，見 Attendance / Leave）；本表只借 arrivalTime 記到校時刻。
+//   - 親師對話不存在這裡（沿用 Message，Student-centered）；本表只存老師的當日留言。
+//   - 過敏原 / 用藥委託 / 成長曲線屬未來「幼兒健康」模組的長期資料，不放本表（修正 B）。
+// 沒有列 = 當日未記錄（家長端顯示「未記錄」，非錯誤）。publishedAt = null 代表老師尚未送出。
+model CommunicationBookEntry {
+  id          String          @id @default(cuid())
+  studentId   String
+  student     Student         @relation(fields: [studentId], references: [id])
+  date        DateTime // 當日零點（UTC），與 Attendance 同慣例
+  arrivalTime String? // "HH:mm" 園所當地牆上時間；由點名（check-in）帶入
+  lunch       MealAmount?
+  snack       MealAmount?
+  nap         NapQuality?
+  toilet      ToiletState?
+  mood        Mood?
+  symptoms    HealthSymptom[] // 可複選；空陣列 = 無異狀
+  temperature Float? // 攝氏，選填；只有實際量過才有值
+  pickup      PickupMethod?
+  teacherNote String?
+  filledBy    String? // 最後填寫者 userId
+  filledAt    DateTime?
+  publishedAt DateTime? // 送出給家長的時間；null = 尚未送出
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([studentId, date])
+  @@index([date])
+}
+
 // ---------- Notification（Derived）----------
 model Notification {
   id        String    @id @default(cuid())
@@ -297,4 +329,50 @@ enum AuditResult {
   SUCCESS
   FAILURE
   DENIED
+}
+
+// ---- 每日聯絡簿的選項（刀4）。順序即 UI 由「最順利」到「最需注意」。----
+enum MealAmount {
+  ALL // 吃完
+  MOST // 大部分
+  HALF // 一半
+  LITTLE // 少許
+  NONE // 沒吃
+}
+
+enum NapQuality {
+  WELL // 睡得好
+  SHORT // 睡一下下
+  NONE // 沒睡
+}
+
+enum ToiletState {
+  NORMAL // 正常
+  LOOSE // 軟便
+  HARD // 硬便
+  NONE // 今天沒有
+}
+
+enum Mood {
+  HAPPY // 開心
+  CALM // 平穩
+  SLEEPY // 想睡
+  LOW // 情緒低落
+}
+
+// 當日健康觀察（可複選）。長期健康資料屬未來「幼兒健康」模組，不在此列舉。
+enum HealthSymptom {
+  COUGH // 咳嗽
+  RUNNY_NOSE // 流鼻水
+  SORE_THROAT // 喉嚨不適
+  DIARRHEA // 腹瀉
+  VOMITING // 嘔吐
+  POOR_APPETITE // 食慾不振
+  LOW_ENERGY // 精神不濟
+  RASH // 皮膚疹
+}
+
+enum PickupMethod {
+  FAMILY // 家人接送
+  SCHOOL_BUS // 校車
 }

@@ -7,6 +7,8 @@ import { usePublicConfig } from '../../lib/queries';
 import { useSelectedStudent } from '../../features/students/useSelectedStudent';
 import { useAttendance } from '../../features/attendance/hooks';
 import { useAnnouncements } from '../../features/announcement/hooks';
+import { useStudentBook } from '../../features/communication-book/hooks';
+import { MOOD_LABEL } from '../../features/communication-book/labels';
 import { cardMeta } from '../../features/dashboard/cards';
 import { Icon } from '../../components/Icon';
 
@@ -44,6 +46,9 @@ export default function DashboardPage() {
   const student = students?.find((s) => s.id === studentId);
 
   const todayKey = new Date().toISOString().slice(0, 10);
+  const todayIso = `${todayKey}T00:00:00.000Z`;
+  const { data: bookEntries } = useStudentBook(studentId, { from: todayIso, to: todayIso });
+  const todayBook = bookEntries?.[0];
   const monthKey = todayKey.slice(0, 7);
   const todayRec = attendance?.find((a) => a.date.slice(0, 10) === todayKey);
   const monthRecs = attendance?.filter((a) => a.date.slice(0, 7) === monthKey) ?? [];
@@ -131,6 +136,39 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* 今日聯絡簿摘要（老師送出後才有;點進去看全文與親師對話） */}
+      {studentId && todayBook && (
+        <section className="rise-in" style={{ animationDelay: '0.075s' }}>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="eyebrow">今日聯絡簿</p>
+            <Link
+              href={`/liff/communication-book/${studentId}`}
+              className="flex items-center gap-0.5 text-xs font-bold text-brand-primary"
+            >
+              看全文
+              <Icon name="chev" className="h-3 w-3" />
+            </Link>
+          </div>
+          <Link href={`/liff/communication-book/${studentId}`} className="block border-t border-line pt-3">
+            <p className="text-sm text-ink-soft">
+              {[
+                todayBook.arrivalTime ? `到校 ${todayBook.arrivalTime}` : null,
+                todayBook.mood ? MOOD_LABEL[todayBook.mood] : null,
+                todayBook.symptoms.length > 0 || todayBook.temperature !== null ? '健康需注意' : null,
+                todayBook.teacherNote ? '老師有留言' : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+            {todayBook.teacherNote && (
+              <p className="mt-1 line-clamp-2 font-serif text-base leading-snug text-ink">
+                {todayBook.teacherNote}
+              </p>
+            )}
+          </Link>
         </section>
       )}
 

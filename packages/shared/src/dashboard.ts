@@ -20,8 +20,12 @@ export const MVP_CARDS: readonly CardDescriptor[] = [
   { id: 'announcement', requiredRoles: ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'], order: 10 },
   { id: 'attendance', requiredRoles: ['OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 20 },
   { id: 'leave', requiredRoles: ['OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 30 },
-  { id: 'message', requiredRoles: ['ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 40 },
-  { id: 'communication-book', requiredRoles: ['TEACHER', 'PARENT', 'GUARDIAN'], order: 50 },
+  // 聯絡簿＝「一個孩子的頁面」：當日狀態在上、親師對話在下。
+  // **原本的「訊息」卡已併入此處**（Human Owner 決策 2026-08-17）：只有一個小孩的家長會覺得
+  // 兩張卡點進去幾乎一樣，入口收斂成一張才符合「操作簡單、集成度高」。
+  // 訊息 API 與 /liff/message 網址皆保留（舊連結導向聯絡簿），只是不再是獨立入口。
+  // ADMIN 保留在此，否則行政人員會失去訊息的閱讀入口（docs/05 矩陣 Message: ADMIN=R）。
+  { id: 'communication-book', requiredRoles: ['ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN'], order: 40 },
   {
     id: 'transportation',
     // 園長/行政需看得到娃娃車入口（管理路線與名單）;與 payment/health/portfolio 的對象一致。

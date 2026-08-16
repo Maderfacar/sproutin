@@ -49,6 +49,10 @@ POST /auth/line/login
 | GET | `/messages?studentId=` | 訊息串（Student-centered，修正 D） | Roles+Scope | ✔(讀) |
 | POST | `/messages` | 送訊息 → `MessageSent` | Roles+Scope | ✔ |
 | PATCH | `/messages/:id/read` | 標記已讀 | Roles+Scope | ✔ |
+| **GET** | **`/communication-book`** | 每日聯絡簿（`?classId=&date=` 整班／`?studentId=`＋`date=` 或 `from=&to=`） | Roles+Scope | – |
+| **PUT** | **`/communication-book`** | 填寫／修改當日紀錄（每生每日 upsert，局部更新） | ADMIN/TEACHER | ✔ |
+| **POST** | **`/communication-book/check-in`** | 點名即到校（同交易寫 Attendance + 到校時間） | ADMIN/TEACHER | ✔ |
+| **POST** | **`/communication-book/publish`** | 一鍵送出全班 → `CommunicationBookPublished` | ADMIN/TEACHER | ✔ |
 | GET | `/announcements` | 公告清單 | Roles | – |
 | POST | `/announcements` | 發公告 → `AnnouncementPublished` | OWNER/ADMIN/TEACHER | ✔ |
 | GET | `/notifications` | 站內通知 | auth(自己) | – |
@@ -150,6 +154,37 @@ DELETE /teacher-assignments/:id                  → 204
 - 重複綁定 → 409 `guardianship_exists` / `assignment_exists`；對象不存在 → 400。
 - **尚未綁定 LINE 的帳號本人無法登入**（`user_not_provisioned`）。綁定機制為開賣前必要項，
   demo 不做（見 `docs/project/08` Human Owner Action / LATER）。
+
+## 4f. 每日聯絡簿（Phase 9 階段2 刀4）
+
+```text
+GET  /communication-book?classId=&date=            → BookEntryView[]（校方整班；date 必填）
+GET  /communication-book?studentId=&date=          → BookEntryView[]（單日）
+GET  /communication-book?studentId=&from=&to=      → BookEntryView[]（回溯區間）
+
+PUT  /communication-book
+     { studentId, date, arrivalTime?, lunch?, snack?, nap?, toilet?, mood?,
+       symptoms?, temperature?, pickup?, teacherNote? }        → BookEntryView
+
+POST /communication-book/check-in
+     { studentId, date, arrivalTime, status: PRESENT|LATE }    → BookEntryView
+
+POST /communication-book/publish
+     { classId, date, pushStudentIds: string[] }               → { published, pushed }
+```
+
+- **每生每日一筆**（`@@unique([studentId, date])`）；`date` 正規化為當日 UTC 午夜（同 Attendance）。
+- **所有欄位皆可留空**：未提供的欄位不動（局部更新），明確傳 `null` 才清空。強迫必填只會逼出假資料。
+- **家長只讀已送出的紀錄**（`publishedAt` 非 null）；校方看得到填寫中的內容。
+- **老師只能填寫/修改近 7 天**：超出 → 400 `book_edit_window_expired`；未來日期 → 400 `book_future_date`。
+- **點名即到校**：`check-in` 在**同一 transaction** 內呼叫 `AttendanceService.markWithin`（沿用 ADR-002 的
+  override 規則與 `AttendanceMarked` Outbox）再寫 `arrivalTime` —— 老師一個動作完成兩件事，
+  不會出現「出缺勤寫了、聯絡簿沒寫」的半套狀態。
+- **送出**只處理「已有內容且尚未送出」的紀錄（不會憑空產生空白聯絡簿）；`pushStudentIds` 會被
+  後端限縮在本次實際送出的學生內（不信任前端）。全班皆未填 → 不發事件。
+- 稽核：`communication_book.save` / `.check_in` / `.publish`，與業務變更同一 transaction。
+  **metadata 只記欄位名與 studentId，不記留言內容、症狀與姓名**（修正 C）。
+- 入口：「訊息」卡片已併入「聯絡簿」（見 docs/05）；`/messages` 端點與權限不變。
 
 ## 5. 驗證與授權
 

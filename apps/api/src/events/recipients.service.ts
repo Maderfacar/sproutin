@@ -57,6 +57,29 @@ export class RecipientsService {
     return unique([...assignments.map((a) => a.userId), ...guardianships.map((g) => g.userId)]);
   }
 
+  // 一次取多位學生的監護人（每日聯絡簿送出用）。逐生查會是 N 次查詢，班級規模下不划算。
+  // 回傳 studentId → 監護人 userId[]；沒有監護人的學生不會出現在 Map 內。
+  async guardiansByStudent(
+    tx: Prisma.TransactionClient,
+    studentIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const result = new Map<string, string[]>();
+    if (studentIds.length === 0) {
+      return result;
+    }
+    const guardianships = await tx.guardianship.findMany({
+      where: { studentId: { in: studentIds } },
+      select: { studentId: true, userId: true },
+    });
+    for (const g of guardianships) {
+      const current = result.get(g.studentId) ?? [];
+      if (!current.includes(g.userId)) {
+        result.set(g.studentId, [...current, g.userId]);
+      }
+    }
+    return result;
+  }
+
   // 全校所有使用者（全校公告用）。學生不是 User，故不含學生。
   async allUsers(tx: Prisma.TransactionClient): Promise<string[]> {
     const users = await tx.user.findMany({ select: { id: true } });

@@ -44,6 +44,11 @@ export const CreateAnnouncementDto = z.object({
 });
 export type CreateAnnouncementDto = z.infer<typeof CreateAnnouncementDto>;
 
+// 每日聯絡簿（刀4）：體溫達此值即標示「偏高」。
+// 放 shared 的理由——老師端提示、送出前的「健康需注意」判斷都用它，兩處標準不得不一致。
+// 對應的輸入驗證 schema 依既有慣例 inline 於 api controller（api 不從 shared 取執行期值）。
+export const FEVER_THRESHOLD_C = 37.5;
+
 // PATCH /school/config（園所外觀/功能設定，OWNER/ADMIN）。
 // 全欄位選填 = 局部更新;顏色限 #RRGGBB;圖片限 http(s) 或站內相對路徑（內建圖庫）。
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;

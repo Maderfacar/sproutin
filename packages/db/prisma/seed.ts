@@ -44,6 +44,15 @@ const D_OVERRIDE = new Date('2026-08-11T00:00:00.000Z'); // stu-sun-2 被老師�
 const D_PRESENT = new Date('2026-08-12T00:00:00.000Z'); // stu-sun-3 一般手動出勤日
 const NOW = new Date('2026-08-13T09:00:00.000Z'); // override 時間（固定）
 
+// 聯絡簿的 demo 日期採「相對今天」——demo 用途上，翻開必須看到最近幾天有內容，
+// 若寫死日期，過一陣子 demo 就會變成一片空白。id 仍固定，重跑只更新日期（idempotent）。
+const MS_PER_DAY = 86_400_000;
+function daysAgo(n: number): Date {
+  const now = new Date();
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return new Date(today - n * MS_PER_DAY);
+}
+
 async function main(): Promise<void> {
   assertSeedAllowed();
 
@@ -63,7 +72,7 @@ async function main(): Promise<void> {
       brandName: 'Sproutin Demo',
       primaryColor: '#2E7D32',
       secondaryColor: '#A5D6A7',
-      cardOrder: ['leave', 'attendance', 'message', 'announcement'],
+      cardOrder: ['communication-book', 'leave', 'attendance', 'announcement'],
       // demo 園所預設展示完整產品藍圖：規劃中的功能一併開啟（前端顯示為「即將推出」+ 預告頁）。
       // 正式園所可於「園所外觀」設定頁自行開關（Human Owner 決策 2026-08-17）。
       featureFlags: {
@@ -319,6 +328,117 @@ async function main(): Promise<void> {
     },
   });
 
+  // -------- 11. Demo 業務資料：每日聯絡簿（階段2 刀4）--------
+  // 向日葵班近三天的紀錄。刻意做出三種狀態，demo 時三種畫面都看得到：
+  //   ① 已送出且一切順利 ② 已送出但健康需注意（體溫偏高 + 症狀）③ 今天尚未送出（老師記錄中）
+  const bookEntries: Array<{
+    id: string;
+    studentId: string;
+    date: Date;
+    arrivalTime: string;
+    lunch: 'ALL' | 'MOST' | 'HALF' | 'LITTLE' | 'NONE';
+    snack: 'ALL' | 'MOST' | 'HALF' | 'LITTLE' | 'NONE';
+    nap: 'WELL' | 'SHORT' | 'NONE';
+    toilet: 'NORMAL' | 'LOOSE' | 'HARD' | 'NONE';
+    mood: 'HAPPY' | 'CALM' | 'SLEEPY' | 'LOW';
+    symptoms: Array<'COUGH' | 'RUNNY_NOSE' | 'LOW_ENERGY'>;
+    temperature: number | null;
+    pickup: 'FAMILY' | 'SCHOOL_BUS';
+    teacherNote: string | null;
+    published: boolean;
+  }> = [
+    {
+      id: 'cb-sun1-d2',
+      studentId: 'stu-sun-1',
+      date: daysAgo(2),
+      arrivalTime: '08:05',
+      lunch: 'ALL',
+      snack: 'ALL',
+      nap: 'WELL',
+      toilet: 'NORMAL',
+      mood: 'HAPPY',
+      symptoms: [],
+      temperature: null,
+      pickup: 'FAMILY',
+      teacherNote: '今天主動幫忙收玩具，午睡起來精神很好。',
+      published: true,
+    },
+    {
+      id: 'cb-sun2-d2',
+      studentId: 'stu-sun-2',
+      date: daysAgo(2),
+      arrivalTime: '08:20',
+      lunch: 'MOST',
+      snack: 'ALL',
+      nap: 'SHORT',
+      toilet: 'NORMAL',
+      mood: 'CALM',
+      symptoms: [],
+      temperature: null,
+      pickup: 'SCHOOL_BUS',
+      teacherNote: null,
+      published: true,
+    },
+    {
+      id: 'cb-sun1-d1',
+      studentId: 'stu-sun-1',
+      date: daysAgo(1),
+      arrivalTime: '08:12',
+      lunch: 'HALF',
+      snack: 'LITTLE',
+      nap: 'SHORT',
+      toilet: 'LOOSE',
+      mood: 'LOW',
+      symptoms: ['COUGH', 'RUNNY_NOSE'],
+      temperature: 37.8,
+      pickup: 'FAMILY',
+      teacherNote: '午後略有咳嗽，已多補充水分並安排休息，請家長留意。',
+      published: true,
+    },
+    {
+      id: 'cb-sun3-d1',
+      studentId: 'stu-sun-3',
+      date: daysAgo(1),
+      arrivalTime: '08:30',
+      lunch: 'ALL',
+      snack: 'ALL',
+      nap: 'WELL',
+      toilet: 'NORMAL',
+      mood: 'HAPPY',
+      symptoms: [],
+      temperature: null,
+      pickup: 'FAMILY',
+      teacherNote: null,
+      published: true,
+    },
+    {
+      id: 'cb-sun1-d0',
+      studentId: 'stu-sun-1',
+      date: daysAgo(0),
+      arrivalTime: '08:08',
+      lunch: 'ALL',
+      snack: 'ALL',
+      nap: 'WELL',
+      toilet: 'NORMAL',
+      mood: 'HAPPY',
+      symptoms: [],
+      temperature: null,
+      pickup: 'FAMILY',
+      teacherNote: null,
+      published: false, // 老師仍在記錄中 → 家長端顯示「放學前會送出」
+    },
+  ];
+
+  for (const e of bookEntries) {
+    const { id, published, ...fields } = e;
+    const data = { ...fields, filledBy: 'user-teacher-sun', publishedAt: published ? NOW : null };
+    await prisma.communicationBookEntry.upsert({
+      where: { id },
+      update: data,
+      create: { id, ...data },
+    });
+  }
+
   // -------- 摘要（供 CI / Render job log 作為驗證證據）--------
   const counts = {
     school: await prisma.school.count(),
@@ -333,6 +453,7 @@ async function main(): Promise<void> {
     leave: await prisma.leave.count(),
     attendance: await prisma.attendance.count(),
     announcement: await prisma.announcement.count(),
+    communicationBookEntry: await prisma.communicationBookEntry.count(),
   };
   console.log('[seed] OK — Demo School 已就緒（idempotent）。counts=', counts);
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type {
   AnnouncementPublishedPayload,
+  CommunicationBookPublishedPayload,
   LeaveApprovedPayload,
   LeaveCancelledPayload,
   LeaveRejectedPayload,
@@ -10,6 +11,7 @@ import type {
 import { LeaveEventHandler } from './leave-event.handler';
 import { MessageEventHandler } from './message-event.handler';
 import { AnnouncementEventHandler } from './announcement-event.handler';
+import { CommunicationBookEventHandler } from './communication-book-event.handler';
 
 // Outbox 事件路由（docs/06 §4 訂閱表）。dispatcher 對每個 claim 到的事件呼叫 handle()。
 // 新事件在此加 case、以獨立 handler 訂閱，不改既有 domain 模組（docs/06 §6）。
@@ -19,6 +21,7 @@ export class EventHandlersService {
     private readonly leave: LeaveEventHandler,
     private readonly message: MessageEventHandler,
     private readonly announcement: AnnouncementEventHandler,
+    private readonly book: CommunicationBookEventHandler,
   ) {}
 
   async handle(eventType: string, payload: unknown): Promise<void> {
@@ -35,6 +38,8 @@ export class EventHandlersService {
         return this.message.notify(payload as MessageSentPayload);
       case 'AnnouncementPublished':
         return this.announcement.notify(payload as AnnouncementPublishedPayload);
+      case 'CommunicationBookPublished':
+        return this.book.notify(payload as CommunicationBookPublishedPayload);
       case 'AttendanceMarked':
         // MVP：AttendanceMarked 通知為選配（docs/06 §4），本步不發 → no-op。
         return;

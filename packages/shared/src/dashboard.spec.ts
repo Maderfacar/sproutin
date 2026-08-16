@@ -2,10 +2,18 @@ import { selectDashboardCards, MVP_CARDS } from './dashboard.js';
 import type { Role } from './roles.js';
 
 describe('selectDashboardCards', () => {
-  it('家長看得到 announcement/attendance/leave/message/communication-book，看不到 transportation（bus flag 關）', () => {
+  it('家長看得到 announcement/attendance/leave/communication-book，看不到 transportation（bus flag 關）', () => {
     const cards = selectDashboardCards(['PARENT'], {}, []);
     const ids = cards.map((c) => c.id);
-    expect(ids).toEqual(['announcement', 'attendance', 'leave', 'message', 'communication-book']);
+    expect(ids).toEqual(['announcement', 'attendance', 'leave', 'communication-book']);
+  });
+
+  it('訊息已併入聯絡簿 → 不再有獨立的 message 卡片', () => {
+    expect(MVP_CARDS.map((c) => c.id)).not.toContain('message');
+  });
+
+  it('行政（ADMIN）看得到聯絡簿 —— 否則會失去訊息的閱讀入口', () => {
+    expect(selectDashboardCards(['ADMIN'], {}, []).map((c) => c.id)).toContain('communication-book');
   });
 
   it('bus flag 開啟時，家長才看得到 transportation', () => {
@@ -20,12 +28,12 @@ describe('selectDashboardCards', () => {
     );
   });
 
-  it('一人多角色 → 取聯集（OWNER 無 message 卡，但兼具 PARENT 後可見）', () => {
+  it('一人多角色 → 取聯集（OWNER 無聯絡簿卡，但兼具 PARENT 後可見）', () => {
     const ownerOnly = selectDashboardCards(['OWNER'], {}, []).map((c) => c.id);
-    expect(ownerOnly).not.toContain('message');
+    expect(ownerOnly).not.toContain('communication-book');
 
     const ownerAndParent = selectDashboardCards(['OWNER', 'PARENT'], {}, []).map((c) => c.id);
-    expect(ownerAndParent).toContain('message');
+    expect(ownerAndParent).toContain('communication-book');
   });
 
   it('稽核卡只給 OWNER/ADMIN（家長看不到）', () => {
@@ -41,16 +49,16 @@ describe('selectDashboardCards', () => {
       ['leave', 'announcement'], // 只指定前兩張的順序
     ).map((c) => c.id);
     expect(ids.slice(0, 2)).toEqual(['leave', 'announcement']);
-    // 其餘（attendance/message/communication-book）未列入 → 置後、維持 order 遞增
-    expect(ids.slice(2)).toEqual(['attendance', 'message', 'communication-book']);
+    // 其餘（attendance/communication-book）未列入 → 置後、維持 order 遞增
+    expect(ids.slice(2)).toEqual(['attendance', 'communication-book']);
   });
 
   it('已上線功能可被園所明確關閉（flag=false 即隱藏），未設定則照常顯示', () => {
-    const withMessage = selectDashboardCards(['PARENT'], {}, []).map((c) => c.id);
-    expect(withMessage).toContain('message');
+    const shown = selectDashboardCards(['PARENT'], {}, []).map((c) => c.id);
+    expect(shown).toContain('communication-book');
 
-    const hidden = selectDashboardCards(['PARENT'], { message: false }, []).map((c) => c.id);
-    expect(hidden).not.toContain('message');
+    const hidden = selectDashboardCards(['PARENT'], { 'communication-book': false }, []).map((c) => c.id);
+    expect(hidden).not.toContain('communication-book');
     expect(hidden).toContain('leave'); // 只影響被關掉的那張
   });
 

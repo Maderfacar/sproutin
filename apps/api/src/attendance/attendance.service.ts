@@ -91,34 +91,43 @@ export class AttendanceService {
     const allowed = await this.scope.canManageStudentClass(actor.id, actor.roles, input.studentId);
     if (!allowed) throw new ForbiddenException('out_of_scope');
 
+    return this.prisma.$transaction((tx) => this.markWithin(tx, actor, input));
+  }
+
+  // mark() 的交易內主體。**呼叫端必須已完成 scope 檢查**（本方法不重複驗證）。
+  // 抽出的原因：每日聯絡簿的「點名即到校」要在同一個交易裡同時寫出缺勤與到校時間
+  // （Human Owner 決策 2026-08-17：老師一個動作完成兩件事），若各自開交易會有半套失敗的風險。
+  async markWithin(
+    tx: Prisma.TransactionClient,
+    actor: AttendanceActor,
+    input: MarkAttendanceInput,
+  ): Promise<AttendanceView> {
     const date = new Date(input.date);
 
-    return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.attendance.findUnique({
-        where: { studentId_date: { studentId: input.studentId, date } },
-        select: { id: true, source: true, sourceRef: true, derivedFrom: true },
-      });
-
-      const write = this.computeWrite(existing, input.status, actor.id);
-      const row = existing
-        ? await tx.attendance.update({ where: { id: existing.id }, data: write.data, select: ATTENDANCE_VIEW })
-        : await tx.attendance.create({
-            data: { studentId: input.studentId, date, status: input.status, source: 'MANUAL' },
-            select: ATTENDANCE_VIEW,
-          });
-
-      await this.emitMarked(tx, row);
-      await this.audit.record(tx, {
-        actorUserId: actor.id,
-        actorRole: this.actorRole(actor),
-        action: write.wasOverride ? 'attendance.override' : 'attendance.mark',
-        resourceType: 'Attendance',
-        resourceId: row.id,
-        result: 'SUCCESS',
-        metadata: { status: input.status, source: row.source, wasOverride: write.wasOverride },
-      });
-      return row;
+    const existing = await tx.attendance.findUnique({
+      where: { studentId_date: { studentId: input.studentId, date } },
+      select: { id: true, source: true, sourceRef: true, derivedFrom: true },
     });
+
+    const write = this.computeWrite(existing, input.status, actor.id);
+    const row = existing
+      ? await tx.attendance.update({ where: { id: existing.id }, data: write.data, select: ATTENDANCE_VIEW })
+      : await tx.attendance.create({
+          data: { studentId: input.studentId, date, status: input.status, source: 'MANUAL' },
+          select: ATTENDANCE_VIEW,
+        });
+
+    await this.emitMarked(tx, row);
+    await this.audit.record(tx, {
+      actorUserId: actor.id,
+      actorRole: this.actorRole(actor),
+      action: write.wasOverride ? 'attendance.override' : 'attendance.mark',
+      resourceType: 'Attendance',
+      resourceId: row.id,
+      result: 'SUCCESS',
+      metadata: { status: input.status, source: row.source, wasOverride: write.wasOverride },
+    });
+    return row;
   }
 
   // PATCH /attendance/:id — 修改;若原為 source=LEAVE_EVENT → override（ADR-002 rule 4）。

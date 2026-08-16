@@ -1,25 +1,17 @@
 'use client';
 
-import { PageHeader } from '../../../components/PageHeader';
-import { StudentSelect } from '../../../components/StudentSelect';
-import { useSelectedStudent } from '../../../features/students/useSelectedStudent';
-import { MessageThread } from '../../../features/message/MessageThread';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { StatusScreen } from '../../../components/StatusScreen';
 
-export default function MessagePage() {
-  const { students, studentId, setStudentId, isLoading, isError } = useSelectedStudent();
+// 訊息已併入聯絡簿（Human Owner 決策 2026-08-17：入口收斂成「一個孩子的頁面」）。
+// 此網址保留並導向聯絡簿 —— 舊書籤與舊通知連結不該變成 404。
+export default function MessageRedirectPage() {
+  const router = useRouter();
 
-  return (
-    <div className="flex flex-col gap-5">
-      <PageHeader title="訊息" />
+  useEffect(() => {
+    router.replace('/liff/communication-book');
+  }, [router]);
 
-      {isLoading && <p className="text-sm text-ink-soft">載入學生中…</p>}
-      {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
-      {students && students.length === 0 && (
-        <p className="text-sm text-ink-soft">目前沒有可溝通的學生。</p>
-      )}
-
-      <StudentSelect students={students} value={studentId} onChange={setStudentId} />
-      {studentId && <MessageThread studentId={studentId} />}
-    </div>
-  );
+  return <StatusScreen status="loading" message="訊息已併入聯絡簿，正在前往…" />;
 }

@@ -182,6 +182,71 @@ export interface AuditLogFilters {
   offset?: number;
 }
 
+// --- 每日聯絡簿（階段2 刀4）---
+export type MealAmount = 'ALL' | 'MOST' | 'HALF' | 'LITTLE' | 'NONE';
+export type NapQuality = 'WELL' | 'SHORT' | 'NONE';
+export type ToiletState = 'NORMAL' | 'LOOSE' | 'HARD' | 'NONE';
+export type Mood = 'HAPPY' | 'CALM' | 'SLEEPY' | 'LOW';
+export type HealthSymptom =
+  | 'COUGH'
+  | 'RUNNY_NOSE'
+  | 'SORE_THROAT'
+  | 'DIARRHEA'
+  | 'VOMITING'
+  | 'POOR_APPETITE'
+  | 'LOW_ENERGY'
+  | 'RASH';
+export type PickupMethod = 'FAMILY' | 'SCHOOL_BUS';
+
+export interface BookEntryView {
+  id: string;
+  studentId: string;
+  date: string; // ISO
+  arrivalTime: string | null; // "HH:mm"
+  lunch: MealAmount | null;
+  snack: MealAmount | null;
+  nap: NapQuality | null;
+  toilet: ToiletState | null;
+  mood: Mood | null;
+  symptoms: HealthSymptom[];
+  temperature: number | null;
+  pickup: PickupMethod | null;
+  teacherNote: string | null;
+  filledBy: string | null;
+  filledAt: string | null;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+// 局部更新：只送要改的欄位；明確 null 代表清空。
+export interface SaveBookEntryBody {
+  studentId: string;
+  date: string; // ISO datetime
+  arrivalTime?: string | null;
+  lunch?: MealAmount | null;
+  snack?: MealAmount | null;
+  nap?: NapQuality | null;
+  toilet?: ToiletState | null;
+  mood?: Mood | null;
+  symptoms?: HealthSymptom[];
+  temperature?: number | null;
+  pickup?: PickupMethod | null;
+  teacherNote?: string | null;
+}
+
+export interface BookCheckInBody {
+  studentId: string;
+  date: string;
+  arrivalTime: string;
+  status?: 'PRESENT' | 'LATE';
+}
+
+export interface PublishBookBody {
+  classId: string;
+  date: string;
+  pushStudentIds: string[];
+}
+
 export interface AnnouncementView {
   id: string;
   schoolId: string;

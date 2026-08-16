@@ -28,6 +28,7 @@
 | Leave – 審核(approve/reject) | R | ✔ | ✔(自班) | – | – |
 | Leave – 取消 | ✔ | ✔ | ✔(自班) | – | ✔(自己申請) |
 | Message | R | R | Send/R(自班) | – | Send/R(對自己小孩) |
+| **CommunicationBook** | R | **CRUD** | **CRUD(自班)** | – | **R(自己小孩，限已送出)** |
 | Announcement | CRUD | CRUD | Create(班級) | – | R |
 | Notification | R(自己) | R(自己) | R(自己) | R(自己) | R(自己) |
 | **AuditLog** | **R** | R(受限) | – | – | – |
@@ -35,6 +36,12 @@
 > 修正 A：Leave 的「審核」權限僅在 `leaveRequiresApproval=true` 時有意義；為 false 時申請即自動 APPROVED，無審核步驟。
 >
 > **變更（2026-08-17, Human Owner 決定）**：`School config / branding` 與 `Feature flag / leaveRequiresApproval` 的 `ADMIN` 由 `R` 放寬為 `CRUD`。理由：園所實務上由行政人員維護園所外觀與功能開關，園長不見得親自操作。落地於 `GET/PATCH /school/config` 的 `@Roles('OWNER','ADMIN')`。
+>
+> **新增（2026-08-17, 階段2 刀4）**：`CommunicationBook`（每日聯絡簿）比照 `Attendance` —— 老師填自班、行政全校、園長唯讀、家長只讀自己小孩。兩點差異：
+> ① **家長只看得到已送出的紀錄**（`publishedAt` 非 null），否則會看到老師填到一半的半成品；
+> ② **老師只能填寫/修改近 7 天**（`book_edit_window_expired`），避免事後改寫已交付家長的紀錄；家長端可回溯查閱全部歷史。
+>
+> 入口變更：**「訊息」卡片已併入「聯絡簿」**（Human Owner 決策 A）。Message 的權限與 API 不變，只是不再是獨立入口；聯絡簿卡片因此納入 `ADMIN`，行政人員才不會失去訊息的閱讀入口。
 
 ## 3. Scope 限縮（資料列級）
 

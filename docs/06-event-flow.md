@@ -61,6 +61,12 @@ Parent → POST /leaves
 | `MessageSent` | Message | Notification | AI(draft/summary) |
 | `AnnouncementPublished` | Announcement | Notification, **LINE Push**（階段2 刀5） | — |
 | `AttendanceMarked` | Attendance | Notification(選配) | Report |
+| `CommunicationBookPublished` | CommunicationBook | Notification（全部送出者的家長）、**LINE Push（僅 `pushStudentIds`）**（階段2 刀4） | Health, Report |
+
+> `CommunicationBookPublished` 的推播刻意**不是全部收件人**：payload 帶 `studentIds`（本次送出）與
+> `pushStudentIds`（老師勾選要立即 LINE 通知者，通常是健康需注意的孩子）。日常記錄若全班推播，
+> 一班 25 人每天就是 25 則 LINE 訊息，費用與打擾都不成比例（Human Owner 決策 2026-08-17）。
+> 老師不必自行判斷「算不算緊急」——體溫偏高或有症狀者由系統於送出時自動挑出並詢問。
 
 ## 5. Audit 可靠性（修正 C；ADR-005）
 

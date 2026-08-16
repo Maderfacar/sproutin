@@ -9,6 +9,7 @@ export const EventType = {
   MessageSent: 'MessageSent',
   AnnouncementPublished: 'AnnouncementPublished',
   AttendanceMarked: 'AttendanceMarked',
+  CommunicationBookPublished: 'CommunicationBookPublished',
 } as const;
 
 export type EventType = (typeof EventType)[keyof typeof EventType];
@@ -58,6 +59,16 @@ export interface AttendanceMarkedPayload {
   status: string;
 }
 
+// 老師送出當日聯絡簿（刀4）。studentIds = 本次送出的全部學生;
+// pushStudentIds ⊆ studentIds = 老師選擇「立即以 LINE 通知」的學生（通常是健康需注意者）。
+// 其餘學生只寫站內通知不推 LINE —— 每日聯絡簿若全班推播，LINE 訊息量與費用會失控。
+export interface CommunicationBookPublishedPayload {
+  classId: string;
+  date: string;
+  studentIds: string[];
+  pushStudentIds: string[];
+}
+
 export interface DomainEventMap {
   LeaveSubmitted: LeaveSubmittedPayload;
   LeaveApproved: LeaveApprovedPayload;
@@ -66,4 +77,5 @@ export interface DomainEventMap {
   MessageSent: MessageSentPayload;
   AnnouncementPublished: AnnouncementPublishedPayload;
   AttendanceMarked: AttendanceMarkedPayload;
+  CommunicationBookPublished: CommunicationBookPublishedPayload;
 }

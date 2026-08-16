@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type {
   AnnouncementPublishedPayload,
+  CommunicationBookPublishedPayload,
   LeaveApprovedPayload,
   LeaveRejectedPayload,
   MessageSentPayload,
@@ -23,6 +24,7 @@ const PUSH_TEXT: Record<string, (studentName: string) => string> = {
 };
 
 const ANNOUNCEMENT_EVENT = 'AnnouncementPublished';
+const BOOK_EVENT = 'CommunicationBookPublished';
 
 @Injectable()
 export class PushNotificationService {
@@ -38,6 +40,10 @@ export class PushNotificationService {
   async push(eventType: string, payload: unknown): Promise<void> {
     if (eventType === ANNOUNCEMENT_EVENT) {
       return this.pushAnnouncement(payload as AnnouncementPublishedPayload);
+    }
+
+    if (eventType === BOOK_EVENT) {
+      return this.pushCommunicationBook(payload as CommunicationBookPublishedPayload);
     }
 
     const build = PUSH_TEXT[eventType];
@@ -68,6 +74,21 @@ export class PushNotificationService {
       ? await this.recipients.forClass(this.prisma, payload.classId)
       : await this.recipients.allUsers(this.prisma);
     await this.sendTo(userIds, text);
+  }
+
+  // 每日聯絡簿送出：**只推老師明確勾選的學生**（pushStudentIds），其餘只留站內通知。
+  // 動機（Human Owner 決策 2026-08-17）：日常記錄若全班推播，一班 25 人每天就是 25 則 LINE
+  // 訊息，費用與打擾都不成比例；老師遇到健康需注意等情況才選擇即時通知。
+  // 推播文字帶學生姓名，家長一眼看出是哪個小孩。
+  private async pushCommunicationBook(payload: CommunicationBookPublishedPayload): Promise<void> {
+    if (payload.pushStudentIds.length === 0) {
+      return;
+    }
+    for (const studentId of payload.pushStudentIds) {
+      const name = await this.studentName(studentId);
+      const r = await this.recipients.forStudent(this.prisma, studentId);
+      await this.sendTo(r.guardians, `${name} 今日的聯絡簿已更新，請開啟應用程式查看。`);
+    }
   }
 
   // 逐一推播，**單一收件人失敗不得拖垮其他人**（2026-08-17 線上教訓：

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MVP_CARDS } from '@sproutin/shared';
 import type { Role, SchoolAdminConfig } from '@sproutin/shared';
 import { CardsSection } from './CardsSection';
 
@@ -75,6 +76,6 @@ describe('CardsSection', () => {
     fireEvent.click(screen.getByRole('button', { name: '公告 往下移' }));
     const order = onChange.mock.calls[0]?.[0]?.cardOrder as string[];
     expect(order.slice(0, 3)).toEqual(['attendance', 'announcement', 'leave']);
-    expect(order.length).toBe(12); // 全部卡片都留在順序清單中
+    expect(order.length).toBe(MVP_CARDS.length); // 全部卡片都留在順序清單中
   });
 });

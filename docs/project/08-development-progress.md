@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**Phase 9 階段2 刀 1 — 園所外觀設定頁 + 功能藍圖佔位卡 IMPLEMENTED**，待 push → CI → 線上驗收。詳見最上方 Recent Work Log。）
+> Last updated: 2026-08-17（**Phase 9 階段2 刀 4 — 每日聯絡簿 IMPLEMENTED**，待 CI → 線上驗收。刀 1/2/3/5 皆 ACCEPTED。）
 
 ---
 
@@ -12,7 +12,9 @@
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
 階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）＝ ✅ ACCEPTED**；
 **刀 5＝ ✅ ACCEPTED**（學生整合視圖 + 公告 LINE 推播;推播根因＝單一無效收件人中斷整批，已修復並複測收到）。
-**刀 4（每日聯絡簿本）尚未開始 —— Human Owner 決定另開新視窗執行**（需新 model + migration + 老師填寫端與家長閱讀端，為五刀中最大的一刀）。
+**刀 4（每日聯絡簿）＝ IMPLEMENTED（2026-08-17，待線上驗收）** —— 五刀中最大的一刀：migration 0005、6 個新端點、
+老師「直欄模式」填寫端、家長閱讀端，並依 Human Owner 決策 **把「訊息」併入聯絡簿**（入口收斂）。設計定案見 Recent Work Log。
+**→ 刀 4 驗收通過後，Phase 9 階段2 五刀全數完成。**
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
 **Milestone:**
@@ -63,9 +65,33 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 ## Current Task
 
-**Phase 8 主體完成並全上線（CI 綠 + 部署）。** #6 依 Human Owner 定案 B 延後（trigger 已擋一般竄改;least-privilege role 排正式上線前）。
-全測試 158（api 142 + shared 8 + web 8）;lint gate 已納入 CI。
-下一步 = 與 Human Owner 規劃 Phase 9 — Pilot（先計畫 → 確認 → 執行）。
+**Phase 9 階段2 刀 4 — 每日聯絡簿 IMPLEMENTED（2026-08-17）。** 待 CI 綠 + Human Owner 線上驗收。
+本機四項全綠：lint / typecheck / **測試 228（api 200 + shared 12 + web 16）** / build。
+
+### 刀 4 設計定案（Human Owner 逐項拍板，2026-08-17）
+
+| 決策 | 定案 |
+|------|------|
+| 聯絡簿的形式 | **一個孩子的頁面**：當日狀態在上、親師對話在下 |
+| 與訊息的關係 | **A：聯絡簿吃掉訊息**（入口收斂成一張卡；Message API 與 `/liff/message` 網址保留並導向） |
+| 健康 / 接送 | 放進當日狀態（**當日觀察**，非未來「幼兒健康 / 娃娃車」模組的長期資料） |
+| 回溯 | 家長可翻全部歷史；**老師只能填寫/修改近 7 天** |
+| 點名即到校 | **合併**——老師點一下同時完成點名與記錄到校時間（同一 transaction） |
+| 用餐 | 午餐、點心**分兩欄** |
+| 接送 | 只分 **家人接送 / 校車**，不必填哪一位家人 |
+| 送出 | 老師**一鍵送出全班**；單一學生可單獨進入處理 |
+| LINE 推播 | **老師選擇**：系統自動挑出健康需注意者並詢問是否即時通知；其餘只發站內通知（控費用） |
+
+### 導師減負的六個手段（逐生逐欄約 175 次點擊 → 約 25 次）
+
+1. **例外導向**——預設全班正常，只點不一樣的孩子
+2. **直欄模式**——一次一件事、全班一起，注意力不必在欄位間跳
+3. **點名即到校**——一個動作完成兩件事
+4. **沿用上次**——接送方式九成固定
+5. **常用短語**——留言不必從零打字，且**一律選填**
+6. **收尾提醒**——「X 位待送出」+ 一鍵送出，老師不用自己記漏了誰
+
+健康與留言**刻意不放進直欄模式**：那是例外情形，逐生處理反而正確也更快（兩種模式並存）。
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -168,6 +194,9 @@ Required decision:
 5. Rate limiting — DEFERRED: 同源 proxy 後 API 只見 Vercel IP,宜在 edge/Next proxy 層做。
 6. 版型風格模板（per-school layout, §D）— 留待需求出現（YAGNI）。
 
+7b. 聯絡簿的常用短語目前寫死在前端（`features/communication-book/labels.ts`）。
+   若園所想自訂，屬 `SchoolConfig` 的小擴充（需 migration）——等實際回饋再做（YAGNI）。
+
 7. 清葉改版後的殘留死碼（低風險，隨手清）：
    - `apps/web/src/components/DashboardCard.tsx` — 首頁改為內嵌細線列表後已無人使用。
    - `apps/web/src/lib/preview.tsx` — 單一主題（清葉）下 theme/layout 預覽已無作用;
@@ -211,9 +240,16 @@ DONE
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
 NOW
-- 無硬性待辦。階段2 的刀 1/2/3/5 皆已 ACCEPTED，**只剩刀 4（每日聯絡簿本）**，已於新視窗啟動。
-- （已完成）公告 LINE 推播複測 ✅ 收到。worker log 會出現「略過收件人（LINE 拒絕，HTTP 400）」，
-  那是 demo 假帳號被正確跳過，屬正常現象。
+- **線上驗收刀 4（每日聯絡簿）** —— 部署完成後（Render 會自動套用 migration 0005）：
+  ① 老師帳號 → 底部「聯絡簿」→ 選班級 → 按幾位學生的「到校」→ 回出缺勤頁確認同一批人已變成「已到校」
+     （驗「一個動作完成兩件事」）。
+  ② 同頁點「全班預設『吃完』」→ 只改一兩個孩子 → 確認其餘沒有被蓋掉。
+  ③ 點任一學生進入他的聯絡簿 → 填體溫 37.8 + 勾咳嗽 → 儲存 → 回班級頁按「送出全班聯絡簿」，
+     確認跳出「1 位健康需注意，要立刻用 LINE 通知嗎」→ 勾選並送出 → **該生家長的手機應收到 LINE**，
+     其他家長**不該**收到（驗「日常不推、緊急才推」）。
+  ④ 家長帳號 → 首頁應出現「今日聯絡簿」摘要 → 點進去看得到當日狀態 + 底下的親師對話，
+     並可用日期橫條往前翻（demo 種子已備近三天資料）。
+  ⑤ 確認底部頁籤「聯絡簿」與首頁卡片都到得了新頁面；舊的 `/liff/message` 會自動導向聯絡簿。
 
 DONE
 - ~~建立 Vercel Blob Store（access mode 選 Public）並連到 web 專案~~ ✅ 已完成，上傳實測通過（刀1 ACCEPTED）。
@@ -234,12 +270,13 @@ LATER（正式上線前）
 ## Next Task
 
 ```text
-刀 1、刀 2 ✅ ACCEPTED;刀 3、刀 5 IMPLEMENTED 待驗收。
-**下一個 Task = 刀 4（每日聯絡簿本）—— 於新視窗執行（Human Owner 決定）。**
-  範圍：新 model `CommunicationBookEntry`（每生每日一筆：到校時間 / 用餐 / 午睡 / 如廁 / 心情 / 老師留言 /
-  家長回覆）+ migration + 老師填寫端（以勾選為主，整班快速完成）+ 家長閱讀端 + 卡片改為 enabled。
-  需先出設計提案（欄位定義由 Human Owner 拍板）→ 確認 → 實作。
-  接手方式：讀本檔最上方工作紀錄 + docs/03/05/07 + 本機記憶。
+刀 1/2/3/5 ✅ ACCEPTED;**刀 4（每日聯絡簿）IMPLEMENTED，待線上驗收 → 驗收通過即 Phase 9 階段2 完成。**
+
+**下一個 Task（待 Human Owner 指示方向）**：階段2 收尾後，候選項目為
+  ① 依實際操作回饋微調聯絡簿（例：選項增減、常用短語由園所自訂 —— 改選項不需 migration）
+  ② 清葉設計繼續往上蓋（園所裝飾的其餘部分）
+  ③ 隨手清死碼：`components/DashboardCard.tsx`、`lib/preview.tsx`
+  ④ 封面圖呈現方式定案（目前為全站 128px 橫帶;選項見 Technical Debt）
 
 （歷史）Phase 7 + Phase 8 主體完成;原 Phase 9 Pilot 已由 Human Owner 改定調為 Demo。
   Phase 9 多為 infra/ops + Human Owner 前置（正式 DB provisioning、每校 instance、LINE 正式 channel、
@@ -352,6 +389,50 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — 📓 Phase 9 階段2 刀 4 — **每日聯絡簿（IMPLEMENTED，待線上驗收）**
+
+**設計的關鍵轉折（Human Owner 主導）**
+初版提案把聯絡簿設計成一張「表單」，等於把紙本搬上螢幕。Human Owner 指出正確形式是
+**「一個孩子的頁面」**：當日狀態在上、親師對話在下，一頁掌握。而既有的 `Message` 本來就綁在
+`studentId` 上——每個孩子早就有一條專屬對話串，所以不是「再做一個聊天室」，而是**在既有對話串上方
+釘一塊當日狀態**。由此推出「訊息卡併入聯絡簿」（決策 A），也讓「家長回覆一則還是多則」這題自動消失
+（回覆＝對話本身）。
+
+**資料只新增一層**
+
+| | 內容 | 來源 |
+|---|---|---|
+| 讀來的 | 到校/缺席、請假 | Attendance / Leave（各自 SoT，**不複製**） |
+| 老師填的 | 午餐·點心·午睡·如廁·心情·健康·接送·留言 | 新表 `CommunicationBookEntry` |
+| 聊的 | 親師對話 | Message（原封不動） |
+
+→ 「與出缺勤、請假互通、不必重複填寫」因此自然成立。
+
+**做了什麼（檔案）**
+```text
+DB      packages/db/prisma/schema.prisma + migrations/0005_communication_book（expand-only，純新增一表 + 6 enum）
+        seed.ts 補近三天 demo 紀錄（含一位健康需注意、一位尚未送出）——demo 打開就要有東西可翻
+shared  events.ts CommunicationBookPublished + payload;dto.ts FEVER_THRESHOLD_C（前後端同一標準）
+        dashboard.ts **移除 message 卡**、communication-book 納入 ADMIN 並移到 order 40
+api     communication-book/{service,controller,module}.ts + spec（15 tests）
+        attendance.service.ts 抽出 markWithin(tx,…) 供「點名即到校」在**同一交易**內重用（不複製 ADR-002 規則）
+        events/communication-book-event.handler.ts + spec;push-notification.service.ts 只推 pushStudentIds
+web     features/communication-book/{hooks,labels,TeacherBookPanel,PublishPanel,StudentBookView,HealthEditor}.tsx
+        app/liff/communication-book/{page,[studentId]/page}.tsx;3 條 proxy route
+        AppShell 頁籤改指聯絡簿;/liff/message 改為導向頁（舊書籤不 404）;首頁加「今日聯絡簿」摘要
+docs    03（schema + enums）05（RBAC 列 + 入口變更）06（事件表）07（§4f）+ 本檔
+```
+
+**刻意沒做（避免功能糊在一起）**
+- 用藥委託、過敏原、成長曲線 → 屬未來「幼兒健康」模組的長期資料。
+- 乘車名單、路線、上下車紀錄 → 屬未來「娃娃車」模組。聯絡簿只記「今天家人接還是校車」。
+- AI 自動生成老師留言 → 每個孩子的留言會長得很像，反而傷信任。
+
+**驗證**：本機 lint / typecheck / **測試 228（api 200 + shared 12 + web 16）** / build **四項全綠**。
+線上驗收步驟見 Human Owner Action / NOW。
+
+---
 
 ### 2026-08-17 — 🔎 公告/請假 LINE 推播收不到 — **根因查明、修復、✅ Human Owner 複測收到（結案）**
 

@@ -10,20 +10,7 @@ export interface RoadmapEntry {
 }
 
 export const ROADMAP: Record<string, RoadmapEntry> = {
-  'communication-book': {
-    title: '每日聯絡簿',
-    tagline: '把老師每天手寫的聯絡本，變成家長手機上一頁就看完的當日紀錄。',
-    forFamily: [
-      '當天的到校時間、用餐、午睡、如廁與心情一次看完',
-      '老師當日留言與提醒，不必翻聊天訊息',
-      '可回覆家長事項（例如今天由誰接送）',
-    ],
-    forSchool: [
-      '老師以勾選為主、打字為輔，一個班幾分鐘完成',
-      '整學期紀錄自動累積，親師溝通有依據',
-      '與出缺勤、請假資料互通，不必重複填寫',
-    ],
-  },
+  // 每日聯絡簿已於 2026-08-17 上線（階段2 刀4），預告條目移除 —— 已完工的功能不該再出現在預告頁。
   transportation: {
     title: '娃娃車 / 接送',
     tagline: '每天誰上車、誰下車、車開到哪了，園所與家長看的是同一份名單。',

@@ -6,6 +6,7 @@ import { NotificationService } from './notification.service';
 import { LeaveEventHandler } from './leave-event.handler';
 import { MessageEventHandler } from './message-event.handler';
 import { AnnouncementEventHandler } from './announcement-event.handler';
+import { CommunicationBookEventHandler } from './communication-book-event.handler';
 import { EventHandlersService } from './event-handlers.service';
 import { OutboxDispatcherService } from './outbox-dispatcher.service';
 import { LinePushClient } from './line-push.client';
@@ -22,6 +23,7 @@ import { PushNotificationService } from './push-notification.service';
     LeaveEventHandler,
     MessageEventHandler,
     AnnouncementEventHandler,
+    CommunicationBookEventHandler,
     EventHandlersService,
     OutboxDispatcherService,
     LinePushClient,
