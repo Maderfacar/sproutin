@@ -39,6 +39,8 @@ export async function GET(): Promise<NextResponse> {
     featureFlags: {},
     cardOrder: [],
     leaveRequiresApproval: true,
+    theme: 'warm',
+    dashboardLayout: 'grid',
   };
 
   return NextResponse.json(config);

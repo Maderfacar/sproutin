@@ -21,4 +21,7 @@ export interface PublicConfig {
   featureFlags: Record<string, boolean>; // 僅 public 子集
   cardOrder: string[];
   leaveRequiresApproval: boolean;
+  // per-school 版型/主題模板（Phase 8）
+  theme: string; // 主題氛圍：warm | professional
+  dashboardLayout: string; // Dashboard 版型：grid | list
 }

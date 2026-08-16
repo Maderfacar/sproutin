@@ -324,6 +324,23 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
+### 2026-08-16 — Phase 8 / 溫暖親和全站鋪開 + per-school 版型/主題模板後端（IMPLEMENTED）
+
+**設計全站鋪開**：globals `@layer components`（card/field/btn-primary/btn-secondary/field-label/section-title/chip）;所有內頁與元件（leave/attendance/message/notification/announcement/audit + teacher/school 面板 + PageHeader/StudentSelect/ClassSelect）改暖色 tokens + 圓角卡片 + pill 按鈕 + 訊息氣泡。冷灰全換暖色中性。
+
+**per-school 版型/主題模板（Human Owner §D 定案:主題+版型都做,先各 2 套）**：
+- **migration 0003**（expand,ADR-003）:SchoolConfig 加 `theme`（warm|professional,預設 warm）+ `dashboardLayout`（grid|list,預設 grid）;既有列自動取預設,零風險。
+- shared `PublicConfig` +theme/+dashboardLayout;`public-config.service` + web `/api/public-config` fallback 都補。
+- 前端 `lib/theme.ts`（warm/professional 兩組暖色中性 CSS 變數 bundle）;`BrandingProvider` 依 config.theme 套一組 + 疊品牌色;Dashboard 依 `dashboardLayout` 切 grid(雙欄)/list(單欄橫列);`DashboardCard` 加 variant。
+- 換一間園只要改該校 SchoolConfig.theme/dashboardLayout（+色/logo/banner）即不同樣貌,zero 改版。
+
+Verification:
+- 本機 lint/typecheck/test(158)/build 綠;db:generate 過。
+- 待:push → CI（db job 套 0003 + drift 檢查）→ Render preDeploy 套 0003 → Human 手機實測。
+
+Next:
+- Phase 8 收尾。之後 Phase 9 Pilot（先計畫）。
+
 ### 2026-08-16 — Phase 8 / 登入持久化（httpOnly cookie session）+ 溫暖親和設計 proof（IMPLEMENTED）
 
 **溫暖親和設計方向**：Human Owner 反映線上太陽春 → 定「溫暖親和」（圓角/暖色/柔和陰影/留白）。已上線 Dashboard + 外框 proof（globals 暖色 tokens、AppShell 漸層頁首、卡片 hover/stagger 進場）;方向確認 OK → 待全站鋪開內頁 + §D 版型/主題模板後端。

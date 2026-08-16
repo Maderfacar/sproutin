@@ -30,6 +30,8 @@ export class PublicConfigService {
         featureFlags: this.asFlags(config.featureFlags),
         cardOrder: this.asStringArray(config.cardOrder),
         leaveRequiresApproval: config.leaveRequiresApproval,
+        theme: config.theme,
+        dashboardLayout: config.dashboardLayout,
       };
     }
 
@@ -48,6 +50,8 @@ export class PublicConfigService {
       featureFlags: {},
       cardOrder: [],
       leaveRequiresApproval: true,
+      theme: 'warm',
+      dashboardLayout: 'grid',
     };
   }
 

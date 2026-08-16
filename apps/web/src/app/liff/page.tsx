@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const roles = user.roles.map((r) => r.role);
   const cards = selectDashboardCards(roles, config?.featureFlags ?? {}, config?.cardOrder ?? []);
   const roleLabels = [...new Set(roles.map((r) => ROLE_LABEL[r] ?? r))];
+  const layout = config?.dashboardLayout === 'list' ? 'list' : 'grid';
 
   return (
     <div>
@@ -53,7 +54,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-3.5">
+      <div className={layout === 'list' ? 'flex flex-col gap-3' : 'grid grid-cols-2 gap-3.5'}>
         {cards.map((card, i) => {
           const meta = cardMeta(card.id);
           return (
@@ -65,6 +66,7 @@ export default function DashboardPage() {
               href={meta.href}
               enabled={meta.enabled}
               delay={0.04 * i}
+              variant={layout}
             />
           );
         })}

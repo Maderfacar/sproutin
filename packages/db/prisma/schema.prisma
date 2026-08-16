@@ -34,6 +34,9 @@ model SchoolConfig {
   cardOrder             Json // Dashboard card 排序 (§25)
   featureFlags          Json // { ai:false, health:false, bus:false, ... } (§26)
   leaveRequiresApproval Boolean @default(true) // 修正 A
+  // --- per-school 版型/主題模板（Phase 8）---
+  theme                 String  @default("warm") // 主題氛圍：warm | professional
+  dashboardLayout       String  @default("grid") // Dashboard 版型：grid | list
   // --- 公開 runtime config（非機密，供 /config/public，ADR-001）---
   liffId                String? // 該校 LIFF ID（公開）
   lineOaChannelId       String? // LINE OA 公開 channel id
