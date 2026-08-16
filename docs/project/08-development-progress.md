@@ -33,8 +33,8 @@ Phase 7:  ✅ COMPLETE（2026-08-16, Human Owner）— Core MVP 全數 ACCEPTED
     └ 7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）+ GET /leaves 全校 → ✅ ACCEPTED
 Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner 授權「都做」）
   1. ESLint flat config（CI lint gate）                        → ✅ 上線（CI 綠 run 31941929773）
-  2. 全域 exception filter（統一錯誤信封,不洩漏內部）           → IMPLEMENTED（本機綠;待 push）
-  3. web 元件測試（vitest/RTL）                                → NOT_STARTED
+  2. 全域 exception filter（統一錯誤信封,不洩漏內部）           → ✅ 上線（CI 綠 run 31942307892）
+  3. web 元件測試（vitest + RTL;web 8 tests）                  → IMPLEMENTED（本機綠;待 push）
   4. 多校隔離 / secret / 效能 hardening                        → NOT_STARTED
   5. P5 demo 資料收尾                                          → NOT_STARTED
   6. append-only DB 層鎖死（§D 提案,需 Human Owner 定案）      → NOT_STARTED（最後,不自行做）
@@ -311,6 +311,20 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 8 / web 前端元件測試（Vitest + RTL）（IMPLEMENTED）
+
+Completed:
+- 導入 **Vitest + React Testing Library**（web 原本無測試層）:`vitest.config.ts`（jsdom + @vitejs/plugin-react）、`src/test/setup.ts`（RTL afterEach cleanup;因 globals:false 需手動註冊）;web `test`=`vitest run`（turbo `test` 自動涵蓋）。
+- 測試:`lib/roles.spec.ts`（roleFlags 5 例——家長/老師/園長/多重身份聯集/無角色,鎖住 UI 權限旗標對齊後端矩陣）、`components/StatusScreen.spec.tsx`（RTL 3 例）。web 共 8 tests。
+- deps（web devDeps）:vitest、@vitejs/plugin-react、@testing-library/react、@testing-library/dom、jsdom。
+
+Verification:
+- 本機:`pnpm lint`✓、`pnpm typecheck`✓、`pnpm test`✓（api 142 + shared 8 + web 8 = **158**）、`pnpm build`✓。
+- 待:push → CI 全綠。
+
+Next:
+- Phase 8 #4 多校隔離 / secret / 效能 hardening。
 
 ### 2026-08-16 — Phase 8 / 全域 exception filter（IMPLEMENTED）
 

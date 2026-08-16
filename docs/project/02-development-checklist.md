@@ -221,7 +221,9 @@
   - [x] `core/http/all-exceptions.filter.ts`（HttpException 沿用狀態碼+訊息碼;未預期→500 通用、不洩漏 stack）+ 單元測試;APP_FILTER 全域註冊
   - [x] e2e 409 斷言改新信封;前端 `lib/api.ts` `toApiError` 讀 `error.code`（保留舊形狀回退）
 - [ ] append-only DB 層鎖死（Step 6 決策 2,§D 提案,infra/ADR-003 破壞性）— `NOT_STARTED`
-- [ ] web 前端元件測試（RTL/vitest,§D）— `NOT_STARTED`
+- [~] **web 前端元件測試（Vitest + React Testing Library）** — `IMPLEMENTED`（本機綠;待 push→CI）
+  - [x] vitest.config.ts（jsdom + @vitejs/plugin-react）+ setup（RTL cleanup）;web `test`=`vitest run`（turbo test 涵蓋）
+  - [x] `lib/roles.spec.ts`（roleFlags 5 例:家長/老師/園長/多重身份/無角色）+ `components/StatusScreen.spec.tsx`（RTL 3 例）;web 8 tests
 - [ ] 多校隔離 / secret exposure / 錯誤處理 / 效能 — `NOT_STARTED`
 - [ ] P5 demo 資料收尾（seed 園長 ADMIN+監護 hack 移除/改測試帳號）— `NOT_STARTED`
 
