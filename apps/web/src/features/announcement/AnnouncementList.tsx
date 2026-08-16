@@ -25,17 +25,14 @@ export function AnnouncementList() {
     <ul className="flex flex-col gap-3">
       {[...data].sort(byCreatedDesc).map((a) => (
         <li key={a.id} className="card p-4">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-ink">{a.title}</span>
-            <span
-              className="chip ml-auto"
-              style={{ background: 'color-mix(in srgb, var(--brand-primary) 12%, #ffffff)' }}
-            >
+          <div className="flex items-start gap-2">
+            <p className="font-serif text-base font-semibold leading-snug text-ink">{a.title}</p>
+            <span className="chip ml-auto shrink-0 border border-line text-ink-soft">
               {a.scope === 'SCHOOL' ? '全校' : '班級'}
             </span>
           </div>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-ink-soft">{a.body}</p>
-          <p className="mt-2 text-xs text-ink-soft">{a.createdAt.slice(0, 10)}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">{a.body}</p>
+          <p className="eyebrow mt-3">{a.createdAt.slice(0, 10)}</p>
         </li>
       ))}
     </ul>

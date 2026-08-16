@@ -40,7 +40,7 @@ export function NotificationList() {
             className="card p-4"
             style={
               unread
-                ? { background: 'color-mix(in srgb, var(--brand-primary) 7%, #ffffff)' }
+                ? { background: 'color-mix(in srgb, var(--brand-primary) 8%, var(--surface))' }
                 : undefined
             }
           >

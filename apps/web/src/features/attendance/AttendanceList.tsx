@@ -24,12 +24,14 @@ export function AttendanceList({ studentId }: { studentId: string }) {
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2.5">
       {[...data].sort(byDateDesc).map((row) => {
         const status = ATTENDANCE_STATUS_LABEL[row.status];
         return (
-          <li key={row.id} className="card flex items-center justify-between px-4 py-3">
-            <span className="font-medium text-ink">{row.date.slice(0, 10)}</span>
+          <li key={row.id} className="card flex items-center justify-between px-4 py-3.5">
+            <span className="font-serif text-base font-semibold text-ink tabular-nums">
+              {row.date.slice(0, 10)}
+            </span>
             <span className={`chip ${status.className}`}>{status.label}</span>
           </li>
         );

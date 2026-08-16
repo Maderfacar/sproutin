@@ -324,6 +324,19 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
+### 2026-08-17 — Phase 9（Demo 設計）/ 「清葉」方向落地 + 家長 App 全面改版（IMPLEMENTED，已上線 demo）
+
+**背景（Human Owner 重新定調）**：Phase 9 目前真正需求＝一套「拿去賣的 demo」（同一套系統、假資料），**非 pilot**。要件：後台管理介面、園所客製/裝飾、**設計大升級**、逐步加功能。設計策略：先把**一套**做到頂（單一主題，園所在其下換品牌/內容；多主題供選列未來擴充，架構 `theme` 欄位已預留）。**選定方向＝清葉（清新自然/editorial）**；warm/professional/grid/list 被否決為不夠格。詳見記憶 `sproutin-phase9-redirect-demo-design`。
+
+**已上線（main 直接部署 demo；commit 2e7c291 / a0f3f9f / 329a4d8 …）**：
+- **設計系統核心**：`globals.css` / `theme.ts` / `tailwind.config` → 清葉 token（米白 `#f4f2ea` 底、森綠 `#2f6b4f`、襯線標題、細線、柔和留白）+ `font-sans/serif`。主題單一：`warm/professional` 一律映射清葉；品牌色（`--brand-*`）仍 per-school 疊（ADR-001 不變）。
+- **家長 App 改版**：`Icon` 元件（清葉線性圖示集）；首頁 `/liff` 重建（襯線問候 + 學生切換 + 今日到校狀態 + 本月統計〔接真實 attendance〕+ 快速功能細線清單 + 最新公告〔接真實 announcements〕）；`AppShell` 清爽頁首 + **底部頁籤**（首頁/聯絡簿/通知/我的）；新增 `/liff/me`；請假表單（類別 chips + 細線輸入 + 森綠送出）；聯絡簿訊息（清葉氣泡 + 日期分隔 + pill 輸入 + 圓形送出）；出缺勤/公告/通知清單精修；`PageHeader` 襯線 + 圓框返回。
+- **老師/園長面板**：沿用 `.card`/`.section-title`（已襯線）/`.btn`（清葉），自動轉清葉，無結構改動。
+
+**架構**：無變更。無新 migration、無新 library、無新 infra。純前端設計系統 + 頁面重建。build/lint/CI 綠。
+
+**待辦 / 誠實提醒**：① 園所裝飾/後台管理目前只是**互動樣板**（artifact），尚非 App 真頁面 → 下一大階段。② 襯線中文在部分 Android 無內建襯線字時會退黑體（未內嵌字型，之後評估）。③「到校時間 08:12 / 老師留言」欄位資料庫未建模，首頁先示意。④ 尚未逐頁精修：稽核頁。
+
 ### 2026-08-16 — Phase 8 / 溫暖親和全站鋪開 + per-school 版型/主題模板後端（IMPLEMENTED）
 
 **設計全站鋪開**：globals `@layer components`（card/field/btn-primary/btn-secondary/field-label/section-title/chip）;所有內頁與元件（leave/attendance/message/notification/announcement/audit + teacher/school 面板 + PageHeader/StudentSelect/ClassSelect）改暖色 tokens + 圓角卡片 + pill 按鈕 + 訊息氣泡。冷灰全換暖色中性。
