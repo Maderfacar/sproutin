@@ -224,7 +224,12 @@
 - [~] **web 前端元件測試（Vitest + React Testing Library）** — `IMPLEMENTED`（本機綠;待 push→CI）
   - [x] vitest.config.ts（jsdom + @vitejs/plugin-react）+ setup（RTL cleanup）;web `test`=`vitest run`（turbo test 涵蓋）
   - [x] `lib/roles.spec.ts`（roleFlags 5 例:家長/老師/園長/多重身份/無角色）+ `components/StatusScreen.spec.tsx`（RTL 3 例）;web 8 tests
-- [ ] 多校隔離 / secret exposure / 錯誤處理 / 效能 — `NOT_STARTED`
+- [~] **多校隔離 / secret exposure / 錯誤處理 / 效能 hardening** — `PARTIAL`（本機綠;待 push）
+  - [x] web 安全標頭（X-Content-Type-Options / Referrer-Policy / Permissions-Policy / HSTS）via next.config `headers()`
+  - [x] 錯誤處理：已由全域 exception filter 涵蓋（不洩漏內部細節）
+  - [x] 多校隔離：架構性（DB-per-school、單 instance 單校，ADR-006）— 無新程式
+  - [x] secret exposure：`/config/public` 為 PublicConfig 型別（無機密）;API_INTERNAL_URL server-only（ADR-001）
+  - [ ] 後續（需裝置實測 / 決策）：CSP + X-Frame-Options（LIFF 風險）、rate limiting（proxy 後 client IP 議題,宜在 edge 做）
 - [ ] P5 demo 資料收尾（seed 園長 ADMIN+監護 hack 移除/改測試帳號）— `NOT_STARTED`
 
 ## Phase 9–10 — Pilot / Production  ⬜  `NOT_STARTED`

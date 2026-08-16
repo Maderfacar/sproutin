@@ -34,8 +34,8 @@ Phase 7:  ✅ COMPLETE（2026-08-16, Human Owner）— Core MVP 全數 ACCEPTED
 Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner 授權「都做」）
   1. ESLint flat config（CI lint gate）                        → ✅ 上線（CI 綠 run 31941929773）
   2. 全域 exception filter（統一錯誤信封,不洩漏內部）           → ✅ 上線（CI 綠 run 31942307892）
-  3. web 元件測試（vitest + RTL;web 8 tests）                  → IMPLEMENTED（本機綠;待 push）
-  4. 多校隔離 / secret / 效能 hardening                        → NOT_STARTED
+  3. web 元件測試（vitest + RTL;web 8 tests）                  → ✅ 上線（CI 綠 run 31942641153）
+  4. hardening（web 安全標頭 + 錯誤/隔離/secret 檢視）          → PARTIAL（標頭本機綠待 push;CSP/rate-limit 列後續）
   5. P5 demo 資料收尾                                          → NOT_STARTED
   6. append-only DB 層鎖死（§D 提案,需 Human Owner 定案）      → NOT_STARTED（最後,不自行做）
 ```
@@ -311,6 +311,20 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 8 / hardening（web 安全標頭 + 隔離/secret/錯誤檢視）（PARTIAL）
+
+Completed:
+- **web 安全標頭**（`next.config.mjs` `headers()`,全路徑）:`X-Content-Type-Options: nosniff`、`Referrer-Policy: strict-origin-when-cross-origin`、`Permissions-Policy: camera=(),microphone=(),geolocation=()`、`Strict-Transport-Security`（HSTS）。
+- **檢視/確認（無新程式）**:錯誤處理已由全域 exception filter 涵蓋;多校隔離為架構性（DB-per-school、單 instance 單校,ADR-006）;secret exposure —`/config/public` 為 PublicConfig 型別無機密、`API_INTERNAL_URL` server-only（ADR-001）。
+- **刻意不做（列後續,需裝置實測/決策）**:CSP + X-Frame-Options（LIFF 於 LINE webview,貿然設定易擋登入）;rate limiting（同源 proxy 後 API 只見 Vercel IP,IP 限流會誤傷全體,宜在 edge/Next proxy 層做）。
+
+Verification:
+- 本機:`pnpm build`✓（next.config headers 有效）;lint/typecheck/test 不受影響。
+- 待:push → CI 綠 → 線上 curl 驗標頭生效。
+
+Next:
+- Phase 8 #5 P5 demo 資料收尾 → #6 append-only DB 鎖死（§D 提案,停下等 Human Owner 定案）。
 
 ### 2026-08-16 — Phase 8 / web 前端元件測試（Vitest + RTL）（IMPLEMENTED）
 
