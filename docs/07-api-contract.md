@@ -127,6 +127,29 @@ PATCH  /students/:id   { name?, classId?, status? } → StudentView（未知欄�
   與業務變更同一 transaction（ADR-005 類別一）。**metadata 不存學生姓名等 PII**（修正 C），
   換班額外記 `fromClassId` / `toClassId` 供追溯。
 
+## 4e. 人員帳號與關聯（Phase 9 階段2 刀3）
+
+```text
+GET    /users?role=                              → UserView[]（含角色、綁定小孩、任教班級、是否已綁 LINE）
+POST   /users            { displayName, role }   → UserView（建立帳號 + 一個角色）
+PATCH  /users/:id        { displayName?, status? } → UserView（**無 DELETE**）
+
+POST   /guardianships    { userId, studentId, relation, isPrimary? } → { id }
+DELETE /guardianships/:id                        → 204
+POST   /teacher-assignments { userId, classId }  → { id }
+DELETE /teacher-assignments/:id                  → 204
+```
+
+全部 `OWNER/ADMIN`，全部寫稽核（`user.create` / `user.update` / `guardianship.add|remove` / `teacher_assignment.add|remove`）。
+
+- **只停用不刪除**：`status=INACTIVE` 即無法登入（`login` 與 `/me` 兩處擋，既有 JWT 於下次載入失效）。
+  **最後一位在職 OWNER 不得停用** → 400 `last_owner_cannot_be_disabled`（否則園所無人可管理）。
+- **UserRole 一律建 SCHOOL scope**：班級層級授權的真正依據是 `TeacherAssignment`（見 `ScopeResolver`），
+  避免班級歸屬存在兩處而不同步。
+- 重複綁定 → 409 `guardianship_exists` / `assignment_exists`；對象不存在 → 400。
+- **尚未綁定 LINE 的帳號本人無法登入**（`user_not_provisioned`）。綁定機制為開賣前必要項，
+  demo 不做（見 `docs/project/08` Human Owner Action / LATER）。
+
 ## 5. 驗證與授權
 
 - **輸入驗證**：每個 body 用 Zod（`packages/shared/dto`），fail-fast。

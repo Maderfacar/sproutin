@@ -81,6 +81,10 @@ model Student {
 model User {
   id           String              @id @default(cuid())
   displayName  String
+  // 帳號啟用狀態（Phase 9 階段2 刀3，migration 0004，expand-only）。
+  // 停用＝不得登入（AuthService 於 login 與 /me 兩處擋）；**帳號不刪除**，
+  // 否則其建立的請假／訊息／稽核紀錄會失去歸屬。
+  status       UserStatus          @default(ACTIVE) // ACTIVE | INACTIVE
   lineIdentity LineIdentity?
   roles        UserRole[]
   guardianOf   Guardianship[]

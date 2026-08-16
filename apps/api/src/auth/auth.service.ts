@@ -38,6 +38,11 @@ export class AuthService {
       throw new UnauthorizedException('user_not_provisioned');
     }
 
+    // 階段2 刀3：帳號已停用 → 拒絕登入（帳號不刪除，只停用）。
+    if (identity.user.status === 'INACTIVE') {
+      throw new UnauthorizedException('user_inactive');
+    }
+
     const user = this.toAuthUser(identity.user);
     const accessToken = await this.jwt.signAsync({ sub: user.id, roles: user.roles });
     return { accessToken, user };
@@ -50,6 +55,10 @@ export class AuthService {
     });
     if (!user) {
       throw new UnauthorizedException('user_not_found');
+    }
+    // 停用後既有 JWT 仍在效期內 → 於 /me 再擋一次，使 App 下次載入即失效。
+    if (user.status === 'INACTIVE') {
+      throw new UnauthorizedException('user_inactive');
     }
     return this.toAuthUser(user);
   }

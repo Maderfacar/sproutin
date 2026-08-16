@@ -72,6 +72,9 @@ model Student {
 model User {
   id           String              @id @default(cuid())
   displayName  String
+  // 帳號啟用狀態（Phase 9 階段2 刀3）。停用＝不得登入；**不刪除帳號**，
+  // 否則其建立的請假/訊息/稽核紀錄會失去歸屬。
+  status       UserStatus          @default(ACTIVE)
   lineIdentity LineIdentity?
   roles        UserRole[]
   guardianOf   Guardianship[]
@@ -226,6 +229,11 @@ enum StudentStatus {
   ACTIVE
   INACTIVE
   GRADUATED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum Role {

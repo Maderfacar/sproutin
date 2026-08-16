@@ -10,7 +10,7 @@
 
 **Phase:**
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
-階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ IN_PROGRESS**；刀 3（人員帳號與關聯）→ 刀 4（每日聯絡簿，需 migration）→ 刀 5（學生整合視圖 + 公告推播）尚未開始。
+階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯）＝ IMPLEMENTED，待線上驗收**（含 migration 0004 User.status）；刀 4（每日聯絡簿，需 migration）→ 刀 5（學生整合視圖 + 公告推播）尚未開始。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
 **Milestone:**
@@ -344,7 +344,32 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-17 — Phase 9 階段2 刀2 / 班級 + 學生管理（IMPLEMENTED，待線上驗收）
+### 2026-08-17 — Phase 9 階段2 刀3 / 人員帳號與關聯（IMPLEMENTED，待線上驗收）
+
+**migration 0004_user_status（expand-only，ADR-003）**：`User.status`（enum `UserStatus` ACTIVE|INACTIVE，預設 ACTIVE）。
+既有列自動 ACTIVE，線上零風險。**這是階段2 唯一到目前為止的 DB 變更**（Human Owner 事前已知會）。
+
+**後端（新增 7 端點）**
+- `GET /users?role=`、`POST /users`、`PATCH /users/:id`（OWNER/ADMIN;**無 DELETE**）。
+  `UserView` 一次帶回角色、綁定的小孩、任教班級、是否已綁 LINE —— 管理介面不必多打好幾支 API。
+- `POST/DELETE /guardianships`（家長↔學生）、`POST/DELETE /teacher-assignments`（老師↔班級）。
+- **停用即不能登入**：`AuthService` 於 `login` 與 `/me` 兩處擋（既有 JWT 於下次載入失效）。
+- **最後一位在職園長不得停用** → 400 `last_owner_cannot_be_disabled`（否則園所無人可管理）。
+- **UserRole 一律建 SCHOOL scope**：班級層級授權的真正依據是 `TeacherAssignment`（ScopeResolver 實測確認 `UserRole.scopeId` 未被任何授權路徑讀取），避免班級歸屬存兩份而不同步。
+- 全部寫入與 AuditLog 同交易;**metadata 不存姓名**（PII），只記角色/對象 id。
+
+**前端**
+- `/liff/admin/people`：新增人員（老師/隨車老師/行政/家長/監護人）、分頁篩選（全部/教職員/家長）、
+  「未綁定」標記;編輯面板＝改名、停用/啟用、**家長綁小孩（含關係）**、**老師排班級**，含解除。
+- 「我的」→ 園所管理 擴為四個入口。proxy routes 6 支。
+
+**誠實提醒**：① 園長（OWNER）不從此頁新增——交接園長屬敏感操作，demo 先不開放。② 停用只在「下次載入」生效，
+既有 API 呼叫在 JWT 效期內仍可用;完整即時撤銷屬上線前項目。③ 新建帳號**尚未綁定 LINE 前本人無法登入**（綁定機制為開賣前必要項）。
+
+Verification：本機 lint ✓ / typecheck ✓ / test ✓（api 176 + shared 10 + web 16 = **202**）/ build ✓。
+待 push → CI（db job 會套用 0004 並做 drift 檢查）→ Render preDeploy migrate → 線上驗收。
+
+### 2026-08-17 — Phase 9 階段2 刀2 / 班級 + 學生管理（✅ **ACCEPTED**, Human Owner 2026-08-17）
 
 **後端（新增 5 端點，零 migration）**
 - `POST /classes`、`PATCH /classes/:id`、`DELETE /classes/:id`（OWNER/ADMIN）。班名園內唯一（重複 409）;

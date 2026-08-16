@@ -85,6 +85,36 @@ export interface CreateStudentBody {
   classId: string;
 }
 
+export type UserRoleName = 'OWNER' | 'ADMIN' | 'TEACHER' | 'BUS_TEACHER' | 'PARENT' | 'GUARDIAN';
+export type UserStatus = 'ACTIVE' | 'INACTIVE';
+export type GuardianRelation = 'FATHER' | 'MOTHER' | 'GRANDPARENT' | 'GUARDIAN';
+
+export interface UserView {
+  id: string;
+  displayName: string;
+  status: UserStatus;
+  hasLineLinked: boolean;
+  roles: { role: UserRoleName; scopeType: string; scopeId: string | null }[];
+  guardianOf: {
+    id: string;
+    studentId: string;
+    studentName: string;
+    relation: GuardianRelation;
+    isPrimary: boolean;
+  }[];
+  teaching: { id: string; classId: string; className: string }[];
+}
+
+export interface CreateUserBody {
+  displayName: string;
+  role: UserRoleName;
+}
+
+export interface UpdateUserBody {
+  displayName?: string;
+  status?: UserStatus;
+}
+
 export interface UpdateStudentBody {
   name?: string;
   classId?: string;

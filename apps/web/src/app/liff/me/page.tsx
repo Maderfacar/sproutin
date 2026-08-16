@@ -23,6 +23,12 @@ const ADMIN_LINKS: { href: string; title: string; description: string; icon: Ico
     description: '新增學生、換班、在學狀態',
     icon: 'user',
   },
+  {
+    href: '/liff/admin/people',
+    title: '人員管理',
+    description: '老師與家長帳號、帶班與綁定小孩',
+    icon: 'chat',
+  },
 ];
 
 async function handleLogout(): Promise<void> {
