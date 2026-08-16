@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**Phase 9 階段2 刀 4 — 每日聯絡簿 IMPLEMENTED**，待 CI → 線上驗收。刀 1/2/3/5 皆 ACCEPTED。）
+> Last updated: 2026-08-17（**Phase 9 階段2 — 五刀全數 ACCEPTED，階段2 完成。** 刀 4 每日聯絡簿已線上驗證通過。下一階段待 Human Owner 定方向。）
 
 ---
 
@@ -12,9 +12,10 @@
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
 階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）＝ ✅ ACCEPTED**；
 **刀 5＝ ✅ ACCEPTED**（學生整合視圖 + 公告 LINE 推播;推播根因＝單一無效收件人中斷整批，已修復並複測收到）。
-**刀 4（每日聯絡簿）＝ IMPLEMENTED（2026-08-17，待線上驗收）** —— 五刀中最大的一刀：migration 0005、6 個新端點、
-老師「直欄模式」填寫端、家長閱讀端，並依 Human Owner 決策 **把「訊息」併入聯絡簿**（入口收斂）。設計定案見 Recent Work Log。
-**→ 刀 4 驗收通過後，Phase 9 階段2 五刀全數完成。**
+**刀 4（每日聯絡簿）＝ ✅ ACCEPTED（2026-08-17, Human Owner 線上驗證完畢）** —— 五刀中最大的一刀：migration 0005、
+6 個新端點、老師「直欄模式」填寫端、家長閱讀端，並依 Human Owner 決策 **把「訊息」併入聯絡簿**（入口收斂）。設計定案見 Recent Work Log。
+
+# ✅ **Phase 9 階段2「後台管理 + 園所裝飾」五刀全數 ACCEPTED（2026-08-17）** —— 階段2 完成。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
 **Milestone:**
@@ -239,8 +240,14 @@ DONE
 - ✅ Phase 7 — Core MVP COMPLETE（2026-08-16）: Step 1–7 全 ACCEPTED;LINE 推播線上實測收到（Step 5 已驗）。
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
+DONE
+- ✅ **刀 4（每日聯絡簿）線上驗證完畢 — ACCEPTED（2026-08-17）→ Phase 9 階段2 五刀全數完成。**
+- ✅ Human Owner 明確指示：**AI 生成老師留言不需要，不做也不再提**（原本就沒實作，僅移除文件提及）。
+
 NOW
-- **線上驗收刀 4（每日聯絡簿）** —— 部署完成後（Render 會自動套用 migration 0005）：
+- **決定下一階段方向**（選項見 Next Task）。
+
+（已完成，保留紀錄）驗收刀 4 的步驟 —— 部署完成後（Render 會自動套用 migration 0005）：
   ① 老師帳號 → 底部「聯絡簿」→ 選班級 → 按幾位學生的「到校」→ 回出缺勤頁確認同一批人已變成「已到校」
      （驗「一個動作完成兩件事」）。
   ② 同頁點「全班預設『吃完』」→ 只改一兩個孩子 → 確認其餘沒有被蓋掉。
@@ -270,13 +277,25 @@ LATER（正式上線前）
 ## Next Task
 
 ```text
-刀 1/2/3/5 ✅ ACCEPTED;**刀 4（每日聯絡簿）IMPLEMENTED，待線上驗收 → 驗收通過即 Phase 9 階段2 完成。**
+**Phase 9 階段2 五刀全數 ✅ ACCEPTED（2026-08-17）→ 階段2 完成。下一階段方向待 Human Owner 拍板。**
 
-**下一個 Task（待 Human Owner 指示方向）**：階段2 收尾後，候選項目為
-  ① 依實際操作回饋微調聯絡簿（例：選項增減、常用短語由園所自訂 —— 改選項不需 migration）
-  ② 清葉設計繼續往上蓋（園所裝飾的其餘部分）
-  ③ 隨手清死碼：`components/DashboardCard.tsx`、`lib/preview.tsx`
-  ④ 封面圖呈現方式定案（目前為全站 128px 橫帶;選項見 Technical Debt）
+候選方向（Claude 建議順序 A → B → C；C 為開賣前必要但 demo 展示不需要）：
+
+  A. **Demo 打磨到可以直接拿去賣**（建議先做，成本最低、對「賣」最直接）
+     - 封面圖呈現方式定案（目前全站 128px 橫帶;選項 A 只首頁／B 首頁 hero 大圖／C 維持）
+     - demo 資料鋪厚一點（多幾天聯絡簿、公告、請假，讓人隨便點都不空）
+     - 走查一輪三個角色的每一頁，修掉細節破綻
+     - 隨手清死碼 `components/DashboardCard.tsx`、`lib/preview.tsx`
+
+  B. **再加一個有賣點的功能**（六張佔位卡挑一張做成真的）
+     - 行事曆＝最便宜;成長紀錄（照片/作品）＝招生最有說服力但要處理圖片儲存與量
+     - 需先出設計提案 + §D（多半需 migration）
+
+  C. **LINE 帳號綁定機制**（開賣前必要，非 demo 需要）
+     - 現況：後台建立的老師/家長帳號**本人無法登入**（無 LineIdentity → `user_not_provisioned`）
+     - 三選一：綁定碼 / 手機號比對 / 個人 QR;需 migration + 新端點 → §D 提案
+
+  D. 依實際操作回饋微調聯絡簿（選項增減、常用短語改由園所自訂）—— 等你用過再說
 
 （歷史）Phase 7 + Phase 8 主體完成;原 Phase 9 Pilot 已由 Human Owner 改定調為 Demo。
   Phase 9 多為 infra/ops + Human Owner 前置（正式 DB provisioning、每校 instance、LINE 正式 channel、
@@ -380,6 +399,15 @@ Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待�
 ## Latest Accepted Commit
 
 ```text
+Phase 9 階段2 刀 4 — 每日聯絡簿 — ✅ ACCEPTED（2026-08-17, Human Owner 線上驗證完畢）
+  commit a317fd9（+ 540d3ed CI 紀錄）;CI run 31976370995 全綠（build + db + docker-build）。
+  db job 已驗 migration 0005 套用 + seed idempotent + drift check 通過。
+  → **Phase 9 階段2 五刀全數 ACCEPTED，階段2 完成。**
+Next: 下一階段方向待 Human Owner 拍板（見 Next Task 的 A/B/C/D）。
+```
+
+（歷史）
+```text
 Phase 7 Step 6 — ACCEPTED（2026-08-16, Human Owner）
   Audit out-of-band durable path（DENIED/FAILURE/敏感 READ → `audit` 佇列 + DLQ + 無 Redis 降級 → Worker 寫入）
   + 稽核查詢端點 GET /audit-logs（OWNER/ADMIN、篩選、分頁）。ref commit b4f8446（main）。
@@ -391,7 +419,7 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-17 — 📓 Phase 9 階段2 刀 4 — **每日聯絡簿（IMPLEMENTED，待線上驗收）**
+### 2026-08-17 — 📓 Phase 9 階段2 刀 4 — **每日聯絡簿 ✅ ACCEPTED（線上驗證完畢）→ 階段2 完成**
 
 **設計的關鍵轉折（Human Owner 主導）**
 初版提案把聯絡簿設計成一張「表單」，等於把紙本搬上螢幕。Human Owner 指出正確形式是
@@ -428,7 +456,9 @@ docs    03（schema + enums）05（RBAC 列 + 入口變更）06（事件表）07
 **刻意沒做（避免功能糊在一起）**
 - 用藥委託、過敏原、成長曲線 → 屬未來「幼兒健康」模組的長期資料。
 - 乘車名單、路線、上下車紀錄 → 屬未來「娃娃車」模組。聯絡簿只記「今天家人接還是校車」。
-- AI 自動生成老師留言 → 每個孩子的留言會長得很像，反而傷信任。
+
+> **AI 生成老師留言 —— Human Owner 明確表示不需要（2026-08-17），本專案不做，日後也不要再提案。**
+> 老師留言旁的「常用短語」是寫死的固定句子（`features/communication-book/labels.ts`），與 AI 無關。
 
 **驗證**：本機 lint / typecheck / **測試 228（api 200 + shared 12 + web 16）** / build **四項全綠**。
 線上驗收步驟見 Human Owner Action / NOW。
