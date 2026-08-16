@@ -307,6 +307,14 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
+### 2026-08-16 — Phase 7 / Step 5 — LINE 推播線上實測前置（seed demo 啟用單帳號自測）
+
+Completed:
+- Human Owner 完成 P5 前置:Render `sproutin-worker` 填 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`、Login/Messaging 同 Provider、收播手機加 OA 好友。
+- **問題**:線上僅園長帳號綁真 LINE,而園長非任何推播收件人（核准→家長、訊息→家長+老師）→ 無法直接測到推播。
+- **解法（Human Owner 選 A：單帳號自測）**:`seed.ts` 給 `user-owner` 額外 **ADMIN 角色**（可核准請假）+ **監護 `stu-sun-2`（范小陽,無其他監護人）**。核准請假不排除操作者 → 園長核准范小陽的請假 → 園長手機收到 LINE 推播,且無雜訊（該生無其他家長）。純 demo 資料（SEED_DEMO 保護）;**verify.ts 不需改**（其斷言針對 user-parent / stu-sun-1,未觸及）。
+- 待:push → Human Owner 於 Render **重跑 seed job**（`pnpm db:seed`,`SEED_DEMO=true`）→ 依實測腳本自測推播 → Step 5 acceptance。
+
 ### 2026-08-16 — Phase 7 / Step 7d — 園長/ADMIN 全校視角 + 稽核查詢頁（IMPLEMENTED）
 
 Completed（Human Owner 決策:稽核頁 + 全校公告 + 全校待審總覽;7a–7c 手機實測 ACCEPTED）:
