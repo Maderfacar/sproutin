@@ -356,11 +356,12 @@ Backend（Render 部署 2026-08-14，已驗證）
 ## Latest CI
 
 ```text
-Commit:  1181d10（feat: 推播帶學生姓名 + 通知鈴鐺顯示到秒）
-Run:     31940076688
+Commit:  a317fd9（feat: 每日聯絡簿 —— 一個孩子的頁面,階段2 刀4）
+Run:     31976370995
 Status:  ✅ SUCCESS（build + db + docker-build 全綠）
-Date:    2026-08-16
-Note:    Phase 7 全部上線並手機實測通過（含 LINE 推播）。僅 Node 20 deprecation 警告（非致命）。
+Date:    2026-08-17
+Note:    db job 已於拋棄式 Postgres 套用 migration 0005、seed 連跑兩次（idempotent）、
+         drift check 通過 —— 手寫的 migration 與 schema.prisma 一致，可安全套用到線上。
 ```
 
 ---
