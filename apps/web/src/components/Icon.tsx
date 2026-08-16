@@ -15,7 +15,8 @@ export type IconName =
   | 'wallet'
   | 'cam'
   | 'check'
-  | 'chev';
+  | 'chev'
+  | 'send';
 
 const PATHS: Record<IconName, ReactNode> = {
   home: (
@@ -90,6 +91,12 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
   check: <path d="M5 12.6l4.4 4.4L19 7.4" />,
   chev: <path d="M9 6l6 6-6 6" />,
+  send: (
+    <>
+      <path d="M4.5 11.5 20 4.5l-7 15-2.3-6.2-6.2-1.8Z" />
+      <path d="M10.7 13.3 20 4.5" />
+    </>
+  ),
 };
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {

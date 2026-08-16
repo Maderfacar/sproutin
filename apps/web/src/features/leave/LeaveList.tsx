@@ -32,7 +32,9 @@ export function LeaveList({ studentId }: { studentId: string }) {
         return (
           <li key={leave.id} className="card p-4">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-ink">{formatRange(leave)}</span>
+              <span className="font-serif text-base font-semibold text-ink tabular-nums">
+                {formatRange(leave)}
+              </span>
               <span className={`chip ${status.className}`}>{status.label}</span>
             </div>
             <p className="mt-1 text-sm text-ink-soft">{leave.reason}</p>
