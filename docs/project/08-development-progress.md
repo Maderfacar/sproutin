@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-16（Phase 7 Step 7a 已上線[CI run 31913609567 綠]待手機實測;Step 7b — 家長其餘四張卡片[出缺勤/訊息/通知/公告] IMPLEMENTED,本機 typecheck/test/build 綠,待 push）
+> Last updated: 2026-08-16（Phase 7 Step 7a/7b 已上線待手機實測;Step 7c — 老師端[審核請假/點名/班級訊息/班級公告] + 兩支輕量後端端點[GET /classes、GET /leaves?classId=] IMPLEMENTED,本機 typecheck/test[143]/build 綠,待 push）
 
 ---
 
@@ -30,8 +30,8 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
     └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（§D 提案;本版先程式自律）
   Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → IN_PROGRESS（切子步驟:先家長→老師→園長）
     ├ 7a 前端地基（Tailwind+TanStack Query+品牌主題）+ 家長「請假」端到端 → 已上線（CI run 31913609567 綠 + Production 路由 200/401）,待 Human 手機實測驗收
-    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → IMPLEMENTED（本機 typecheck/test[133]/build 綠;待 push→CI + Vercel + Human 手機實測）
-    ├ 7c 老師端（審核請假/點名/班級訊息·公告）                 → NOT_STARTED
+    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → 已上線（CI run 31926435249 綠 + Production 200/401）,待 Human 手機實測
+    ├ 7c 老師端（審核請假/點名/班級訊息·公告）+ 補 GET /classes、GET /leaves?classId= → IMPLEMENTED（本機 typecheck/test[143]/build 綠;待 push→CI + Vercel + Human 手機實測）
     └ 7d 園長·ADMIN（全校視角 + 稽核查詢頁）                   → NOT_STARTED
 ```
 
@@ -41,16 +41,17 @@ Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園
 
 ## Current Objective
 
-**Phase 7 Step 7b — IMPLEMENTED（2026-08-16）。** 補齊家長其餘四張卡片:出缺勤（依日期清單,唯讀）、訊息（雙向訊息串 + 發訊 + 標已讀）、通知（站內清單 + 標已讀,入口為頁首 🔔）、公告（唯讀清單）。沿用 7a 地基,無新 library、無架構變更、無 migration。（7a 已上線,CI run 31913609567 綠,待你手機實測。）
-**下一步（等 Human Owner）**:確認是否 commit + push 7b（push main 觸發 Vercel/Render）。之後 7c（老師端:審核請假/點名/班級訊息·公告）。
+**Phase 7 Step 7c — IMPLEMENTED（2026-08-16）。** 老師端四項:審核請假（整班待審 → 核准/駁回）、點名（一天一班,逐生標 出席/缺席/請假/遲到）、班級訊息（重用 7b 訊息串）、發班級公告。並依 Human Owner 決策**補兩支輕量後端唯讀端點**:`GET /classes`（我的班級+班名）、`GET /leaves?classId=&status=`（整班待審清單）。前端採聯集視圖:各功能頁依角色顯示對應面板（老師看點名/審核,家長看自己小孩）。（7a/7b 已上線,待你手機實測。）
+**下一步（等 Human Owner）**:確認是否 commit + push 7c。之後 7d（園長/ADMIN:全校視角 + 稽核查詢頁）。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 7b — 家長其餘四張卡片 — **IMPLEMENTED**（2026-08-16）。
-本機驗證:typecheck ✓、test ✓（api 126 + shared 7 = 133;7b 為 UI,未新增後端/shared 測試）、`pnpm build` ✓（新增 `/liff/{attendance,message,notification,announcement}` + `/api/{attendance,messages(+/[id]/read),notifications(+/[id]/read),announcements}` 路由;各頁 First Load JS 137–141kB）。
-待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（家長全貌）。**commit/push 前先問 Human Owner。**
+Phase 7 Step 7c — 老師端 + 兩支輕量後端端點 — **IMPLEMENTED**（2026-08-16）。
+後端:`ClassesModule`（GET /classes,scope 過濾）、`LeavesService.listForClass` + controller classId/status、`ScopeResolver.canManageClass`;+10 單元測試。前端:`/api/classes`、`/api/leaves/[id]/status`、`/api/attendance`(POST)+`/[id]`(PATCH)、`/api/announcements`(POST) proxy;teacher 面板（審核/點名/發公告）+ 角色旗標 `lib/roles`,role-gated 併入 leave/attendance/announcement 頁。
+本機驗證:typecheck ✓、test ✓（api 136 + shared 7 = 143）、`pnpm build` ✓。
+待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（老師帳號）。**commit/push 前先問 Human Owner。**
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -305,6 +306,37 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 / Step 7c — 老師端 + 兩支輕量後端端點（IMPLEMENTED）
+
+Completed（Human Owner 決策:補後端 + 一次做完四項）:
+- **後端（新增，皆唯讀 scope 過濾;非新架構/library,無 migration）**:
+  - `ScopeResolver.canManageClass(userId, roles, classId)`（OWNER/ADMIN 全校;TEACHER/BUS_TEACHER 自班）。
+  - `GET /classes`（`classes/**`:ClassesService/Controller/Module）:OWNER/ADMIN 全校、TEACHER 自班（+班名）;`@Roles` 限 staff。
+  - `GET /leaves?classId=&status=`（`LeavesService.listForClass` + controller 分支）:整班待審清單,`canManageClass` 授權。
+  - 測試 +10（classes.service 3、canManageClass 4、listForClass 3）→ api 共 **136**;`app.module.spec` DI smoke 自動涵蓋 ClassesModule。
+- **前端（沿用 7a 地基,聯集視圖）**:
+  - proxy:`/api/classes`、`/api/leaves/[id]/status`、`/api/attendance`(POST)+`/api/attendance/[id]`(PATCH)、`/api/announcements`(POST)。
+  - `lib/roles`（角色旗標:isGuardian/canReviewLeave/canMarkAttendance/canAnnounce,對齊後端 @Roles,避免顯示會 403 的面板）。
+  - `features/classes`（`useMyClasses`/`useSelectedClass`）+ `ClassSelect`。
+  - 審核請假:`TeacherLeaveReviewPanel`（班級待審 → 核准/駁回,學生名以 useMyStudents 對映）+ hooks `useClassPendingLeaves`/`useSetLeaveStatus`。
+  - 點名:`TeacherRosterPanel`（班+日 → 逐生狀態鈕;新標記 POST / 改狀態 PATCH）+ hooks `useClassAttendance`/`useMarkAttendance`。
+  - 班級公告:`TeacherAnnouncePanel`（班+標題+內容 → POST scope=CLASS）+ `useCreateAnnouncement`。
+  - 班級訊息:重用 7b `MessageThread`（老師從自班學生選）。
+  - 頁面 role-gated 併入:`/liff/leave`（審核+家長申請）、`/liff/attendance`（點名+查看,查看對任何有學生者顯示,修正不因角色遺漏園長/行政讀取）、`/liff/announcement`（發布+清單）。
+
+Verification:
+- 本機:`pnpm typecheck` ✓;`pnpm test` ✓（api 136 + shared 7 = 143）;`pnpm build` ✓（新增 `/api/classes`、`/api/leaves/[id]/status`、`/api/attendance/[id]` 等路由）。
+- 待:push → CI 綠 → Vercel Preview → **Human Owner 手機實測（老師帳號）**。
+
+Architecture:
+- **無變更**。新增後端唯讀端點屬既有 domain 邊界內（契約本列 GET /classes）;無新 migration、無新 library。多重身份沿用聯集視圖。
+
+Human Owner:
+- NOW:確認是否 commit + push 7c（push main 觸發 Vercel/Render）。老師端手機實測需一個對映到 seed 老師 User 的 LINE 帳號（同家長前置的 A 做法）。
+
+Next:
+- 7c acceptance → 7d（園長/ADMIN:全校視角 + 稽核查詢頁 GET /audit-logs）。
 
 ### 2026-08-16 — Phase 7 / Step 7b — 家長其餘四張卡片（IMPLEMENTED）
 

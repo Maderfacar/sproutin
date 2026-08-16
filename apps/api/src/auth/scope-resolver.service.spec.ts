@@ -141,3 +141,38 @@ describe('ScopeResolver.canManageStudentClass', () => {
     expect(prisma.guardianship.findFirst).not.toHaveBeenCalled(); // 管理者判斷不看監護關係
   });
 });
+
+describe('ScopeResolver.canManageClass', () => {
+  it('OWNER：全校 → allow（不需查 DB）', async () => {
+    const prisma = emptyPrisma();
+    const resolver = makeResolver(prisma);
+    await expect(resolver.canManageClass('u-owner', [role('OWNER')], 'class-sun')).resolves.toBe(true);
+    expect(prisma.teacherAssignment.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('TEACHER：自己任教的班 → allow', async () => {
+    const prisma = emptyPrisma();
+    prisma.teacherAssignment.findFirst.mockResolvedValue({ id: 'ta-1' });
+    const resolver = makeResolver(prisma);
+    await expect(
+      resolver.canManageClass('u-teacher', [role('TEACHER', 'class-sun')], 'class-sun'),
+    ).resolves.toBe(true);
+    expect(prisma.teacherAssignment.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'u-teacher', classId: 'class-sun' } }),
+    );
+  });
+
+  it('TEACHER：非自己任教的班 → deny', async () => {
+    const prisma = emptyPrisma();
+    prisma.teacherAssignment.findFirst.mockResolvedValue(null);
+    const resolver = makeResolver(prisma);
+    await expect(
+      resolver.canManageClass('u-teacher', [role('TEACHER', 'class-sun')], 'class-tulip'),
+    ).resolves.toBe(false);
+  });
+
+  it('PARENT：非管理者 → deny', async () => {
+    const resolver = makeResolver(emptyPrisma());
+    await expect(resolver.canManageClass('u-parent', [role('PARENT')], 'class-sun')).resolves.toBe(false);
+  });
+});

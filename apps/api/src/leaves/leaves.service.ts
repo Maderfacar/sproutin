@@ -143,6 +143,23 @@ export class LeavesService {
     });
   }
 
+  // GET /leaves?classId=&status= — 整班請假紀錄（老師審核用，Step 7c）。班級管理者限定。
+  async listForClass(
+    actor: LeaveActor,
+    classId: string,
+    status?: LeaveStatus,
+  ): Promise<LeaveView[]> {
+    const allowed = await this.scope.canManageClass(actor.id, actor.roles, classId);
+    if (!allowed) {
+      throw new ForbiddenException('out_of_scope');
+    }
+    return this.prisma.leave.findMany({
+      where: { student: { classId }, ...(status ? { status } : {}) },
+      select: LEAVE_VIEW,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // PATCH /leaves/:id/status — 審核 approve/reject（僅 PENDING 可審核）。班級管理者（TEACHER 自班 / ADMIN）。
   async setStatus(
     actor: LeaveActor,

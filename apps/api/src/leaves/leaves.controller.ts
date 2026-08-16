@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
+import type { LeaveStatus } from '@sproutin/db';
 import { JwtAuthGuard, AuthedRequest } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -50,18 +51,25 @@ export class LeavesController {
     return this.leaves.create(user, parsed.data);
   }
 
-  // GET /leaves?studentId= — 請假紀錄（scope 過濾）。
+  // GET /leaves?studentId=（單一學生）或 ?classId=&status=（整班,老師審核用,Step 7c）。
   @Get()
   @Roles('OWNER', 'ADMIN', 'TEACHER', 'PARENT', 'GUARDIAN')
   async list(
     @Req() req: AuthedRequest,
     @Query('studentId') studentId?: string,
+    @Query('classId') classId?: string,
+    @Query('status') status?: string,
   ): Promise<LeaveView[]> {
-    if (!studentId) {
-      throw new BadRequestException('studentId_required');
-    }
     const user = req.user!;
-    return this.leaves.listForStudent(user, studentId);
+    if (studentId) {
+      return this.leaves.listForStudent(user, studentId);
+    }
+    if (classId) {
+      const allowed = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+      const parsedStatus = status && allowed.includes(status) ? (status as LeaveStatus) : undefined;
+      return this.leaves.listForClass(user, classId, parsedStatus);
+    }
+    throw new BadRequestException('studentId_or_classId_required');
   }
 
   // PATCH /leaves/:id/status — 審核 approve/reject（TEACHER 自班 / ADMIN）。

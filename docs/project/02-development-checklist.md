@@ -202,8 +202,15 @@
     - [x] 通知:`/api/notifications`(+`/[id]/read`)、`features/notification`、`/liff/notification`;入口為頁首 🔔（非 MVP_CARD）
     - [x] 公告（唯讀）:`/api/announcements`、`features/announcement`、`/liff/announcement`
     - [x] 共用抽出 `useSelectedStudent`/`StudentSelect`/`PageHeader`;啟用 attendance/message/announcement 卡片;leave 頁重構沿用
-    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance
-  - [ ] 7c 老師端（審核請假/點名/班級訊息·公告）— `NOT_STARTED`
+    - [x] push（commit f550589）→ CI 綠（run 31926435249）→ Production 200/401 驗證
+    - [ ] Human Owner 手機實測 acceptance
+  - [~] **7c 老師端（審核請假/點名/班級訊息·公告）+ 補後端** — `IMPLEMENTED`（本機 typecheck/test[143]/build 綠;待 push→CI + Vercel + Human 手機實測）
+    - [x] 後端:`ScopeResolver.canManageClass`、`GET /classes`（ClassesModule）、`GET /leaves?classId=&status=`（listForClass）;+10 單元測試（api 136）
+    - [x] proxy:`/api/classes`、`/api/leaves/[id]/status`、`/api/attendance`(POST)+`/[id]`(PATCH)、`/api/announcements`(POST)
+    - [x] `lib/roles` 角色旗標;`features/classes`+`ClassSelect`
+    - [x] 審核請假 `TeacherLeaveReviewPanel`、點名 `TeacherRosterPanel`、發公告 `TeacherAnnouncePanel`;班級訊息重用 7b MessageThread
+    - [x] role-gated 併入 `/liff/{leave,attendance,announcement}`（聯集視圖）
+    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance（需老師 LINE 帳號對映）
   - [ ] 7d 園長·ADMIN（全校視角 + 稽核查詢頁）— `NOT_STARTED`
 
 ## Phase 8 — Integration / Hardening  ⬜

@@ -65,7 +65,30 @@ export interface NotificationView {
   createdAt: string; // ISO
 }
 
+export interface ClassView {
+  id: string;
+  name: string;
+}
+
+export interface UpdateLeaveStatusBody {
+  status: 'APPROVED' | 'REJECTED';
+  reviewNote?: string;
+}
+
+export interface MarkAttendanceBody {
+  studentId: string;
+  date: string; // ISO datetime
+  status: AttendanceStatus;
+}
+
 export type AnnouncementScope = 'SCHOOL' | 'CLASS';
+
+export interface CreateAnnouncementBody {
+  scope: AnnouncementScope;
+  classId?: string;
+  title: string;
+  body: string;
+}
 
 export interface AnnouncementView {
   id: string;

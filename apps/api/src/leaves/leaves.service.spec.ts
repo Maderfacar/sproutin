@@ -20,6 +20,7 @@ type PrismaMock = {
 type ScopeMock = {
   canAccessStudent: jest.Mock;
   canManageStudentClass: jest.Mock;
+  canManageClass: jest.Mock;
 };
 
 const D1 = new Date('2026-08-20T00:00:00.000Z');
@@ -64,6 +65,7 @@ function makeScope(): ScopeMock {
   return {
     canAccessStudent: jest.fn(async () => true),
     canManageStudentClass: jest.fn(async () => true),
+    canManageClass: jest.fn(async () => true),
   };
 }
 
@@ -303,5 +305,42 @@ describe('LeavesService.listForStudent', () => {
     scope.canAccessStudent.mockResolvedValue(false);
     const service = makeService(prisma, scope);
     await expect(service.listForStudent(parent, 'stu-other')).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('LeavesService.listForClass', () => {
+  it('班級管理者 + status → 依 student.classId + status 查詢（createdAt desc）', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.leave.findMany.mockResolvedValue([leaveRow()]);
+    const service = makeService(prisma, makeScope());
+
+    const list = await service.listForClass(teacher, 'class-sun', 'PENDING');
+    expect(list).toHaveLength(1);
+    expect(prisma.leave.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { student: { classId: 'class-sun' }, status: 'PENDING' },
+        orderBy: { createdAt: 'desc' },
+      }),
+    );
+  });
+
+  it('未帶 status → 不加 status 過濾', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.leave.findMany.mockResolvedValue([]);
+    const service = makeService(prisma, makeScope());
+
+    await service.listForClass(teacher, 'class-sun');
+    expect(prisma.leave.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { student: { classId: 'class-sun' } } }),
+    );
+  });
+
+  it('非班級管理者 → Forbidden;不查詢', async () => {
+    const prisma = makePrisma(makeTx());
+    const scope = makeScope();
+    scope.canManageClass.mockResolvedValue(false);
+    const service = makeService(prisma, scope);
+    await expect(service.listForClass(teacher, 'class-tulip')).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.leave.findMany).not.toHaveBeenCalled();
   });
 });

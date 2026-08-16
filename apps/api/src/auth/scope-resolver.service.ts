@@ -78,4 +78,28 @@ export class ScopeResolver {
 
     return false;
   }
+
+  // 班級層級管理判斷（Step 7c）：能否對「整個班級」做管理動作（如列全班待審請假）。
+  //   OWNER / ADMIN → 全校皆可；TEACHER / BUS_TEACHER → 僅自己任教的班級；其餘 → false。
+  async canManageClass(
+    userId: string,
+    roles: AuthUser['roles'],
+    classId: string,
+  ): Promise<boolean> {
+    const roleNames = new Set(roles.map((r) => r.role));
+
+    if (roleNames.has('OWNER') || roleNames.has('ADMIN')) {
+      return true;
+    }
+
+    if (roleNames.has('TEACHER') || roleNames.has('BUS_TEACHER')) {
+      const assignment = await this.prisma.teacherAssignment.findFirst({
+        where: { userId, classId },
+        select: { id: true },
+      });
+      if (assignment) return true;
+    }
+
+    return false;
+  }
 }

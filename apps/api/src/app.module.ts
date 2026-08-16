@@ -5,6 +5,7 @@ import { HealthModule } from './core/health/health.module';
 import { PublicConfigModule } from './core/config/public-config.module';
 import { AuthModule } from './auth/auth.module';
 import { StudentsModule } from './students/students.module';
+import { ClassesModule } from './classes/classes.module';
 import { LeavesModule } from './leaves/leaves.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { MessagesModule } from './messages/messages.module';
@@ -33,6 +34,7 @@ import { AuditFailureInterceptor } from './core/audit/audit-failure.interceptor'
     PublicConfigModule,
     AuthModule,
     StudentsModule,
+    ClassesModule,
     LeavesModule,
     AttendanceModule,
     MessagesModule,
