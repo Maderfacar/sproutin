@@ -36,8 +36,11 @@ Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner
   2. 全域 exception filter（統一錯誤信封,不洩漏內部）           → ✅ 上線（CI 綠 run 31942307892）
   3. web 元件測試（vitest + RTL;web 8 tests）                  → ✅ 上線（CI 綠 run 31942641153）
   4. hardening（web 安全標頭 + 錯誤/隔離/secret 檢視）          → ✅ 上線（CI 綠 + 線上標頭生效;CSP/rate-limit 列後續）
-  5. P5 demo 資料收尾（園長 ADMIN+監護 fixture 改 opt-in）      → IMPLEMENTED（本機綠;待 push）
-  6. append-only DB 層鎖死（§D 提案,需 Human Owner 定案）      → 待提案（最後,不自行做）
+  5. P5 demo 資料收尾（園長 ADMIN+監護 fixture 改 opt-in）      → ✅ 上線（CI 綠 run 31943015872）
+  6. append-only DB 層鎖死（least-privilege app role）          → **§D 提案已提出,待 Human Owner 定案**（不自行做）
+```
+
+> **待 Human Owner 定案（Phase 8 #6, §D）**：AuditLog append-only 已由 trigger 於 DB 層強制（migration 0002,擋 UPDATE/DELETE/TRUNCATE,即使 owner 連線）。**殘餘風險**:app 連線＝DB owner,取得該憑證者可先 DISABLE/DROP trigger 再竄改。**建議 A**＝least-privilege app role（AuditLog 只授 INSERT/SELECT、REVOKE 改刪、app 改用新 secret `APP_DATABASE_URL`、migrate 續用 owner）——屬 ADR-003 破壞性 + 每校 provisioning + 新 secret,需定案。**B**＝維持現狀（trigger 足夠,接受殘餘風險,pilot 前延後）。**C**＝WORM/SIEM（MVP 排除）。
 ```
 
 > Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留 Phase 8（§D）。多重身份（同帳號兼多角色）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
