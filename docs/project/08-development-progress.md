@@ -31,9 +31,13 @@ Phase 7:  ✅ COMPLETE（2026-08-16, Human Owner）— Core MVP 全數 ACCEPTED
     ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → ✅ ACCEPTED
     ├ 7c 老師端（審核/點名/班級訊息·公告）+ GET /classes、GET /leaves?classId= → ✅ ACCEPTED
     └ 7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）+ GET /leaves 全校 → ✅ ACCEPTED
-Phase 8:  IN_PROGRESS（Integration / Hardening）
-  ESLint flat config（清 tech debt,CI lint gate）→ IMPLEMENTED（本機 pnpm lint 綠;待 push→CI）
-  其餘候選（append-only §D / 全域 exception filter / web 元件測試 / 多校隔離·secret·效能 / P5 demo 收尾）→ NOT_STARTED
+Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner 授權「都做」）
+  1. ESLint flat config（CI lint gate）                        → ✅ 上線（CI 綠 run 31941929773）
+  2. 全域 exception filter（統一錯誤信封,不洩漏內部）           → IMPLEMENTED（本機綠;待 push）
+  3. web 元件測試（vitest/RTL）                                → NOT_STARTED
+  4. 多校隔離 / secret / 效能 hardening                        → NOT_STARTED
+  5. P5 demo 資料收尾                                          → NOT_STARTED
+  6. append-only DB 層鎖死（§D 提案,需 Human Owner 定案）      → NOT_STARTED（最後,不自行做）
 ```
 
 > Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留 Phase 8（§D）。多重身份（同帳號兼多角色）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
@@ -307,6 +311,20 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 8 / 全域 exception filter（IMPLEMENTED）
+
+Completed:
+- `core/http/all-exceptions.filter.ts`（`@Catch()` 全域,APP_FILTER 註冊）:所有錯誤統一 `{ success:false, error:{ code, message } }`。HttpException 沿用狀態碼 + 訊息碼（out_of_scope / LEAVE_INVALID_TRANSITION / missing_token…）;未預期錯誤 → 500 通用 `INTERNAL_ERROR`,**stack 只進 server log、不外洩**。成功回應維持原樣（不包裝,避免破壞既有前端）。
+- 前端 `lib/api.ts` `toApiError` 改讀信封 `error.code`（保留舊 `message` 形狀回退,如 proxy 503）;既有 leave/通用錯誤中文對映不受影響。
+- e2e 409 斷言改為新信封;+ filter 單元測試（403/409/400/500 不洩漏）。api 測試 138→142。
+
+Verification:
+- 本機:`pnpm lint` ✓、`pnpm typecheck` ✓、`pnpm test` ✓（api 142 + shared 8 = 150）、`pnpm build` ✓。
+- 待:push → CI 全綠。
+
+Next:
+- Phase 8 #3 web 元件測試（vitest/RTL）。
 
 ### 2026-08-16 — Phase 8 / ESLint flat config（IMPLEMENTED）
 

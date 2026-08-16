@@ -179,7 +179,11 @@ describe('API e2e (Leave + Attendance, real JWT)', () => {
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({ status: 'APPROVED' })
       .expect(409);
-    expect(res.body.message).toContain('LEAVE_INVALID_TRANSITION');
+    // 全域 exception filter 統一信封（Phase 8）：{ success:false, error:{ code, message } }
+    expect(res.body).toEqual({
+      success: false,
+      error: { code: 'LEAVE_INVALID_TRANSITION', message: 'LEAVE_INVALID_TRANSITION' },
+    });
   });
 
   it('老師手動點名 → 201 MANUAL', async () => {

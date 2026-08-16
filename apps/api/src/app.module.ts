@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from './core/prisma/prisma.module';
 import { HealthModule } from './core/health/health.module';
 import { PublicConfigModule } from './core/config/public-config.module';
@@ -15,6 +15,7 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { AuditModule } from './core/audit/audit.module';
 import { AuditReadInterceptor } from './core/audit/audit-read.interceptor';
 import { AuditFailureInterceptor } from './core/audit/audit-failure.interceptor';
+import { AllExceptionsFilter } from './core/http/all-exceptions.filter';
 
 // 核心橫切模組 + Phase 6 vertical slice + Phase 7 domain：
 // AuthModule（Step 2：LINE/LIFF 登入 → JWT）+ StudentsModule（Step 3：RBAC 示範端點）
@@ -43,6 +44,7 @@ import { AuditFailureInterceptor } from './core/audit/audit-failure.interceptor'
     AuditLogsModule,
   ],
   providers: [
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: AuditReadInterceptor },
     { provide: APP_INTERCEPTOR, useClass: AuditFailureInterceptor },
   ],

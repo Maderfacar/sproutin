@@ -14,9 +14,20 @@ export class ApiError extends Error {
 
 async function toApiError(res: Response): Promise<ApiError> {
   try {
-    const data = (await res.json()) as { message?: unknown; error?: unknown };
-    const raw = data.message ?? data.error;
-    const code = typeof raw === 'string' && raw.length > 0 ? raw : `HTTP_${res.status}`;
+    // 後端統一錯誤信封（Phase 8）：{ success:false, error:{ code, message } }。
+    // 保留對舊形狀（NestException { message }）的回退,以防非信封路徑（如 proxy 503）。
+    const data = (await res.json()) as {
+      error?: { code?: string; message?: string } | string;
+      message?: unknown;
+    };
+    const fromEnvelope =
+      typeof data.error === 'object' && data.error !== null
+        ? (data.error.code ?? data.error.message)
+        : typeof data.error === 'string'
+          ? data.error
+          : undefined;
+    const fallback = typeof data.message === 'string' ? data.message : undefined;
+    const code = fromEnvelope ?? fallback ?? `HTTP_${res.status}`;
     return new ApiError(res.status, code);
   } catch {
     return new ApiError(res.status, `HTTP_${res.status}`);
