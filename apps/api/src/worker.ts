@@ -7,6 +7,7 @@ import { WorkerModule } from './events/worker.module';
 import { OutboxDispatcherService, type ClaimedEvent } from './events/outbox-dispatcher.service';
 import { EventHandlersService } from './events/event-handlers.service';
 import { PushNotificationService } from './events/push-notification.service';
+import { LinePushClient } from './events/line-push.client';
 import { AuditService, type AuditEntry } from './core/audit/audit.service';
 
 // Sproutin Worker entrypoint（同一 image、不同 CMD，§20 / docs/04）。
@@ -46,6 +47,17 @@ async function bootstrap(): Promise<void> {
   const handlers = app.get(EventHandlersService);
   const pushService = app.get(PushNotificationService);
   const auditService = app.get(AuditService);
+
+  // 啟動時就講清楚 LINE 推播是否可用。
+  // 動機（2026-08-17 實測教訓）：token 未設定時 LinePushClient 是「安靜略過」，
+  // 站內通知一切正常、只有 LINE 收不到 → 從外部完全看不出原因，只能猜。
+  // 這行讓 Render log 第一眼就能判斷。
+  const linePush = app.get(LinePushClient);
+  console.log(
+    linePush.enabled
+      ? '[worker] LINE push: ENABLED（已讀到 LINE_MESSAGING_CHANNEL_ACCESS_TOKEN）'
+      : '[worker] LINE push: DISABLED — LINE_MESSAGING_CHANNEL_ACCESS_TOKEN 未設定，所有推播會被略過',
+  );
 
   // BullMQ 要求 maxRetriesPerRequest = null。
   const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });

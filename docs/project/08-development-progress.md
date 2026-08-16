@@ -352,6 +352,13 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
+### 2026-08-17 — Bug fix / 請假清單不自動更新（Human Owner 實測回報）
+
+**現象**：園長申請請假後，上方「全校待審請假」不會立即出現，必須手動重整頁面。
+**根因**：`useCreateLeave` 成功後只失效 `['leaves', studentId]`；老師的整班待審 `['leaves','class',…]`
+與園長的全校待審 `['leaves','school','PENDING']` 是不同 key、**前綴不相符** → 未被通知重取。
+**修法**：改為以前綴 `['leaves']` 一次失效（與 `useCancelLeave` / `useSetLeaveStatus` 一致）。
+
 ### 2026-08-17 — Phase 9 階段2 刀5 / 學生整合視圖 ✅ ACCEPTED + 公告 LINE 推播 ⚠ 待確認
 
 **Human Owner 驗收（2026-08-17）**：學生整合視圖 ✅ 通過。**公告 LINE 推播 ❌ 手機未收到 —— 未結案**。
@@ -364,6 +371,30 @@ worker 對每個事件都會 enqueue `line-push`，過濾在 `PushNotificationSe
    舊 worker 處理該事件後即標 DISPATCHED，不會重跑 → 該則公告永遠不會補推。
 2. **發的是班級公告、而該班與園長無關**（班級公告只推該班老師 + 該班家長；園長僅與向日葵班有監護關係，
    來自 `SEED_PUSH_DEMO` fixture）。
+
+**第三次複測（Human Owner，2026-08-17）— 決定性線索**
+- **鈴鐺（站內通知）有出現該則公告** → worker 活著且事件處理正常（outbox → handler → Notification 全通）。
+- **`sproutin-worker` 已 Manual Deploy 且 Live**，再測公告與請假核准 → **兩者都沒有 LINE**。
+- ⚠ **請假核准推播是 Step 5 已驗收過、原本會動的功能，現在也收不到** → 問題**不在刀5 的公告程式碼**，
+  而在推播鏈的共用段。
+
+**結論：最可能是 `sproutin-worker` 的 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` 未設定或失效。**
+理由：`LinePushClient` 在無 token 時是**安靜略過**（只 warn，不丟出）→ 症狀正好是「站內通知全正常、
+LINE 全無、沒有任何錯誤」。該 env 在 `render.yaml` 為 `sync: false`＝**必須由 Human Owner 於 Render 後台手動填**，
+不會隨 Blueprint 帶入（Step 5 亦曾發生「worker 未吃到 token」）。
+
+**Human Owner 要做的檢查（依序）**
+1. Render → `sproutin-worker` → **Environment** → 確認 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` 存在且非空。
+   （注意：api 與 worker 是**兩個獨立服務**，各自有自己的環境變數，填在 api 上 worker 也讀不到。）
+2. Render → `sproutin-worker` → **Logs** → 找這行（本次已加，見下）：
+   `[worker] LINE push: ENABLED` ／ `DISABLED — …未設定`。
+   若見 `DISABLED` → 就是 token 沒填 → 填上後重新部署即解決。
+   若見 `ENABLED` 但仍收不到 → 找 `LINE push failed: HTTP <code>` ——
+   401=token 失效需重新產生;403=權限/好友問題（收播帳號需為該 OA 好友且未封鎖）。
+
+**本次程式改動（讓這類問題不再只能用猜的）**
+- `worker.ts` 啟動時印出 LINE 推播是否可用（`[worker] LINE push: ENABLED/DISABLED`）。
+  動機：token 未設定原本完全靜默，從外部無法判別。
 
 **複測結果（Human Owner，2026-08-17 第二次）**：確定發的是**全校公告**；**公告列表有顯示**（＝POST 成功、
 Announcement 已寫入），**LINE 仍未收到**。⚠ 注意：公告列表只讀 Announcement 資料表，**不能證明 outbox 事件

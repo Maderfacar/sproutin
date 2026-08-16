@@ -15,13 +15,16 @@ export function useLeaves(studentId: string | undefined): UseQueryResult<LeaveVi
   });
 }
 
-// 申請請假。成功後讓該學生的請假清單重取。
+// 申請請假。成功後讓**所有**請假清單重取。
+// 注意不能只失效 ['leaves', studentId]：老師的整班待審 ['leaves','class',...] 與園長的全校待審
+// ['leaves','school','PENDING'] 是不同的 key，前綴不相符 → 會漏掉，使用者得手動重整才看得到新申請
+// （Human Owner 2026-08-17 實測回報）。統一用前綴 ['leaves'] 一次失效，與取消/審核一致。
 export function useCreateLeave() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateLeaveBody) => apiSend<LeaveView>('/api/leaves', 'POST', body),
-    onSuccess: (_data, body) => {
-      void queryClient.invalidateQueries({ queryKey: ['leaves', body.studentId] });
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['leaves'] });
     },
   });
 }
