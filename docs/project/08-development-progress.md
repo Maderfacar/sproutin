@@ -10,7 +10,8 @@
 
 **Phase:**
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
-階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）與刀 5（學生整合視圖 + 公告推播）＝ IMPLEMENTED，待線上驗收**；
+階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）＝ ✅ ACCEPTED**；
+**刀 5：學生整合視圖 ✅ ACCEPTED；公告 LINE 推播 ⚠ 手機未收到，未結案**（診斷步驟見工作紀錄最上方）。
 **刀 4（每日聯絡簿本）尚未開始 —— Human Owner 決定另開新視窗執行**（需新 model + migration + 老師填寫端與家長閱讀端，為五刀中最大的一刀）。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
@@ -210,7 +211,14 @@ DONE
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
 NOW
-- **建立 Vercel Blob Store（access mode 選 Public）並連到 web 專案** → 園所外觀的「上傳圖片」才會啟用（未接上時該按鈕回報「尚未啟用上傳」，其餘功能不受影響）。
+- **複測公告 LINE 推播**（未結案）：發一則**全校公告** → ①看 App 鈴鐺有無該則通知 ②看手機有無收到 LINE。
+  兩者都無 → 事件流程問題；只有鈴鐺有 → 推播段問題（查 Render `sproutin-worker` log）。
+
+DONE
+- ~~建立 Vercel Blob Store（access mode 選 Public）並連到 web 專案~~ ✅ 已完成，上傳實測通過（刀1 ACCEPTED）。
+
+（原始說明保留）
+- **Vercel Blob Store（access mode 選 Public）並連到 web 專案** → 園所外觀的「上傳圖片」才會啟用（未接上時該按鈕回報「尚未啟用上傳」，其餘功能不受影響）。
   連上專案後 Vercel 預設以 OIDC 注入 `BLOB_STORE_ID`（+ 自動輪替的 `VERCEL_OIDC_TOKEN`），不一定會有 `BLOB_READ_WRITE_TOKEN`；程式兩種都接受。
   Blob 在 Hobby 方案免費（超出額度會停用而非扣款）。**store 的 public/private 建立後不可更改**，logo/封面需 Public。
 - 線上驗收刀 1：用園長帳號 → 我的 → 園所外觀 → 改名稱/顏色/園徽 → 儲存 → 看全站是否即時變樣。
@@ -344,7 +352,23 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-17 — Phase 9 階段2 刀5 / 學生整合視圖 + 公告 LINE 推播（IMPLEMENTED，待線上驗收）
+### 2026-08-17 — Phase 9 階段2 刀5 / 學生整合視圖 ✅ ACCEPTED + 公告 LINE 推播 ⚠ 待確認
+
+**Human Owner 驗收（2026-08-17）**：學生整合視圖 ✅ 通過。**公告 LINE 推播 ❌ 手機未收到 —— 未結案**。
+
+**已排除**：程式已部署（線上探測 `/students/:id/detail`、`/users`、`/school/config` 皆回 401＝路由存在）；
+worker 對每個事件都會 enqueue `line-push`，過濾在 `PushNotificationService`；`allUsers` 不排除發布者。
+
+**最可能原因（待 Human Owner 複測釐清）**
+1. **測試當下 Render worker 尚未完成重新部署**（CI 20:41 綠 → Render Docker build 另需數分鐘）。
+   舊 worker 處理該事件後即標 DISPATCHED，不會重跑 → 該則公告永遠不會補推。
+2. **發的是班級公告、而該班與園長無關**（班級公告只推該班老師 + 該班家長；園長僅與向日葵班有監護關係，
+   來自 `SEED_PUSH_DEMO` fixture）。
+
+**下一步診斷**：重發一則**全校公告** → ①App 鈴鐺是否出現該公告（有＝事件流程正常，問題僅在推播段）
+②手機是否收到 LINE。若仍無 → 查 Render `sproutin-worker` log 有無 `line-push` job 與 LINE API 回應。
+
+
 
 **MVP 缺口 #10 學生整合視圖**
 - 後端 `GET /students/:id/detail`：在既有 `/students/:id` 的授權鏈（ScopeGuard）與敏感 READ 稽核之上，
@@ -363,7 +387,7 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 Verification：本機 lint ✓ / typecheck ✓ / test ✓（api 179 + shared 10 + web 16 = **205**）/ build ✓。
 
-### 2026-08-17 — Phase 9 階段2 刀3 / 人員帳號與關聯（IMPLEMENTED，待線上驗收;CI ✅ run 31970653250，含 migration 0004 套用 + drift 檢查）
+### 2026-08-17 — Phase 9 階段2 刀3 / 人員帳號與關聯（✅ **ACCEPTED**, Human Owner 2026-08-17;CI ✅ run 31970653250，含 migration 0004 套用 + drift 檢查）
 
 **migration 0004_user_status（expand-only，ADR-003）**：`User.status`（enum `UserStatus` ACTIVE|INACTIVE，預設 ACTIVE）。
 既有列自動 ACTIVE，線上零風險。**這是階段2 唯一到目前為止的 DB 變更**（Human Owner 事前已知會）。
