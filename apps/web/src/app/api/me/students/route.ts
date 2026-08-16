@@ -1,23 +1,9 @@
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
+import { proxyToApi } from '../../../../lib/server/proxy';
 
-// same-origin proxy → 後端 /me/students（轉發 Authorization;API_INTERNAL_URL server-only）。
+// same-origin proxy → 後端 /me/students（授權由 proxy 從 httpOnly cookie 注入 Bearer）。
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request): Promise<NextResponse> {
-  const apiInternalUrl = process.env.API_INTERNAL_URL;
-  if (!apiInternalUrl) {
-    return NextResponse.json({ error: 'api_unconfigured' }, { status: 503 });
-  }
-
-  const authorization = req.headers.get('authorization') ?? '';
-  const res = await fetch(`${apiInternalUrl}/me/students`, {
-    headers: { Authorization: authorization },
-    cache: 'no-store',
-  });
-
-  const text = await res.text();
-  return new NextResponse(text, {
-    status: res.status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+export function GET(req: Request): Promise<NextResponse> {
+  return proxyToApi(req, '/me/students');
 }

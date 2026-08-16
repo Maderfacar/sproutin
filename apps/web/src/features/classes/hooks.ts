@@ -3,15 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { apiGet } from '../../lib/api';
-import { useSession } from '../../lib/session';
 import type { ClassView } from '../../lib/types';
 
-// 我的班級（staff;後端 scope 過濾）。
+// 我的班級（staff;後端 scope 過濾）。授權走 cookie。
 export function useMyClasses(): UseQueryResult<ClassView[]> {
-  const { accessToken } = useSession();
   return useQuery({
     queryKey: ['classes'],
-    queryFn: () => apiGet<ClassView[]>('/api/classes', accessToken),
+    queryFn: () => apiGet<ClassView[]>('/api/classes'),
   });
 }
 

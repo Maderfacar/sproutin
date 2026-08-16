@@ -324,6 +324,16 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
+### 2026-08-16 — Phase 8 / 登入持久化（httpOnly cookie session）+ 溫暖親和設計 proof（IMPLEMENTED）
+
+**溫暖親和設計方向**：Human Owner 反映線上太陽春 → 定「溫暖親和」（圓角/暖色/柔和陰影/留白）。已上線 Dashboard + 外框 proof（globals 暖色 tokens、AppShell 漸層頁首、卡片 hover/stagger 進場）;方向確認 OK → 待全站鋪開內頁 + §D 版型/主題模板後端。
+
+**登入持久化（業界標準 httpOnly cookie;先做 pilot 痛點）**：
+- 問題：Sproutin JWT 只存記憶體 → 重整就沒 → 每次重走登入;LIFF idToken 過期會強制跳 LINE。
+- 解法（same-origin 層，後端 Bearer 介面不變）：`/api/auth/line/login` 換發後**設 httpOnly cookie `sp_session`**（7d,對齊 JWT）;`proxyToApi` 從 cookie 注入 Bearer;`/me`、`/me/students` 改走 proxy;新增 `/api/auth/logout`。前端 `apiGet/apiSend` 去 token 參數（cookie 自動帶）;`SessionProvider` **先試 /me（cookie），有效就完全不碰 LINE**，401 才走 LIFF;`useSession` 只提供 user;AppShell footer 加「登出」。
+- 效果：7 天內重開/重整**不再跳 LINE 登入**;cookie httpOnly（防 XSS）。
+- Verification：本機 lint/typecheck/test(158)/build 綠;待 push→CI→Human 手機實測（重開不跳 LINE、登出鈕可清）。
+
 ### 2026-08-16 — Phase 8 / P5 demo 資料收尾（IMPLEMENTED）
 
 Completed:

@@ -1,6 +1,5 @@
-// 前端 API 客戶端：一律走 same-origin /api/*（proxy 到後端），附帶 Bearer token。
-// 後端錯誤回應非統一信封（NestException 預設 { statusCode, message, error }），
-// 這裡抽出可顯示的訊息碼，供 UI 呈現友善訊息。
+// 前端 API 客戶端：一律走 same-origin /api/*（proxy）。授權改由 httpOnly session cookie 承載——
+// same-origin 請求瀏覽器會自動帶 cookie，前端不需（也拿不到）token。proxy 再從 cookie 注入 Bearer。
 
 export class ApiError extends Error {
   constructor(
@@ -49,12 +48,8 @@ export function apiErrorMessage(error: unknown): string {
   return '操作失敗，請稍後再試。';
 }
 
-function authHeaders(accessToken: string): Record<string, string> {
-  return { Authorization: `Bearer ${accessToken}` };
-}
-
-export async function apiGet<T>(path: string, accessToken: string): Promise<T> {
-  const res = await fetch(path, { headers: authHeaders(accessToken), cache: 'no-store' });
+export async function apiGet<T>(path: string): Promise<T> {
+  const res = await fetch(path, { cache: 'no-store', credentials: 'same-origin' });
   if (!res.ok) {
     throw await toApiError(res);
   }
@@ -63,18 +58,15 @@ export async function apiGet<T>(path: string, accessToken: string): Promise<T> {
 
 export async function apiSend<T>(
   path: string,
-  accessToken: string,
   method: 'POST' | 'PATCH' | 'DELETE',
   body?: unknown,
 ): Promise<T> {
   const res = await fetch(path, {
     method,
-    headers: {
-      ...authHeaders(accessToken),
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-    },
+    headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
     body: body !== undefined ? JSON.stringify(body) : undefined,
     cache: 'no-store',
+    credentials: 'same-origin',
   });
   if (!res.ok) {
     throw await toApiError(res);

@@ -2,7 +2,6 @@
 
 import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { apiGet } from '../../lib/api';
-import { useSession } from '../../lib/session';
 import type { AuditLogFilters, AuditLogPage } from '../../lib/types';
 
 function buildQuery(filters: AuditLogFilters): string {
@@ -16,12 +15,11 @@ function buildQuery(filters: AuditLogFilters): string {
   return qs.toString();
 }
 
-// 稽核查詢（OWNER/ADMIN;信封回應 {data, meta}）。換頁時保留前一頁資料避免閃爍。
+// 稽核查詢（OWNER/ADMIN;信封回應 {data, meta}）。授權走 cookie。換頁保留前一頁避免閃爍。
 export function useAuditLogs(filters: AuditLogFilters): UseQueryResult<AuditLogPage> {
-  const { accessToken } = useSession();
   return useQuery({
     queryKey: ['auditLogs', filters],
-    queryFn: () => apiGet<AuditLogPage>(`/api/audit-logs?${buildQuery(filters)}`, accessToken),
+    queryFn: () => apiGet<AuditLogPage>(`/api/audit-logs?${buildQuery(filters)}`),
     placeholderData: keepPreviousData,
   });
 }

@@ -4,6 +4,13 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useBranding } from '../lib/branding';
 import { useSession } from '../lib/session';
+import { logout } from '../lib/auth';
+
+async function handleLogout(): Promise<void> {
+  await logout();
+  // 清 cookie 後重載 → SessionProvider 會走 LINE 重新登入。
+  window.location.reload();
+}
 
 // 溫暖親和外框：柔和品牌漸層頁首（logo + 名稱 + 通知鈴）+ 選用 banner + 內容容器。
 export function AppShell({ children }: { children: ReactNode }) {
@@ -60,8 +67,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto max-w-2xl px-5 py-6">{children}</main>
 
-      <footer className="mx-auto max-w-2xl px-5 pb-8 pt-2 text-center text-xs text-ink-soft">
-        {branding.brandName}｜{user.displayName}
+      <footer className="mx-auto flex max-w-2xl items-center justify-center gap-2 px-5 pb-8 pt-2 text-center text-xs text-ink-soft">
+        <span>
+          {branding.brandName}｜{user.displayName}
+        </span>
+        <span aria-hidden>·</span>
+        <button type="button" onClick={handleLogout} className="underline transition hover:text-ink">
+          登出
+        </button>
       </footer>
     </div>
   );
