@@ -20,7 +20,8 @@
 ## 4. 目前在哪
 ```text
 Current Phase:
-**Phase 7 — Core MVP = ✅ COMPLETE（2026-08-16, Human Owner）。** 下一步 = Phase 8（Integration / Hardening,新 session）。Phase 5/6 亦 COMPLETE。
+**Phase 7 COMPLETE + Phase 8（Integration/Hardening）主體完成（2026-08-16）。** 下一步 = Phase 9 — Pilot。Phase 5/6 亦 COMPLETE。
+Phase 8:ESLint+CI lint gate / 全域 exception filter / web 元件測試(Vitest+RTL) / 安全標頭 / P5 demo 收尾 皆上線;#6 append-only 最小權限 role 定案 **B 延後**（排正式上線前,Claude 提醒）。
 
 Current Status:
 Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。

@@ -212,7 +212,7 @@
     - [x] 全校公告（`TeacherAnnouncePanel` 加全校/班級範圍）;全校待審總覽 `SchoolLeaveOverviewPanel`;`lib/roles` 加 canAnnounceSchool/canViewSchoolLeaves/canViewAudit
     - [x] push → CI 綠 → Human Owner 手機實測 → **✅ Phase 7 COMPLETE（2026-08-16）**
 
-## Phase 8 — Integration / Hardening  🟡 IN_PROGRESS
+## Phase 8 — Integration / Hardening  ✅ 主體完成（#6 定案 B 延後）
 - [~] **ESLint flat config（清 Technical Debt,CI lint gate）** — `IMPLEMENTED`（本機 pnpm lint 綠;待 push→CI）
   - [x] root `eslint.config.mjs`（ESLint 9 flat;js + typescript-eslint;web 加 react-hooks + @next/eslint-plugin-next@15）
   - [x] no-unused-vars 忽略 `^_`;no-console error（entrypoint 已 disable）;測試檔 jest 全域
@@ -220,7 +220,7 @@
 - [~] **全域 exception filter（統一錯誤信封 { success:false, error:{code,message} }）** — `IMPLEMENTED`（本機 lint/typecheck/test[150]/build 綠;待 push→CI）
   - [x] `core/http/all-exceptions.filter.ts`（HttpException 沿用狀態碼+訊息碼;未預期→500 通用、不洩漏 stack）+ 單元測試;APP_FILTER 全域註冊
   - [x] e2e 409 斷言改新信封;前端 `lib/api.ts` `toApiError` 讀 `error.code`（保留舊形狀回退）
-- [ ] append-only DB 層鎖死（Step 6 決策 2,§D 提案,infra/ADR-003 破壞性）— `NOT_STARTED`
+- [~] append-only 最小權限 app role（#6）— **DEFERRED（Human Owner 定案 B, 2026-08-16）**;trigger 已足夠 dev/pilot,A（least-privilege role + 新 secret `APP_DATABASE_URL`）**排正式上線前**（Claude 屆時提醒）。
 - [~] **web 前端元件測試（Vitest + React Testing Library）** — `IMPLEMENTED`（本機綠;待 push→CI）
   - [x] vitest.config.ts（jsdom + @vitejs/plugin-react）+ setup（RTL cleanup）;web `test`=`vitest run`（turbo test 涵蓋）
   - [x] `lib/roles.spec.ts`（roleFlags 5 例:家長/老師/園長/多重身份/無角色）+ `components/StatusScreen.spec.tsx`（RTL 3 例）;web 8 tests

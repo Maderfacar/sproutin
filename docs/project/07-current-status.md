@@ -1,7 +1,7 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-16（**Phase 7 — Core MVP ✅ COMPLETE**（Human Owner）。Step 1–7 全 ACCEPTED;LINE 推播線上實測收到。下一步 Phase 8 — Integration/Hardening,新 session。）
+> Last updated: 2026-08-16（**Phase 7 COMPLETE + Phase 8 主體完成**。Phase 8:ESLint/exception filter/web 測試/安全標頭/P5 收尾 上線;#6 append-only role 定案 B 延後（排正式上線前）。下一步 = Phase 9 Pilot。）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;Step 7 = 前端可操作頁面 + 品牌 + Feature Flag,切子步驟先家長→老師→園長）。Phase 6 ✅ COMPLETE。

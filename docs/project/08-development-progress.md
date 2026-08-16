@@ -37,10 +37,11 @@ Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner
   3. web 元件測試（vitest + RTL;web 8 tests）                  → ✅ 上線（CI 綠 run 31942641153）
   4. hardening（web 安全標頭 + 錯誤/隔離/secret 檢視）          → ✅ 上線（CI 綠 + 線上標頭生效;CSP/rate-limit 列後續）
   5. P5 demo 資料收尾（園長 ADMIN+監護 fixture 改 opt-in）      → ✅ 上線（CI 綠 run 31943015872）
-  6. append-only DB 層鎖死（least-privilege app role）          → **§D 提案已提出,待 Human Owner 定案**（不自行做）
+  6. append-only DB 層鎖死（least-privilege app role）          → **DEFERRED（Human Owner 定案 B,2026-08-16）**;A 排正式上線前（Technical Debt）
+Phase 9:  NOT_STARTED（Pilot）— 下一步
 ```
 
-> **待 Human Owner 定案（Phase 8 #6, §D）**：AuditLog append-only 已由 trigger 於 DB 層強制（migration 0002,擋 UPDATE/DELETE/TRUNCATE,即使 owner 連線）。**殘餘風險**:app 連線＝DB owner,取得該憑證者可先 DISABLE/DROP trigger 再竄改。**建議 A**＝least-privilege app role（AuditLog 只授 INSERT/SELECT、REVOKE 改刪、app 改用新 secret `APP_DATABASE_URL`、migrate 續用 owner）——屬 ADR-003 破壞性 + 每校 provisioning + 新 secret,需定案。**B**＝維持現狀（trigger 足夠,接受殘餘風險,pilot 前延後）。**C**＝WORM/SIEM（MVP 排除）。
+> **Phase 8 #6 已定案 B（2026-08-16, Human Owner）**：AuditLog append-only 已由 trigger 於 DB 層強制（migration 0002）足夠 dev/pilot。least-privilege app role（A:AuditLog 只授 INSERT/SELECT + 新 secret `APP_DATABASE_URL` + 換連線,防「app 憑證外洩→卸 trigger 竄改」殘餘風險）**延後,排正式上線前執行**（見 Technical Debt;屆時 Claude 主動提醒）。
 ```
 
 > Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留 Phase 8（§D）。多重身份（同帳號兼多角色）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
@@ -49,17 +50,18 @@ Phase 8:  IN_PROGRESS（Integration / Hardening;順序由 Claude 排,Human Owner
 
 ## Current Objective
 
-**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）。** 全部後端（Leave/Attendance/Event/Message/Announcement/Notification·LINE Push/Audit）+ 前端可操作頁面（家長/老師/園長三角色 + 品牌 + Feature Flag + Dashboard 卡片 + 稽核查詢頁）皆已 ACCEPTED,線上手機實測通過（含 LINE 推播）。
-**下一步**:Phase 8 — Integration / Hardening（先計畫 → Human Owner 確認 → 實作）。於新 session 啟動,見本檔末「Phase 8 Handoff」或 handoff prompt。**Phase 8 候選項**（未定序,待計畫）:① ESLint flat config（清 tech debt,CI 開 lint）② append-only DB 層鎖死（Step 6 決策 2 的 §D 提案,least-privilege app role,infra/ADR-003 破壞性）③ 多校隔離 / secret exposure / 錯誤處理（全域 exception filter 統一信封）/ 效能 hardening ④ 前端元件測試（RTL/vitest,web 目前無單元測試）⑤ **P5 demo 資料收尾**:seed 給園長加的 ADMIN + 監護 stu-sun-2 是「單帳號自測推播」的 demo hack,正式前需評估移除或改以獨立測試帳號。
+**Phase 7 — Core MVP ✅ COMPLETE。Phase 8 — Integration / Hardening 主體完成（2026-08-16）。**
+Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception filter（統一錯誤信封）、#3 web 元件測試（Vitest+RTL）、#4 安全標頭 + 隔離/secret/錯誤檢視、#5 P5 demo 資料收尾（opt-in）。
+**#6 append-only 最小權限 app role → Human Owner 定案 B（延後）**：trigger 已足夠 dev/pilot;A（least-privilege role + 新 secret）**排入正式上線前**（見 Technical Debt）。
+**下一步**：Phase 9 — Pilot（多為 infra/ops + Human Owner 前置,非純 code;需先計畫 → 確認）。
 
 ---
 
 ## Current Task
 
-**Phase 7 收尾完成。** 最後兩項 polish 已上線:LINE 推播帶學生姓名（如「范小陽 的請假申請已核准。」）、通知鈴鐺顯示到秒（本地時間）。Human Owner 確認 Phase 7 COMPLETE。
-下一步 = Phase 8 計畫（新 session）。
-本機驗證:typecheck ✓、test ✓（api 138 + shared 8 = 146）、`pnpm build` ✓（`/liff/audit`、`/api/audit-logs` 產出）。
-待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（園長帳號）。**commit/push 前先問 Human Owner。**
+**Phase 8 主體完成並全上線（CI 綠 + 部署）。** #6 依 Human Owner 定案 B 延後（trigger 已擋一般竄改;least-privilege role 排正式上線前）。
+全測試 158（api 142 + shared 8 + web 8）;lint gate 已納入 CI。
+下一步 = 與 Human Owner 規劃 Phase 9 — Pilot（先計畫 → 確認 → 執行）。
 
 Phase 6 成果（全數 ACCEPTED）：
 ```text
@@ -146,17 +148,21 @@ Required decision:
 ## Technical Debt
 
 ```text
-1. ESLint flat config
-   - Priority: Medium
-   - Required before: Phase 8 — MVP Release Candidate（R7）
-   - Owner: Claude(impl) / Human(accept)
-   - Note: 目前 CI 暫略 lint；不得因換 Phase 而遺忘。
+1. ~~ESLint flat config~~ → ✅ RESOLVED（Phase 8, 2026-08-16）: root eslint.config.mjs + CI lint gate。
 
-2. ~~AuditLog append-only 未於 DB 權限層強制~~ → ✅ RESOLVED（Phase 7 Step 6 決策 A，migration 0002）
-   - 手段: trigger 擋 AuditLog UPDATE/DELETE/TRUNCATE（RAISE EXCEPTION;即使 owner 連線也擋）。
-     純 expand migration、零 infra、對線上無風險。CI db job 斷言 INSERT 允許 / 改·刪·清空被擋。
-   - 未來 hardening（非必要）: least-privilege app role 分離（防 superuser 層級 tampering，
-     需新 secret + 換連線，ADR-003 破壞性變更）→ Phase 8+ 正式營運/合規前評估。
+2. ~~AuditLog append-only 未於 DB 權限層強制~~ → ✅ RESOLVED（Phase 7 Step 6，migration 0002 trigger）。
+
+3. ★ append-only 最小權限 app role（Phase 8 #6-A）— DEFERRED（Human Owner 定案 B, 2026-08-16）
+   - Priority: High（合規/正式營運相關）
+   - **Required before: 正式上線（Phase 9 pilot → production 之間）** — Claude 屆時主動提醒 Human Owner。
+   - 內容: 建 least-privilege app role（AuditLog 只授 INSERT/SELECT、REVOKE 改/刪/清/ALTER）;
+     app 改用新 secret `APP_DATABASE_URL`;migrate 續用 owner;每校 provisioning 一併建 role。
+   - 動機: 防「app 連線憑證外洩 → 卸 trigger 竄改稽核」的殘餘風險（現階段 trigger 足夠 dev/pilot）。
+   - 屬 ADR-003 破壞性 + 新 secret + 每校 provisioning。
+
+4. CSP + X-Frame-Options（web）— DEFERRED: 需裝置實測避免擋 LIFF 登入。正式上線前收緊。
+5. Rate limiting — DEFERRED: 同源 proxy 後 API 只見 Vercel IP,宜在 edge/Next proxy 層做。
+6. 版型風格模板（per-school layout, §D）— 留待需求出現（YAGNI）。
 ```
 
 ---
@@ -189,13 +195,16 @@ DONE
 DONE
 - ✅ Phase 6 — Vertical Slice — COMPLETE（2026-08-14）: Step 1–4 全數 ACCEPTED
 
-NOW（Step 7a IMPLEMENTED,等 Human Owner）
-- ① 確認是否 commit + push（push main 觸發 Vercel/Render 自動部署）。
-- ② 家長手機實測前置二選一:**A** 把一個 LINE 帳號對映到 seed 家長 User（比照 `DEMO_OWNER_LINE_USER_ID`）→ 直接以家長身分實測;**B** 先用園長帳號驗品牌+版面,家長流程靠 CI e2e。
-- （選用）若要每園所 dashboard 卡片組成不同,可調整該校 `SchoolConfig.cardOrder` / `featureFlags`（已被前端消費,零改版）。
+DONE
+- ✅ Phase 7 — Core MVP COMPLETE（2026-08-16）: Step 1–7 全 ACCEPTED;LINE 推播線上實測收到（Step 5 已驗）。
+- ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
-LATER
-- LINE Push（Step 5）線上實測需 Messaging token + LINE 好友/provider（Render 填 `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`）。
+NOW
+- 無硬性待辦。**目前沒有任何項目在等 Human Owner。** 下一步 = 決定是否啟動 Phase 9 — Pilot（Claude 會先提計畫）。
+
+LATER（正式上線前）
+- **append-only 最小權限 app role（Phase 8 #6-A）**：Claude 屆時主動提醒;需你在每個 Render instance 填新 secret `APP_DATABASE_URL`。
+- Phase 9 Pilot 前置（多為 infra/ops，屆時 Claude 條列給你）。
 ```
 
 ---
@@ -203,12 +212,10 @@ LATER
 ## Next Task
 
 ```text
-Step 7a IMPLEMENTED（2026-08-16,本機綠;待 push→CI + Vercel + Human 手機實測）。
-  下一步 = 7b（家長其餘卡片:出缺勤/訊息/通知/公告）—— 先計畫 → Human Owner 確認 → 實作。
-  未了項:
-   - Step 7a 尚待 Human Owner 手機實測驗收（+ 家長帳號對映前置）。
-   - append-only DB 層鎖死（Step 6 決策 2）留下一版獨立 release（§D 提案,infra/ADR-003 破壞性變更）。
-   - Step 5 線上「真的收到 LINE 推播」仍卡 Human Owner 前置（Messaging token + LINE 好友/provider）。
+Phase 7 + Phase 8 主體完成。下一步 = Phase 9 — Pilot（先計畫 → Human Owner 確認 → 執行）。
+  Phase 9 多為 infra/ops + Human Owner 前置（正式 DB provisioning、每校 instance、LINE 正式 channel、
+  試點學校導入資料…），非純 code。Claude 會先出計畫與你需要準備的清單。
+  排入正式上線前：append-only 最小權限 app role（Phase 8 #6-A,§D 已定案 B 延後）。
 ```
 
 ---
@@ -223,8 +230,10 @@ Phase 6 — Step 4 Acceptance Gate（端到端讀取切片）— ✅ 通過 → 
 [x] 線上：園長手機 Dashboard 顯示（王園長 OWNER + 學生清單）
 [x] Human Owner acceptance（Step 4）— 2026-08-14 → **Phase 6 COMPLETE**
 
-下一個 Gate：Phase 7 — Core MVP（各模組 Online 驗收）。
+下一個 Gate：Phase 9 — Pilot（試點學校導入 + 正式 provisioning 驗收）。
 ```
+
+（Phase 7 Gate — ✅ 通過:各模組 Online 驗收 + 三角色手機實測 + LINE 推播,Human Owner 2026-08-16。）
 
 ```text
 Phase 6 — Step 3 Acceptance Gate（RBAC 骨架）— ✅ 通過（保留紀錄）
