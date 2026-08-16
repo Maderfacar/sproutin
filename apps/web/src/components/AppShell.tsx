@@ -1,21 +1,22 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useBranding } from '../lib/branding';
-import { useSession } from '../lib/session';
-import { logout } from '../lib/auth';
+import { Icon, type IconName } from './Icon';
 
-async function handleLogout(): Promise<void> {
-  await logout();
-  // 清 cookie 後重載 → SessionProvider 會走 LINE 重新登入。
-  window.location.reload();
-}
+const TABS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/liff', label: '首頁', icon: 'home' },
+  { href: '/liff/message', label: '聯絡簿', icon: 'book' },
+  { href: '/liff/notification', label: '通知', icon: 'bell' },
+  { href: '/liff/me', label: '我的', icon: 'user' },
+];
 
-// 清葉外框：清爽頁首（外框 logo + 襯線園名 + 外框通知鈴）+ 選用 banner + 內容容器。
+// 清葉外框：清爽頁首（外框 logo + 襯線園名 + 外框通知鈴）+ 選用 banner + 內容 + 底部頁籤。
 export function AppShell({ children }: { children: ReactNode }) {
   const branding = useBranding();
-  const { user } = useSession();
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen">
@@ -48,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             title="通知"
             className="ml-auto flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink-soft transition hover:border-brand-primary hover:text-brand-primary"
           >
-            🔔
+            <Icon name="bell" className="h-5 w-5" />
           </Link>
         </div>
 
@@ -64,17 +65,31 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <main className="mx-auto max-w-2xl px-5 py-7">{children}</main>
+      <main className="mx-auto max-w-2xl px-5 pb-28 pt-7">{children}</main>
 
-      <footer className="mx-auto flex max-w-2xl items-center justify-center gap-2 px-5 pb-9 pt-2 text-center text-xs text-ink-soft">
-        <span>
-          {branding.brandName}｜{user.displayName}
-        </span>
-        <span aria-hidden>·</span>
-        <button type="button" onClick={handleLogout} className="underline transition hover:text-ink">
-          登出
-        </button>
-      </footer>
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur">
+        <div
+          className="mx-auto flex max-w-2xl items-stretch justify-around"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          {TABS.map((tab) => {
+            const active = tab.href === '/liff' ? pathname === '/liff' : pathname.startsWith(tab.href);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                aria-current={active ? 'page' : undefined}
+                className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-semibold transition ${
+                  active ? 'text-brand-primary' : 'text-ink-soft'
+                }`}
+              >
+                <Icon name={tab.icon} className="h-[22px] w-[22px]" />
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
