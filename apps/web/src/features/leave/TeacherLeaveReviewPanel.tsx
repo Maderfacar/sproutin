@@ -24,28 +24,26 @@ export function TeacherLeaveReviewPanel() {
     students?.find((s) => s.id === studentId)?.name ?? studentId;
 
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4">
-      <h2 className="font-semibold text-gray-900">待審核請假（老師）</h2>
+    <section className="card flex flex-col gap-3 p-5">
+      <h2 className="section-title">待審核請假（老師）</h2>
 
-      {classesLoading && <p className="text-sm text-gray-500">載入班級中…</p>}
-      {classes && classes.length === 0 && (
-        <p className="text-sm text-gray-500">你目前沒有任教班級。</p>
-      )}
+      {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+      {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
 
       <ClassSelect classes={classes} value={classId} onChange={setClassId} />
 
-      {classId && isLoading && <p className="text-sm text-gray-500">載入待審請假中…</p>}
+      {classId && isLoading && <p className="text-sm text-ink-soft">載入待審請假中…</p>}
       {classId && isError && <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>}
       {classId && pending && pending.length === 0 && (
-        <p className="text-sm text-gray-500">目前沒有待審核的請假。</p>
+        <p className="text-sm text-ink-soft">目前沒有待審核的請假。</p>
       )}
 
       {pending && pending.length > 0 && (
         <ul className="flex flex-col gap-3">
           {pending.map((leave) => (
-            <li key={leave.id} className="rounded-lg border border-gray-200 p-3">
-              <p className="font-medium text-gray-900">{nameOf(leave.studentId)}</p>
-              <p className="text-sm text-gray-600">
+            <li key={leave.id} className="rounded-md2 border border-line p-3">
+              <p className="font-bold text-ink">{nameOf(leave.studentId)}</p>
+              <p className="text-sm text-ink-soft">
                 {range(leave)}｜{leave.reason}
               </p>
               <div className="mt-2 flex gap-2">
@@ -53,7 +51,7 @@ export function TeacherLeaveReviewPanel() {
                   type="button"
                   onClick={() => setStatus.mutate({ leaveId: leave.id, body: { status: 'APPROVED' } })}
                   disabled={setStatus.isPending}
-                  className="rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                  className="btn-primary px-4 py-1.5 text-sm"
                 >
                   核准
                 </button>
@@ -61,7 +59,7 @@ export function TeacherLeaveReviewPanel() {
                   type="button"
                   onClick={() => setStatus.mutate({ leaveId: leave.id, body: { status: 'REJECTED' } })}
                   disabled={setStatus.isPending}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-50"
+                  className="btn-secondary text-sm"
                 >
                   駁回
                 </button>

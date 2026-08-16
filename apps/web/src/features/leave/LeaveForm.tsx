@@ -56,57 +56,50 @@ export function LeaveForm({ studentId }: { studentId: string }) {
   const errorText = localError ?? (createLeave.isError ? leaveErrorMessage(createLeave.error) : null);
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-card border border-gray-200 bg-white p-4">
-      <h2 className="mb-3 font-semibold text-gray-900">申請請假</h2>
-
-      <div className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-600">開始日期</span>
+    <form onSubmit={handleSubmit} className="card flex flex-col gap-4 p-5">
+      <div className="flex gap-3">
+        <label className="field-label flex-1">
+          <span>開始日期</span>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="field"
             required
           />
         </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-600">結束日期</span>
+        <label className="field-label flex-1">
+          <span>結束日期</span>
           <input
             type="date"
             value={dateTo}
             min={dateFrom}
             onChange={(e) => setDateTo(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="field"
             required
           />
         </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-600">事由</span>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={3}
-            maxLength={500}
-            placeholder="例如：發燒需在家休息"
-            className="rounded-lg border border-gray-300 px-3 py-2"
-            required
-          />
-        </label>
-
-        {errorText && <p className="text-sm text-red-600">{errorText}</p>}
-        {done && <p className="text-sm text-green-700">已送出請假申請。</p>}
-
-        <button
-          type="submit"
-          disabled={createLeave.isPending}
-          className="rounded-lg bg-brand-primary px-4 py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
-        >
-          {createLeave.isPending ? '送出中…' : '送出申請'}
-        </button>
       </div>
+
+      <label className="field-label">
+        <span>事由</span>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          maxLength={500}
+          placeholder="例如：發燒需在家休息"
+          className="field"
+          required
+        />
+      </label>
+
+      {errorText && <p className="text-sm font-medium text-red-600">{errorText}</p>}
+      {done && <p className="text-sm font-medium text-green-700">已送出請假申請 🎉</p>}
+
+      <button type="submit" disabled={createLeave.isPending} className="btn-primary">
+        {createLeave.isPending ? '送出中…' : '送出申請'}
+      </button>
     </form>
   );
 }

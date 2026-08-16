@@ -41,36 +41,29 @@ export function TeacherRosterPanel() {
   const pending = mark.isPending || update.isPending;
 
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4">
-      <h2 className="font-semibold text-gray-900">點名（老師）</h2>
+    <section className="card flex flex-col gap-3 p-5">
+      <h2 className="section-title">點名（老師）</h2>
 
-      {classesLoading && <p className="text-sm text-gray-500">載入班級中…</p>}
-      {classes && classes.length === 0 && (
-        <p className="text-sm text-gray-500">你目前沒有任教班級。</p>
-      )}
+      {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+      {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
 
       <ClassSelect classes={classes} value={classId} onChange={setClassId} />
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-gray-600">日期</span>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2"
-        />
+      <label className="field-label">
+        <span>日期</span>
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field" />
       </label>
 
-      {classId && isLoading && <p className="text-sm text-gray-500">載入點名資料中…</p>}
+      {classId && isLoading && <p className="text-sm text-ink-soft">載入點名資料中…</p>}
       {classId && isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
-      {classId && roster.length === 0 && <p className="text-sm text-gray-500">此班沒有學生。</p>}
+      {classId && roster.length === 0 && <p className="text-sm text-ink-soft">此班沒有學生。</p>}
 
       {roster.length > 0 && (
         <ul className="flex flex-col gap-2">
           {roster.map((s) => {
             const current = byStudent.get(s.id)?.status;
             return (
-              <li key={s.id} className="rounded-lg border border-gray-200 p-3">
-                <p className="mb-2 font-medium text-gray-900">{s.name}</p>
+              <li key={s.id} className="rounded-md2 border border-line p-3">
+                <p className="mb-2 font-bold text-ink">{s.name}</p>
                 <div className="flex flex-wrap gap-2">
                   {STATUSES.map((st) => {
                     const active = current === st;
@@ -80,10 +73,10 @@ export function TeacherRosterPanel() {
                         type="button"
                         onClick={() => setStatus(s.id, st)}
                         disabled={pending}
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition disabled:opacity-50 ${
+                        className={`chip transition disabled:opacity-50 ${
                           active
                             ? ATTENDANCE_STATUS_LABEL[st].className
-                            : 'border border-gray-300 text-gray-600'
+                            : 'border border-line text-ink-soft'
                         }`}
                       >
                         {ATTENDANCE_STATUS_LABEL[st].label}

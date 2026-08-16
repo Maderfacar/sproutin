@@ -46,6 +46,31 @@ body {
     'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
 }
 
+/* 可重用元件樣式（溫暖親和；全站一致） */
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-soft;
+  }
+  .field {
+    @apply w-full rounded-md2 border border-line bg-surface px-3.5 py-2.5 text-ink outline-none transition placeholder:text-ink-soft focus:border-brand-primary;
+  }
+  .btn-primary {
+    @apply rounded-full bg-brand-primary px-5 py-2.5 font-semibold text-white shadow-soft transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply rounded-full border border-line bg-surface px-4 py-2 font-medium text-ink transition hover:bg-black/[0.03] disabled:opacity-50;
+  }
+  .field-label {
+    @apply flex flex-col gap-1.5 text-sm text-ink-soft;
+  }
+  .section-title {
+    @apply text-lg font-extrabold text-ink;
+  }
+  .chip {
+    @apply rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+}
+
 /* 進場動畫：卡片/區塊柔和升起（reduced-motion 尊重） */
 @keyframes riseIn {
   from {

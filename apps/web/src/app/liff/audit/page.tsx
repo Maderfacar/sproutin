@@ -46,7 +46,7 @@ export default function AuditPage() {
     return (
       <div className="flex flex-col gap-5">
         <PageHeader title="稽核" />
-        <p className="text-sm text-gray-500">此頁僅園長／行政可使用。</p>
+        <p className="text-sm text-ink-soft">此頁僅園長／行政可使用。</p>
       </div>
     );
   }
@@ -65,13 +65,13 @@ export default function AuditPage() {
     <div className="flex flex-col gap-5">
       <PageHeader title="稽核查詢" />
 
-      <form onSubmit={handleSearch} className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-600">資源類型</span>
+      <form onSubmit={handleSearch} className="card flex flex-col gap-3 p-5">
+        <label className="field-label">
+          <span>資源類型</span>
           <select
             value={form.resourceType}
             onChange={(e) => setForm({ ...form, resourceType: e.target.value })}
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="field"
           >
             <option value="">全部</option>
             {AUDIT_RESOURCE_TYPES.map((t) => (
@@ -82,53 +82,50 @@ export default function AuditPage() {
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-600">操作者 User ID</span>
+        <label className="field-label">
+          <span>操作者 User ID</span>
           <input
             type="text"
             value={form.actor}
             onChange={(e) => setForm({ ...form, actor: e.target.value })}
             placeholder="留空 = 全部"
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="field"
           />
         </label>
 
         <div className="flex gap-3">
-          <label className="flex flex-1 flex-col gap-1 text-sm">
-            <span className="text-gray-600">起</span>
+          <label className="field-label flex-1">
+            <span>起</span>
             <input
               type="date"
               value={form.from}
               onChange={(e) => setForm({ ...form, from: e.target.value })}
-              className="rounded-lg border border-gray-300 px-3 py-2"
+              className="field"
             />
           </label>
-          <label className="flex flex-1 flex-col gap-1 text-sm">
-            <span className="text-gray-600">迄</span>
+          <label className="field-label flex-1">
+            <span>迄</span>
             <input
               type="date"
               value={form.to}
               onChange={(e) => setForm({ ...form, to: e.target.value })}
-              className="rounded-lg border border-gray-300 px-3 py-2"
+              className="field"
             />
           </label>
         </div>
 
-        <button
-          type="submit"
-          className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-        >
+        <button type="submit" className="btn-primary">
           查詢
         </button>
       </form>
 
-      {isLoading && <p className="text-sm text-gray-500">載入稽核紀錄中…</p>}
+      {isLoading && <p className="text-sm text-ink-soft">載入稽核紀錄中…</p>}
       {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
-      {data && data.data.length === 0 && <p className="text-sm text-gray-500">沒有符合條件的稽核紀錄。</p>}
+      {data && data.data.length === 0 && <p className="text-sm text-ink-soft">沒有符合條件的稽核紀錄。</p>}
 
       {data && data.data.length > 0 && (
         <>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-soft">
             共 {total} 筆，顯示 {offset + 1}–{Math.min(offset + PAGE_SIZE, total)}
             {isFetching && '（更新中…）'}
           </p>
@@ -136,24 +133,22 @@ export default function AuditPage() {
             {data.data.map((log) => {
               const result = AUDIT_RESULT_LABEL[log.result as AuditResult] ?? {
                 label: log.result,
-                className: 'bg-gray-100 text-gray-600',
+                className: 'bg-black/5 text-ink-soft',
               };
               return (
-                <li key={log.id} className="rounded-card border border-gray-200 bg-white p-3 text-sm">
+                <li key={log.id} className="card p-3 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{log.action}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${result.className}`}>
-                      {result.label}
-                    </span>
-                    <span className="ml-auto text-xs text-gray-400">
+                    <span className="font-bold text-ink">{log.action}</span>
+                    <span className={`chip ${result.className}`}>{result.label}</span>
+                    <span className="ml-auto text-xs text-ink-soft">
                       {log.createdAt.slice(0, 10)} {log.createdAt.slice(11, 16)}
                     </span>
                   </div>
-                  <p className="mt-1 text-gray-600">
+                  <p className="mt-1 text-ink-soft">
                     {log.resourceType}
                     {log.resourceId ? `｜${log.resourceId}` : ''}
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-400">
+                  <p className="mt-0.5 text-xs text-ink-soft">
                     操作者：{log.actorRole ?? '系統'}
                     {log.actorUserId ? `（${log.actorUserId}）` : ''}
                   </p>
@@ -167,7 +162,7 @@ export default function AuditPage() {
               type="button"
               disabled={!canPrev}
               onClick={() => setOffset(Math.max(offset - PAGE_SIZE, 0))}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-40"
+              className="btn-secondary text-sm"
             >
               上一頁
             </button>
@@ -175,7 +170,7 @@ export default function AuditPage() {
               type="button"
               disabled={!canNext}
               onClick={() => setOffset(offset + PAGE_SIZE)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-40"
+              className="btn-secondary text-sm"
             >
               下一頁
             </button>

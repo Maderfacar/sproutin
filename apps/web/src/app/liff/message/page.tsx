@@ -12,10 +12,10 @@ export default function MessagePage() {
     <div className="flex flex-col gap-5">
       <PageHeader title="訊息" />
 
-      {isLoading && <p className="text-sm text-gray-500">載入學生中…</p>}
+      {isLoading && <p className="text-sm text-ink-soft">載入學生中…</p>}
       {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
       {students && students.length === 0 && (
-        <p className="text-sm text-gray-500">目前沒有可溝通的學生。</p>
+        <p className="text-sm text-ink-soft">目前沒有可溝通的學生。</p>
       )}
 
       <StudentSelect students={students} value={studentId} onChange={setStudentId} />

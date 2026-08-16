@@ -15,13 +15,13 @@ export function LeaveList({ studentId }: { studentId: string }) {
   const cancelLeave = useCancelLeave();
 
   if (isLoading) {
-    return <p className="text-sm text-gray-500">載入請假紀錄中…</p>;
+    return <p className="text-sm text-ink-soft">載入請假紀錄中…</p>;
   }
   if (isError) {
     return <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>;
   }
   if (!leaves || leaves.length === 0) {
-    return <p className="text-sm text-gray-500">目前沒有請假紀錄。</p>;
+    return <p className="text-sm text-ink-soft">目前沒有請假紀錄。</p>;
   }
 
   return (
@@ -30,23 +30,21 @@ export function LeaveList({ studentId }: { studentId: string }) {
         const status = LEAVE_STATUS_LABEL[leave.status];
         const canCancel = CANCELLABLE_STATUSES.includes(leave.status);
         return (
-          <li key={leave.id} className="rounded-card border border-gray-200 bg-white p-4">
+          <li key={leave.id} className="card p-4">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">{formatRange(leave)}</span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
-                {status.label}
-              </span>
+              <span className="font-bold text-ink">{formatRange(leave)}</span>
+              <span className={`chip ${status.className}`}>{status.label}</span>
             </div>
-            <p className="mt-1 text-sm text-gray-600">{leave.reason}</p>
+            <p className="mt-1 text-sm text-ink-soft">{leave.reason}</p>
             {leave.reviewNote && (
-              <p className="mt-1 text-sm text-gray-500">審核備註：{leave.reviewNote}</p>
+              <p className="mt-1 text-sm text-ink-soft">審核備註：{leave.reviewNote}</p>
             )}
             {canCancel && (
               <button
                 type="button"
                 onClick={() => cancelLeave.mutate(leave.id)}
                 disabled={cancelLeave.isPending}
-                className="mt-3 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                className="btn-secondary mt-3 text-sm"
               >
                 取消請假
               </button>

@@ -14,13 +14,9 @@ export function StudentSelect({ students, value, onChange }: StudentSelectProps)
     return null;
   }
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="text-gray-600">選擇學生</span>
-      <select
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-gray-300 px-3 py-2"
-      >
+    <label className="field-label">
+      <span>選擇學生</span>
+      <select value={value ?? ''} onChange={(e) => onChange(e.target.value)} className="field">
         {students.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}

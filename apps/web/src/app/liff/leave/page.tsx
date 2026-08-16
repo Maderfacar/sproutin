@@ -10,8 +10,7 @@ import { SchoolLeaveOverviewPanel } from '../../../features/leave/SchoolLeaveOve
 import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
 
-// 請假頁（聯集視圖）:老師/行政看「待審核」;家長看「申請 + 我的紀錄」。一人多角色兩者皆見。
-// 授權由後端把關（園長不可申請/審核 → 不顯示對應面板）。
+// 請假頁（聯集視圖）:園長/行政看全校待審;老師看班級待審;家長看申請 + 我的紀錄。授權由後端把關。
 export default function LeavePage() {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
@@ -21,7 +20,6 @@ export default function LeavePage() {
     <div className="flex flex-col gap-5">
       <PageHeader title="請假" />
 
-      {/* 園長/行政 → 全校待審總覽（含行政可審核）;純老師 → 班級待審審核 */}
       {flags.canViewSchoolLeaves ? (
         <SchoolLeaveOverviewPanel />
       ) : (
@@ -30,11 +28,11 @@ export default function LeavePage() {
 
       {flags.canApplyLeave && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-semibold text-gray-900">申請請假</h2>
-          {isLoading && <p className="text-sm text-gray-500">載入學生中…</p>}
+          <h2 className="section-title">申請請假</h2>
+          {isLoading && <p className="text-sm text-ink-soft">載入學生中…</p>}
           {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
           {students && students.length === 0 && (
-            <p className="text-sm text-gray-500">目前沒有可申請請假的學生。</p>
+            <p className="text-sm text-ink-soft">目前沒有可申請請假的學生。</p>
           )}
 
           <StudentSelect students={students} value={studentId} onChange={setStudentId} />
@@ -43,7 +41,7 @@ export default function LeavePage() {
             <>
               <LeaveForm studentId={studentId} />
               <div className="flex flex-col gap-3">
-                <h3 className="font-semibold text-gray-900">請假紀錄</h3>
+                <h3 className="section-title">請假紀錄</h3>
                 <LeaveList studentId={studentId} />
               </div>
             </>
@@ -52,7 +50,7 @@ export default function LeavePage() {
       )}
 
       {!flags.canApplyLeave && !flags.canReviewLeave && !flags.canViewSchoolLeaves && (
-        <p className="text-sm text-gray-500">此功能目前沒有你可操作的項目。</p>
+        <p className="text-sm text-ink-soft">此功能目前沒有你可操作的項目。</p>
       )}
     </div>
   );

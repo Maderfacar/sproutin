@@ -42,17 +42,13 @@ export function TeacherAnnouncePanel() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4">
-      <h2 className="font-semibold text-gray-900">發公告</h2>
+    <form onSubmit={handleSubmit} className="card flex flex-col gap-3 p-5">
+      <h2 className="section-title">發公告</h2>
 
       {flags.canAnnounceSchool && (
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-600">範圍</span>
-          <select
-            value={scope}
-            onChange={(e) => setScope(e.target.value as AnnouncementScope)}
-            className="rounded-lg border border-gray-300 px-3 py-2"
-          >
+        <label className="field-label">
+          <span>範圍</span>
+          <select value={scope} onChange={(e) => setScope(e.target.value as AnnouncementScope)} className="field">
             <option value="SCHOOL">全校</option>
             <option value="CLASS">班級</option>
           </select>
@@ -61,10 +57,8 @@ export function TeacherAnnouncePanel() {
 
       {scope === 'CLASS' && (
         <>
-          {classesLoading && <p className="text-sm text-gray-500">載入班級中…</p>}
-          {classes && classes.length === 0 && (
-            <p className="text-sm text-gray-500">你目前沒有任教班級。</p>
-          )}
+          {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+          {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
           <ClassSelect classes={classes} value={classId} onChange={setClassId} />
         </>
       )}
@@ -75,7 +69,7 @@ export function TeacherAnnouncePanel() {
         onChange={(e) => setTitle(e.target.value)}
         maxLength={200}
         placeholder="公告標題"
-        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        className="field"
       />
       <textarea
         value={body}
@@ -83,18 +77,16 @@ export function TeacherAnnouncePanel() {
         rows={3}
         maxLength={5000}
         placeholder="公告內容"
-        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        className="field"
       />
 
       {create.isError && <p className="text-sm text-red-600">{apiErrorMessage(create.error)}</p>}
-      {done && <p className="text-sm text-green-700">公告已發布。</p>}
+      {done && <p className="text-sm font-medium text-green-700">公告已發布 🎉</p>}
 
       <button
         type="submit"
-        disabled={
-          create.isPending || !title.trim() || !body.trim() || (scope === 'CLASS' && !classId)
-        }
-        className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+        disabled={create.isPending || !title.trim() || !body.trim() || (scope === 'CLASS' && !classId)}
+        className="btn-primary"
       >
         {create.isPending ? '發布中…' : '發布公告'}
       </button>

@@ -6,7 +6,6 @@ import { TeacherAnnouncePanel } from '../../../features/announcement/TeacherAnno
 import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
 
-// 公告頁（聯集視圖）:staff 可發班級公告;所有人看可見公告清單。
 export default function AnnouncementPage() {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
@@ -18,7 +17,7 @@ export default function AnnouncementPage() {
       {flags.canAnnounce && <TeacherAnnouncePanel />}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold text-gray-900">公告列表</h2>
+        <h2 className="section-title">公告列表</h2>
         <AnnouncementList />
       </section>
     </div>

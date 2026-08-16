@@ -13,7 +13,7 @@ function range(leave: LeaveView): string {
   return from === to ? from : `${from} ～ ${to}`;
 }
 
-// 園長/行政:全校待審請假總覽（跨班一次看,Step 7d）。行政可直接核准/駁回;園長唯讀（依後端權限）。
+// 園長/行政:全校待審請假總覽（跨班一次看,Step 7d）。行政可核准/駁回;園長唯讀。
 export function SchoolLeaveOverviewPanel() {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
@@ -25,21 +25,21 @@ export function SchoolLeaveOverviewPanel() {
     students?.find((s) => s.id === studentId)?.name ?? studentId;
 
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4">
-      <h2 className="font-semibold text-gray-900">全校待審請假</h2>
+    <section className="card flex flex-col gap-3 p-5">
+      <h2 className="section-title">全校待審請假</h2>
 
-      {isLoading && <p className="text-sm text-gray-500">載入全校待審請假中…</p>}
+      {isLoading && <p className="text-sm text-ink-soft">載入全校待審請假中…</p>}
       {isError && <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>}
       {pending && pending.length === 0 && (
-        <p className="text-sm text-gray-500">目前全校沒有待審核的請假。</p>
+        <p className="text-sm text-ink-soft">目前全校沒有待審核的請假。</p>
       )}
 
       {pending && pending.length > 0 && (
         <ul className="flex flex-col gap-3">
           {pending.map((leave) => (
-            <li key={leave.id} className="rounded-lg border border-gray-200 p-3">
-              <p className="font-medium text-gray-900">{nameOf(leave.studentId)}</p>
-              <p className="text-sm text-gray-600">
+            <li key={leave.id} className="rounded-md2 border border-line p-3">
+              <p className="font-bold text-ink">{nameOf(leave.studentId)}</p>
+              <p className="text-sm text-ink-soft">
                 {range(leave)}｜{leave.reason}
               </p>
               {flags.canReviewLeave && (
@@ -48,7 +48,7 @@ export function SchoolLeaveOverviewPanel() {
                     type="button"
                     onClick={() => setStatus.mutate({ leaveId: leave.id, body: { status: 'APPROVED' } })}
                     disabled={setStatus.isPending}
-                    className="rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                    className="btn-primary px-4 py-1.5 text-sm"
                   >
                     核准
                   </button>
@@ -56,7 +56,7 @@ export function SchoolLeaveOverviewPanel() {
                     type="button"
                     onClick={() => setStatus.mutate({ leaveId: leave.id, body: { status: 'REJECTED' } })}
                     disabled={setStatus.isPending}
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-50"
+                    className="btn-secondary text-sm"
                   >
                     駁回
                   </button>
