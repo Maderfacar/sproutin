@@ -68,6 +68,27 @@ export interface NotificationView {
 export interface ClassView {
   id: string;
   name: string;
+  studentCount: number;
+}
+
+export type StudentStatus = 'ACTIVE' | 'INACTIVE' | 'GRADUATED';
+
+export interface AdminStudentView {
+  id: string;
+  name: string;
+  classId: string;
+  status: StudentStatus;
+}
+
+export interface CreateStudentBody {
+  name: string;
+  classId: string;
+}
+
+export interface UpdateStudentBody {
+  name?: string;
+  classId?: string;
+  status?: StudentStatus;
 }
 
 export interface UpdateLeaveStatusBody {

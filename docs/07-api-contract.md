@@ -30,10 +30,14 @@ POST /auth/line/login
 | POST | `/auth/line/login` | LINE 登入換 JWT | – | ✔(login) |
 | GET | `/me` | 目前使用者 + 角色 | auth | – |
 | GET | `/me/dashboard` | 動態 card 清單（後端過濾） | auth | – |
-| GET | `/students?classId=` | 學生清單（scope 過濾） | Roles+Scope | – |
+| GET | `/students?classId=` | 學生清單（scope 過濾；classId 只縮小不放寬） | Roles | – |
 | GET | `/students/:id` | 學生詳情 | Roles+Scope | ✔(讀敏感) |
-| POST/PATCH | `/students...` | 建立/修改學生 | ADMIN+ | ✔ |
-| GET | `/classes` | 班級清單 | Roles | – |
+| **POST** | **`/students`** | 新增學生（name + classId） | OWNER/ADMIN | ✔ |
+| **PATCH** | **`/students/:id`** | 改姓名 / 換班 / 改在學狀態（**無刪除**，離校畢業改 status） | OWNER/ADMIN | ✔ |
+| GET | `/classes` | 班級清單（含 studentCount） | Roles | – |
+| **POST** | **`/classes`** | 新增班級（班名園內唯一） | OWNER/ADMIN | ✔ |
+| **PATCH** | **`/classes/:id`** | 改班名 | OWNER/ADMIN | ✔ |
+| **DELETE** | **`/classes/:id`** | 刪除班級（**僅限無學生且無老師編制**，否則 409） | OWNER/ADMIN | ✔ |
 | **POST** | **`/leaves`** | 申請請假 → `LeaveSubmitted`；依 config 進 PENDING 或直接 APPROVED | PARENT(自己小孩)/TEACHER/ADMIN | ✔ |
 | GET | `/leaves?studentId=` | 請假紀錄 | Roles+Scope | – |
 | **PATCH** | **`/leaves/:id/status`** | 審核 approve/reject → `LeaveApproved`/`LeaveRejected` | TEACHER/ADMIN | ✔ |
@@ -105,6 +109,23 @@ PATCH /school/config    （OWNER/ADMIN;全欄位選填 = 局部更新;未知欄�
   已上線功能預設顯示，設 `false` 即對該園所隱藏。
 - 圖片上傳走 web 端 `POST /api/uploads/image`（same-origin → Vercel Blob），回傳網址後再由本端點寫入；
   API 本身不接收檔案。
+
+## 4d. 班級 / 學生管理（Phase 9 階段2 刀2）
+
+```text
+POST   /classes        { name }                    → ClassView（班名重複 → 409 class_name_taken）
+PATCH  /classes/:id    { name }                    → ClassView
+DELETE /classes/:id                                → 204;班內有學生 → 409 class_has_students
+                                                     班內有老師編制 → 409 class_has_teachers
+POST   /students       { name, classId }           → StudentView（班級不存在 → 400 class_not_found）
+PATCH  /students/:id   { name?, classId?, status? } → StudentView（未知欄位 400;無變更 400 no_changes）
+```
+
+- **只停用不刪除**（Human Owner 決策 2026-08-17）：學生無 DELETE，離校/畢業改 `status`（ACTIVE/INACTIVE/GRADUATED），
+  出缺勤・請假・訊息等歷史紀錄才不會成為孤兒；班級只在「無學生且無老師編制」時才可刪。
+- 稽核：`class.create` / `class.rename` / `class.delete` / `student.create` / `student.update`，
+  與業務變更同一 transaction（ADR-005 類別一）。**metadata 不存學生姓名等 PII**（修正 C），
+  換班額外記 `fromClassId` / `toClassId` 供追溯。
 
 ## 5. 驗證與授權
 

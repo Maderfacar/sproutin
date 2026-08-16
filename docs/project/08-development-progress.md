@@ -10,7 +10,7 @@
 
 **Phase:**
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
-階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ IMPLEMENTED，待線上驗收**；刀 2（班級/學生）→ 刀 3（人員帳號與關聯）→ 刀 4（每日聯絡簿）→ 刀 5（學生整合視圖 + 公告推播）尚未開始。
+階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ IN_PROGRESS**；刀 3（人員帳號與關聯）→ 刀 4（每日聯絡簿，需 migration）→ 刀 5（學生整合視圖 + 公告推播）尚未開始。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
 **Milestone:**
@@ -224,11 +224,13 @@ LATER（正式上線前）
 ## Next Task
 
 ```text
-Phase 9 階段2 刀 1 完成待驗收 → 下一個 Task = 刀 2（班級 + 學生管理）：
-  新增 GET /students?classId=、POST /students、PATCH /students/:id、POST /classes、PATCH /classes/:id
-  （docs/07 §3 已列 students 寫入;classes 寫入為新增，屆時併入同一 §D 已定案範圍）。
-  預期零 migration;「停用不刪除」沿用 Student.status，班級僅在無學生時可刪。
-  —— 待 Human Owner 驗收刀 1 後再開工，不跨步。
+刀 1 ✅ ACCEPTED;**刀 2（班級 + 學生管理）IMPLEMENTED，待線上驗收**。
+下一個 Task = 刀 3（人員帳號與關聯）：
+  GET/POST/PATCH /users（老師·家長帳號）、POST/DELETE /guardianships（家長↔學生）、
+  POST/DELETE /teacher-assignments（老師↔班級）。
+  預期需要一個小 migration（User 加「停用」欄位，對齊「只停用不刪除」）。
+  LINE 綁定機制**不在刀 3**（demo 不做，開賣前另提 §D）。
+  —— 待 Human Owner 驗收刀 2 後再開工，不跨步。
 
 （歷史）Phase 7 + Phase 8 主體完成;原 Phase 9 Pilot 已由 Human Owner 改定調為 Demo。
   Phase 9 多為 infra/ops + Human Owner 前置（正式 DB provisioning、每校 instance、LINE 正式 channel、
@@ -342,7 +344,34 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-17 — Phase 9 階段2 刀1 / 園所外觀設定頁 + 功能藍圖佔位卡（IMPLEMENTED，待線上驗收）
+### 2026-08-17 — Phase 9 階段2 刀2 / 班級 + 學生管理（IMPLEMENTED，待線上驗收）
+
+**後端（新增 5 端點，零 migration）**
+- `POST /classes`、`PATCH /classes/:id`、`DELETE /classes/:id`（OWNER/ADMIN）。班名園內唯一（重複 409）;
+  **刪除僅限無學生且無老師編制**（否則 409 `class_has_students` / `class_has_teachers`）。`GET /classes` 回傳加 `studentCount`。
+- `POST /students`、`PATCH /students/:id`（OWNER/ADMIN）。`GET /students?classId=` 新增清單端點——
+  **classId 只縮小不放寬**（家長帶別班 id 仍看不到他人小孩，已有測試鎖住）。
+- **無學生 DELETE**：離校/畢業改 `status`（只停用不刪除，Human Owner 決策）。
+- 全部寫入與 AuditLog 同交易;**metadata 不含學生姓名**（PII，修正 C），換班另記 `fromClassId`/`toClassId`。
+- ClassesService / StudentsService 加入 AuditService;各自 module 補 `AuditModule` import（原先靠 AuthModule re-export，改為顯式）。
+
+**前端**
+- `/liff/admin/classes`：新增、改名、刪除（有學生時刪除鈕停用 + 說明原因，409 錯誤翻成白話）。
+- `/liff/admin/students`：依班級篩選、新增（姓名 + 班級）、編輯（改名 / 換班 / 在學狀態）。無班級時導去先建班級。
+- 「我的」→ 園所管理 擴為三個入口（園所外觀 / 班級管理 / 學生管理）。
+- proxy：`/api/students`(GET,POST)、`/api/students/[id]`(PATCH)、`/api/classes`(+POST)、`/api/classes/[id]`(PATCH,DELETE)。
+
+**架構**：無變更、無 migration、無新 library。docs/05 矩陣本就是 Class/Student = OWNER/ADMIN CRUD，未改。
+
+Verification：本機 lint ✓ / typecheck ✓ / test ✓（api 160 + shared 10 + web 16 = **186**）/ build ✓。待 push → CI → 線上驗收。
+
+### 2026-08-17 — Phase 9 階段2 刀1 / 園所外觀設定頁 + 功能藍圖佔位卡（✅ **ACCEPTED**, Human Owner 2026-08-17）
+
+**Human Owner 線上實測全數通過**：圖片上傳（Vercel Blob，公開 store）、娃娃車卡片顯示、顏色與封面套用、卡片開關、卡片排序。→ **刀 1 ACCEPTED**。
+
+**延後項（Human Owner：之後按需求再改）**：封面圖目前掛在全站外框（每頁都出現的 128px 橫帶）。選項 A 只在首頁顯示 / B 首頁做成真正的 hero（大圖 + 園名歡迎語疊字）/ C 維持現狀。**尚未決定，暫維持現狀**。
+
+
 
 **背景**：階段2 = 後台管理 + 園所裝飾，分 5 刀（1 外觀設定 → 2 班級/學生 → 3 人員帳號與關聯 → 4 每日聯絡簿 → 5 學生整合視圖 + 公告推播）。本次為**刀 1**。
 **Human Owner 決策（2026-08-17）**：① 後台放在同一個 App（`/liff/admin/*`）② 圖片上傳採 **Vercel Blob**（新 infra，已核准）③ 園所外觀**放寬 ADMIN 可改**（docs/05 矩陣同步修改）④ 資料只停用不刪除 ⑤ LINE 綁定碼機制延後至開賣前（已列上線前提醒）⑥ **卡片是否顯示於家長頁由園所自己在後台決定**。

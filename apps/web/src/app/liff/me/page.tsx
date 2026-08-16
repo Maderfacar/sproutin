@@ -6,7 +6,24 @@ import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
 import { ROLE_LABEL } from '../../../lib/roleLabels';
 import { logout } from '../../../lib/auth';
-import { Icon } from '../../../components/Icon';
+import { Icon, type IconName } from '../../../components/Icon';
+
+// 園所管理入口（僅 OWNER/ADMIN 可見;真正授權在後端 Guard）。
+const ADMIN_LINKS: { href: string; title: string; description: string; icon: IconName }[] = [
+  {
+    href: '/liff/admin/appearance',
+    title: '園所外觀',
+    description: '名稱、代表色、園徽封面、功能卡片',
+    icon: 'cog',
+  },
+  { href: '/liff/admin/classes', title: '班級管理', description: '新增班級、改名、刪除空班', icon: 'home' },
+  {
+    href: '/liff/admin/students',
+    title: '學生管理',
+    description: '新增學生、換班、在學狀態',
+    icon: 'user',
+  },
+];
 
 async function handleLogout(): Promise<void> {
   await logout();
@@ -54,17 +71,20 @@ export default function MePage() {
         <section className="rise-in" style={{ animationDelay: '0.1s' }}>
           <p className="eyebrow mb-1">園所管理</p>
           <div className="border-t border-line">
-            <Link
-              href="/liff/admin/appearance"
-              className="flex items-center gap-3 border-b border-line py-4 text-brand-primary transition hover:bg-black/[0.015]"
-            >
-              <Icon name="cog" className="h-5 w-5 shrink-0" />
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-ink">園所外觀</span>
-                <span className="block text-xs text-ink-soft">名稱、代表色、園徽封面、功能卡片</span>
-              </span>
-              <Icon name="chev" className="ml-auto h-4 w-4 shrink-0 text-ink-soft" />
-            </Link>
+            {ADMIN_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 border-b border-line py-4 text-brand-primary transition hover:bg-black/[0.015]"
+              >
+                <Icon name={item.icon} className="h-5 w-5 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-ink">{item.title}</span>
+                  <span className="block text-xs text-ink-soft">{item.description}</span>
+                </span>
+                <Icon name="chev" className="ml-auto h-4 w-4 shrink-0 text-ink-soft" />
+              </Link>
+            ))}
           </div>
         </section>
       )}
