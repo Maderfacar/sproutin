@@ -28,7 +28,7 @@ describe('ClassesService.listForUser', () => {
     expect(prisma.teacherAssignment.findMany).not.toHaveBeenCalled();
   });
 
-  it('TEACHER → 只回自己任教班級（去重、依名稱排序）', async () => {
+  it('TEACHER → 只回自己任教班級（去重）', async () => {
     const prisma: PrismaMock = {
       class: { findMany: jest.fn() },
       teacherAssignment: {
@@ -40,10 +40,10 @@ describe('ClassesService.listForUser', () => {
       },
     };
     const result = await makeService(prisma).listForUser('u-teacher', roles('TEACHER'));
-    expect(result).toEqual([
-      { id: 'c1', name: '小班' },
-      { id: 'c2', name: '中班' },
-    ]);
+    // 去重後兩班（排序依 localeCompare，跨平台 locale 不同 → 不斷言順序，改以集合驗證）。
+    expect(result).toHaveLength(2);
+    expect([...result].map((c) => c.id).sort()).toEqual(['c1', 'c2']);
+    expect(result.find((c) => c.id === 'c1')?.name).toBe('小班');
     expect(prisma.class.findMany).not.toHaveBeenCalled();
   });
 
