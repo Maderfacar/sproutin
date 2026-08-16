@@ -48,6 +48,8 @@ POST /auth/line/login
 | POST | `/announcements` | 發公告 → `AnnouncementPublished` | OWNER/ADMIN/TEACHER | ✔ |
 | GET | `/notifications` | 站內通知 | auth(自己) | – |
 | GET | `/audit-logs?resourceType=&resourceId=` | 稽核查詢（唯讀） | OWNER(/ADMIN 受限) | – |
+| **GET** | **`/school/config`** | 園所設定（管理用完整值，可編輯欄位） | OWNER/ADMIN | – |
+| **PATCH** | **`/school/config`** | 更新園所外觀 / 功能卡片 / 請假是否審核（局部更新） | OWNER/ADMIN | ✔ |
 
 ## 4. Leave 狀態轉移（修正 A）
 
@@ -82,6 +84,27 @@ GET /config/public   （無需認證，只回非機密值）
 - 瀏覽器實際上打 same-origin 的 Next.js route handler `/api/public-config`，由 web server 於請求期讀 env 並取此值，避免 bundle 內嵌 per-school 值。
 - **嚴禁**回傳 channel secret / access token / JWT secret / DB 憑證。
 - **嚴禁**回傳 `API_INTERNAL_URL`（server-only）。`apiBaseUrl` 只表達瀏覽器面 origin（通常 same-origin）。
+
+## 4c. 園所設定（管理用，Phase 9 階段2）
+
+```text
+GET /school/config      （OWNER/ADMIN）
+  → { brandName, logoUrl, bannerUrl, primaryColor, secondaryColor,
+      featureFlags, cardOrder, leaveRequiresApproval, theme, dashboardLayout }
+
+PATCH /school/config    （OWNER/ADMIN;全欄位選填 = 局部更新;未知欄位一律 400）
+  body 可含: brandName / logoUrl / bannerUrl / primaryColor / secondaryColor /
+            featureFlags / cardOrder / leaveRequiresApproval
+  → 同 GET 形狀
+```
+
+- 與 `GET /config/public` 的分工：`/config/public` 是**公開唯讀**、供未登入的前端取品牌與 LIFF 值（ADR-001）；
+  `/school/config` 是**登入後的管理介面**，只含園所可自行編輯的欄位（不含 liffId 等部署決定的值）。
+- 顏色限 `#RRGGBB`；圖片限 `http(s)://…` 或站內相對路徑（內建圖庫）。
+- `featureFlags` 兩種語意（見 `packages/shared/dashboard.ts`）：規劃中功能為 opt-in（`true` 才顯示）；
+  已上線功能預設顯示，設 `false` 即對該園所隱藏。
+- 圖片上傳走 web 端 `POST /api/uploads/image`（same-origin → Vercel Blob），回傳網址後再由本端點寫入；
+  API 本身不接收檔案。
 
 ## 5. 驗證與授權
 

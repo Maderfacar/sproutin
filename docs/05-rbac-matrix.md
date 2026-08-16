@@ -19,8 +19,8 @@
 
 | Resource / Action | OWNER | ADMIN | TEACHER | BUS_TEACHER | PARENT/GUARDIAN |
 |---|:---:|:---:|:---:|:---:|:---:|
-| School config / branding | CRUD | R | – | – | – |
-| Feature flag / leaveRequiresApproval | CRUD | R | – | – | – |
+| School config / branding | CRUD | **CRUD** | – | – | – |
+| Feature flag / leaveRequiresApproval | CRUD | **CRUD** | – | – | – |
 | Class | CRUD | CRUD | R(自班) | R(自車) | – |
 | Student | CRUD | CRUD | R(自班) | R(乘車名單) | R(自己小孩) |
 | Attendance | R | CRUD | CRUD(自班) | R | R(自己小孩) |
@@ -33,6 +33,8 @@
 | **AuditLog** | **R** | R(受限) | – | – | – |
 
 > 修正 A：Leave 的「審核」權限僅在 `leaveRequiresApproval=true` 時有意義；為 false 時申請即自動 APPROVED，無審核步驟。
+>
+> **變更（2026-08-17, Human Owner 決定）**：`School config / branding` 與 `Feature flag / leaveRequiresApproval` 的 `ADMIN` 由 `R` 放寬為 `CRUD`。理由：園所實務上由行政人員維護園所外觀與功能開關，園長不見得親自操作。落地於 `GET/PATCH /school/config` 的 `@Roles('OWNER','ADMIN')`。
 
 ## 3. Scope 限縮（資料列級）
 

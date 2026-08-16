@@ -11,6 +11,7 @@ export interface RoleFlags {
   canAnnounceSchool: boolean; // OWNER/ADMIN → 發全校公告（scope=SCHOOL）
   canViewSchoolLeaves: boolean; // OWNER/ADMIN → 全校待審請假總覽（GET /leaves 無 classId）
   canViewAudit: boolean; // OWNER/ADMIN → 稽核查詢（GET /audit-logs）
+  canManageSchool: boolean; // OWNER/ADMIN → 園所設定（GET/PATCH /school/config;docs/05 矩陣 2026-08-17 放寬 ADMIN）
   isStaff: boolean; // 任一校方角色（需要班級清單/班名）
 }
 
@@ -30,6 +31,7 @@ export function roleFlags(roles: AuthUser['roles']): RoleFlags {
     canAnnounceSchool: isOwnerOrAdmin,
     canViewSchoolLeaves: isOwnerOrAdmin,
     canViewAudit: isOwnerOrAdmin,
+    canManageSchool: isOwnerOrAdmin,
     isStaff: isOwner || isAdmin || isTeacher || names.has('BUS_TEACHER'),
   };
 }

@@ -2,14 +2,16 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-16（**Phase 7 — Core MVP ✅ COMPLETE**（Human Owner）。Step 1–7 全數 ACCEPTED;LINE 推播線上實測收到（帶學生姓名）。下一步:Phase 8 — Integration / Hardening,見新 session handoff。）
+> Last updated: 2026-08-17（**Phase 9 階段2 刀 1 — 園所外觀設定頁 + 功能藍圖佔位卡 IMPLEMENTED**，待 push → CI → 線上驗收。詳見最上方 Recent Work Log。）
 
 ---
 
 ## Current Position
 
 **Phase:**
-**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）。** Phase 5 / 6 亦 COMPLETE。下一步 = Phase 8（Integration / Hardening）。
+**Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
+階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ IMPLEMENTED，待線上驗收**；刀 2（班級/學生）→ 刀 3（人員帳號與關聯）→ 刀 4（每日聯絡簿）→ 刀 5（學生整合視圖 + 公告推播）尚未開始。
+（歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
 **Milestone:**
 Phase 7 Step 1–7 全數 ✅ **ACCEPTED**。Step 5 LINE 推播已**線上實測收到**（帶學生姓名）;Step 7（7a–7d）前端可操作頁面 + 品牌 + Feature Flag + 稽核頁全部上線並手機實測通過。
@@ -163,6 +165,13 @@ Required decision:
 4. CSP + X-Frame-Options（web）— DEFERRED: 需裝置實測避免擋 LIFF 登入。正式上線前收緊。
 5. Rate limiting — DEFERRED: 同源 proxy 後 API 只見 Vercel IP,宜在 edge/Next proxy 層做。
 6. 版型風格模板（per-school layout, §D）— 留待需求出現（YAGNI）。
+
+7. 清葉改版後的殘留死碼（低風險，隨手清）：
+   - `apps/web/src/components/DashboardCard.tsx` — 首頁改為內嵌細線列表後已無人使用。
+   - `apps/web/src/lib/preview.tsx` — 單一主題（清葉）下 theme/layout 預覽已無作用;
+     其角色由「園所外觀設定頁」取代。
+
+8. LINE 帳號綁定機制 — 見 Human Owner Action / LATER。開賣前必要，demo 不做。
 ```
 
 ---
@@ -200,11 +209,12 @@ DONE
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
 NOW
-- 無硬性待辦。**目前沒有任何項目在等 Human Owner。** 下一步 = 決定是否啟動 Phase 9 — Pilot（Claude 會先提計畫）。
+- **建立 Vercel Blob Store**，把 `BLOB_READ_WRITE_TOKEN` 加到 web 專案環境變數 → 園所外觀的「上傳圖片」才會啟用（未設定時該按鈕會回報「尚未啟用上傳」，其餘功能不受影響）。
+- 線上驗收刀 1：用園長帳號 → 我的 → 園所外觀 → 改名稱/顏色/園徽 → 儲存 → 看全站是否即時變樣。
 
 LATER（正式上線前）
 - **append-only 最小權限 app role（Phase 8 #6-A）**：Claude 屆時主動提醒;需你在每個 Render instance 填新 secret `APP_DATABASE_URL`。
-- Phase 9 Pilot 前置（多為 infra/ops，屆時 Claude 條列給你）。
+- **LINE 帳號綁定機制**（後台建的老師/家長帳號 ↔ 本人 LINE）：demo 不做，開賣前必須有（綁定碼 / 手機號比對 / 個人 QR 三選一）;需 migration + 新端點,屆時出 §D 提案。
 ```
 
 ---
@@ -212,7 +222,13 @@ LATER（正式上線前）
 ## Next Task
 
 ```text
-Phase 7 + Phase 8 主體完成。下一步 = Phase 9 — Pilot（先計畫 → Human Owner 確認 → 執行）。
+Phase 9 階段2 刀 1 完成待驗收 → 下一個 Task = 刀 2（班級 + 學生管理）：
+  新增 GET /students?classId=、POST /students、PATCH /students/:id、POST /classes、PATCH /classes/:id
+  （docs/07 §3 已列 students 寫入;classes 寫入為新增，屆時併入同一 §D 已定案範圍）。
+  預期零 migration;「停用不刪除」沿用 Student.status，班級僅在無學生時可刪。
+  —— 待 Human Owner 驗收刀 1 後再開工，不跨步。
+
+（歷史）Phase 7 + Phase 8 主體完成;原 Phase 9 Pilot 已由 Human Owner 改定調為 Demo。
   Phase 9 多為 infra/ops + Human Owner 前置（正式 DB provisioning、每校 instance、LINE 正式 channel、
   試點學校導入資料…），非純 code。Claude 會先出計畫與你需要準備的清單。
   排入正式上線前：append-only 最小權限 app role（Phase 8 #6-A,§D 已定案 B 延後）。
@@ -323,6 +339,36 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — Phase 9 階段2 刀1 / 園所外觀設定頁 + 功能藍圖佔位卡（IMPLEMENTED，待線上驗收）
+
+**背景**：階段2 = 後台管理 + 園所裝飾，分 5 刀（1 外觀設定 → 2 班級/學生 → 3 人員帳號與關聯 → 4 每日聯絡簿 → 5 學生整合視圖 + 公告推播）。本次為**刀 1**。
+**Human Owner 決策（2026-08-17）**：① 後台放在同一個 App（`/liff/admin/*`）② 圖片上傳採 **Vercel Blob**（新 infra，已核准）③ 園所外觀**放寬 ADMIN 可改**（docs/05 矩陣同步修改）④ 資料只停用不刪除 ⑤ LINE 綁定碼機制延後至開賣前（已列上線前提醒）⑥ **卡片是否顯示於家長頁由園所自己在後台決定**。
+**產品原則（Human Owner）**：這是朝完整專案前進的系統，只是不必等完整才展示；未完工的功能不具備完整功能，但**必須讓人知道接下來會有** → 佔位卡連到「功能預告頁」，不是點不下去的死角。
+
+**後端（新增 2 端點，§D 已定案）**
+- `apps/api/src/school/`：`GET /school/config`（讀可編輯欄位）、`PATCH /school/config`（局部更新，未知欄位 400）。`@Roles('OWNER','ADMIN')`;寫入與 `AuditLog` 同一 transaction（`school.config.update`，metadata 只記欄位名不存值）。zod 就地驗證（顏色 `#RRGGBB`、圖片限 http(s) 或站內相對路徑、flag key 格式）。
+- **零 migration**（SchoolConfig 欄位早已齊備）、無破壞性變更。
+
+**shared**
+- `MVP_CARDS` 新增 5 張規劃中卡片（payment/portfolio/forms/calendar/health;transportation 沿用既有）。
+- `selectDashboardCards` 旗標語意擴充（**向後相容**）：規劃中功能維持 opt-in（`true` 才顯示）;已上線功能**預設顯示、可被園所明確關閉**（`false` 才隱藏）→ 既有園所 `featureFlags:{}` 零影響。新增 `cardFlagKey()`。
+- `SchoolAdminConfig` 型別 + `UpdateSchoolConfigDto`。
+
+**前端**
+- `/liff/admin/appearance`（OWNER/ADMIN）：園所名稱、色票（5 組建議色 + 自訂色票選擇器，**編輯中即時套用到整個 App**）、園徽/封面（內建圖庫 4+3 張 SVG、上傳、貼網址、移除）、功能卡片（開關 + 上下移排序）、請假是否需審核;底部固定列顯示「尚未儲存的變更」+ 復原/儲存，只送出 diff。
+- `POST /api/uploads/image`（same-origin → Vercel Blob）：先向後端 `/me` 確認 OWNER/ADMIN 才收檔;限 PNG/JPG/WebP、4MB;**不收 SVG**（可內嵌腳本）;未設 `BLOB_READ_WRITE_TOKEN` → 503 `upload_unconfigured`，前端自動改用圖庫/貼網址，不會壞。
+- `/liff/soon/[feature]` 功能預告頁（7 則文案：聯絡簿/娃娃車/收費/成長紀錄/表單/行事曆/健康），家長首頁的「即將推出」卡片改為可點入。
+- 「我的」新增園所管理入口（僅 OWNER/ADMIN 可見）;`roleFlags.canManageSchool`;`Icon` 新增 heart/cog/image/sparkle;`cards.ts` 改用清葉線性圖示（原 emoji 移除）。
+- seed：demo 園所預設開啟全部規劃中旗標（展示完整藍圖）。
+
+**新依賴**：`@vercel/blob`（web dependency;Human Owner 核准的 infra 決策所需）。**新環境變數**：`BLOB_READ_WRITE_TOKEN`（Vercel web 專案;Human Owner 正在建立 Blob Store,未設定不影響其他功能）。
+
+Verification:
+- 本機 `pnpm lint` ✓、`pnpm typecheck` ✓、`pnpm test` ✓（api 148 + shared 10 + web 15 = **173**）、`pnpm build` ✓。
+- 待：push → CI 全綠 → 線上手機實測（園長改外觀 → 全站即時變樣）。
+
+**誠實提醒**：① 設定頁未開放 `theme`/`dashboardLayout`——目前單一主題（清葉）、首頁已重建不再讀 dashboardLayout，開放會是假選項。② `components/DashboardCard.tsx` 已無人使用（清葉首頁改為內嵌列表）＝ 死碼，待清理。③ `lib/preview.tsx`（sessionStorage 外觀預覽）在單一主題下亦已無作用。
 
 ### 2026-08-17 — Phase 9（Demo 設計）/ 「清葉」方向落地 + 家長 App 全面改版（IMPLEMENTED，已上線 demo）
 

@@ -45,6 +45,22 @@ describe('selectDashboardCards', () => {
     expect(ids.slice(2)).toEqual(['attendance', 'message', 'communication-book']);
   });
 
+  it('已上線功能可被園所明確關閉（flag=false 即隱藏），未設定則照常顯示', () => {
+    const withMessage = selectDashboardCards(['PARENT'], {}, []).map((c) => c.id);
+    expect(withMessage).toContain('message');
+
+    const hidden = selectDashboardCards(['PARENT'], { message: false }, []).map((c) => c.id);
+    expect(hidden).not.toContain('message');
+    expect(hidden).toContain('leave'); // 只影響被關掉的那張
+  });
+
+  it('規劃中功能維持 opt-in：flag=true 才顯示（不受「未設定即顯示」影響）', () => {
+    const ids = selectDashboardCards(['PARENT'], { payment: true }, []).map((c) => c.id);
+    expect(ids).toContain('payment');
+    expect(ids).not.toContain('calendar');
+    expect(ids).not.toContain('health');
+  });
+
   it('無任何適用角色 → 回空陣列', () => {
     const noRoles: Role[] = [];
     expect(selectDashboardCards(noRoles, {}, [])).toEqual([]);

@@ -43,3 +43,23 @@ export const CreateAnnouncementDto = z.object({
   body: z.string().min(1).max(5000),
 });
 export type CreateAnnouncementDto = z.infer<typeof CreateAnnouncementDto>;
+
+// PATCH /school/config（園所外觀/功能設定，OWNER/ADMIN）。
+// 全欄位選填 = 局部更新;顏色限 #RRGGBB;圖片限 http(s) 或站內相對路徑（內建圖庫）。
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+const IMAGE_REF = /^(https?:\/\/|\/)[^\s]*$/;
+const FEATURE_KEY = /^[a-z][a-z0-9-]{0,30}$/;
+
+export const UpdateSchoolConfigDto = z
+  .object({
+    brandName: z.string().min(1).max(60),
+    logoUrl: z.string().max(2000).regex(IMAGE_REF).nullable(),
+    bannerUrl: z.string().max(2000).regex(IMAGE_REF).nullable(),
+    primaryColor: z.string().regex(HEX_COLOR),
+    secondaryColor: z.string().regex(HEX_COLOR),
+    featureFlags: z.record(z.string().regex(FEATURE_KEY), z.boolean()),
+    cardOrder: z.array(z.string().regex(FEATURE_KEY)).max(40),
+    leaveRequiresApproval: z.boolean(),
+  })
+  .partial();
+export type UpdateSchoolConfigDto = z.infer<typeof UpdateSchoolConfigDto>;

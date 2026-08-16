@@ -16,7 +16,11 @@ export type IconName =
   | 'cam'
   | 'check'
   | 'chev'
-  | 'send';
+  | 'send'
+  | 'heart'
+  | 'cog'
+  | 'image'
+  | 'sparkle';
 
 const PATHS: Record<IconName, ReactNode> = {
   home: (
@@ -95,6 +99,28 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="M4.5 11.5 20 4.5l-7 15-2.3-6.2-6.2-1.8Z" />
       <path d="M10.7 13.3 20 4.5" />
+    </>
+  ),
+  heart: (
+    <path d="M12 19.5S4.5 15 4.5 9.9A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.5 1.9c0 5.1-7.5 9.6-7.5 9.6Z" />
+  ),
+  cog: (
+    <>
+      <circle cx="12" cy="12" r="3.1" />
+      <path d="M12 3.2v2.4M12 18.4v2.4M20.8 12h-2.4M5.6 12H3.2M18.2 5.8l-1.7 1.7M7.5 16.5l-1.7 1.7M18.2 18.2l-1.7-1.7M7.5 7.5 5.8 5.8" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3.5" y="5" width="17" height="14" rx="2.4" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="M4.5 17l4.8-4.6 3.4 3.2 2.6-2.3 4.2 3.9" />
+    </>
+  ),
+  sparkle: (
+    <>
+      <path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2L12 3.5Z" />
+      <path d="M18.5 4v3M20 5.5h-3" />
     </>
   ),
 };

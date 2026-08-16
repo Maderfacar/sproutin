@@ -64,7 +64,17 @@ async function main(): Promise<void> {
       primaryColor: '#2E7D32',
       secondaryColor: '#A5D6A7',
       cardOrder: ['leave', 'attendance', 'message', 'announcement'],
-      featureFlags: { ai: false, health: false, bus: false },
+      // demo 園所預設展示完整產品藍圖：規劃中的功能一併開啟（前端顯示為「即將推出」+ 預告頁）。
+      // 正式園所可於「園所外觀」設定頁自行開關（Human Owner 決策 2026-08-17）。
+      featureFlags: {
+        ai: false,
+        bus: true,
+        payment: true,
+        portfolio: true,
+        forms: true,
+        calendar: true,
+        health: true,
+      },
       leaveRequiresApproval: true,
       // LIFF_ID 公開（Step 2）走 /config/public；channel secret/token 走 env（ADR-004）
       liffId: DEMO_LIFF_ID,

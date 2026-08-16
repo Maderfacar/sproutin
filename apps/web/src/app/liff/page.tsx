@@ -8,7 +8,7 @@ import { useSelectedStudent } from '../../features/students/useSelectedStudent';
 import { useAttendance } from '../../features/attendance/hooks';
 import { useAnnouncements } from '../../features/announcement/hooks';
 import { cardMeta } from '../../features/dashboard/cards';
-import { Icon, type IconName } from '../../components/Icon';
+import { Icon } from '../../components/Icon';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -22,17 +22,6 @@ function todayLabel(): string {
   const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
   return `${d.getFullYear()}年 ${d.getMonth() + 1}月 ${d.getDate()}日 · 週${week}`;
 }
-
-// 卡片 id → 清葉線性圖示。
-const CARD_ICON: Record<string, IconName> = {
-  leave: 'doc',
-  attendance: 'cal',
-  message: 'chat',
-  announcement: 'mega',
-  audit: 'shield',
-  'communication-book': 'book',
-  transportation: 'bus',
-};
 
 const ATT: Record<string, { text: string; note: string; brand: boolean }> = {
   PRESENT: { text: '已到校', note: '今天狀態良好', brand: true },
@@ -151,23 +140,25 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 border-t border-line">
           {cards.map((card) => {
             const meta = cardMeta(card.id);
-            const icon = CARD_ICON[card.id] ?? 'doc';
             const rowClass =
               'flex items-center gap-3 border-b border-line py-4 [&:nth-child(odd)]:border-r [&:nth-child(odd)]:pr-4 [&:nth-child(even)]:pl-4';
             const inner = (
               <>
-                <Icon name={icon} className="h-5 w-5 shrink-0" />
+                <Icon name={meta.icon} className="h-5 w-5 shrink-0" />
                 <span className="text-sm font-semibold text-ink">{meta.title}</span>
                 {!meta.enabled && (
                   <span className="ml-auto text-[10px] text-ink-soft">即將推出</span>
                 )}
               </>
             );
-            return meta.enabled && meta.href ? (
+            // 尚未完工的功能仍可點進預告頁（讓人知道接下來會有這功能），只是視覺上收斂。
+            return meta.href ? (
               <Link
                 key={card.id}
                 href={meta.href}
-                className={`${rowClass} text-brand-primary transition hover:bg-black/[0.015]`}
+                className={`${rowClass} transition hover:bg-black/[0.015] ${
+                  meta.enabled ? 'text-brand-primary' : 'text-ink-soft'
+                }`}
               >
                 {inner}
               </Link>

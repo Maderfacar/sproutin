@@ -6,6 +6,7 @@ import { PublicConfigModule } from './core/config/public-config.module';
 import { AuthModule } from './auth/auth.module';
 import { StudentsModule } from './students/students.module';
 import { ClassesModule } from './classes/classes.module';
+import { SchoolModule } from './school/school.module';
 import { LeavesModule } from './leaves/leaves.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { MessagesModule } from './messages/messages.module';
@@ -21,7 +22,7 @@ import { AllExceptionsFilter } from './core/http/all-exceptions.filter';
 // AuthModule（Step 2：LINE/LIFF 登入 → JWT）+ StudentsModule（Step 3：RBAC 示範端點）
 // + LeavesModule（Step 1：Leave 狀態機）+ AttendanceModule（Step 2：手動 SoT + ADR-002 override）
 // + MessagesModule / AnnouncementsModule / NotificationsModule（Step 4：訊息 / 公告 / 站內通知讀取端）
-// + AuditLogsModule（Step 6：稽核查詢端點）。
+// + AuditLogsModule（Step 6：稽核查詢端點）+ SchoolModule（Phase 9：園所設定 GET/PATCH /school/config）。
 //
 // Step 6 out-of-band audit（ADR-005 類別二）以兩個全域攔截器落地（enqueuer 由 AuditModule 提供）：
 //   - AuditReadInterceptor：僅對標了 @AuditRead 的敏感 READ 端點記錄。
@@ -36,6 +37,7 @@ import { AllExceptionsFilter } from './core/http/all-exceptions.filter';
     AuthModule,
     StudentsModule,
     ClassesModule,
+    SchoolModule,
     LeavesModule,
     AttendanceModule,
     MessagesModule,

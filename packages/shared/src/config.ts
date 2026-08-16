@@ -25,3 +25,19 @@ export interface PublicConfig {
   theme: string; // 主題氛圍：warm | professional
   dashboardLayout: string; // Dashboard 版型：grid | list
 }
+
+// 園所設定（管理用）：GET/PATCH /school/config 的形狀。
+// 與 PublicConfig 的差別：這是**園長/行政可編輯的欄位集合**，不含 schoolSlug/LIFF 等
+// 由部署與 LINE 設定決定、不由園所自行修改的值（後者仍走 /config/public，ADR-001）。
+export interface SchoolAdminConfig {
+  brandName: string;
+  logoUrl: string | null;
+  primaryColor: string;
+  secondaryColor: string;
+  bannerUrl: string | null;
+  featureFlags: Record<string, boolean>;
+  cardOrder: string[];
+  leaveRequiresApproval: boolean;
+  theme: string;
+  dashboardLayout: string;
+}
