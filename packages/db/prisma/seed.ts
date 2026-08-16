@@ -112,15 +112,22 @@ async function main(): Promise<void> {
     { id: 'user-parent', displayName: '張媽媽', lineUserId: 'Udemo_parent' },
     { id: 'user-guardian', displayName: '張爺爺', lineUserId: 'Udemo_guardian' },
   ];
+  // 園長是否於本次執行明確帶入真實 LINE userId（env）。未帶入時，重跑 seed **不覆寫**既有
+  // 園長 LINE 對映（避免把線上真實登入 id 清成佔位 'Udemo_owner' 而弄壞登入）。
+  // 需改對映時才帶 DEMO_OWNER_LINE_USER_ID 重跑（沿用 Phase 6 修正對映的做法）。
+  const ownerLineProvided =
+    process.env.DEMO_OWNER_LINE_USER_ID != null && process.env.DEMO_OWNER_LINE_USER_ID !== '';
+
   for (const u of users) {
     await prisma.user.upsert({
       where: { id: u.id },
       update: { displayName: u.displayName },
       create: { id: u.id, displayName: u.displayName },
     });
+    const preserveOwnerLine = u.id === 'user-owner' && !ownerLineProvided;
     await prisma.lineIdentity.upsert({
       where: { id: `line-${u.id}` },
-      update: { lineUserId: u.lineUserId, userId: u.id },
+      update: preserveOwnerLine ? { userId: u.id } : { lineUserId: u.lineUserId, userId: u.id },
       create: { id: `line-${u.id}`, lineUserId: u.lineUserId, userId: u.id },
     });
   }
