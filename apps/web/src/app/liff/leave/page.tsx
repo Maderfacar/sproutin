@@ -28,8 +28,9 @@ export default function LeavePage() {
         flags.canReviewLeave && <TeacherLeaveReviewPanel />
       )}
 
-      {flags.isGuardian && (
-        <>
+      {flags.canApplyLeave && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-semibold text-gray-900">申請請假</h2>
           {isLoading && <p className="text-sm text-gray-500">載入學生中…</p>}
           {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
           {students && students.length === 0 && (
@@ -41,16 +42,16 @@ export default function LeavePage() {
           {studentId && (
             <>
               <LeaveForm studentId={studentId} />
-              <section className="flex flex-col gap-3">
-                <h2 className="font-semibold text-gray-900">請假紀錄</h2>
+              <div className="flex flex-col gap-3">
+                <h3 className="font-semibold text-gray-900">請假紀錄</h3>
                 <LeaveList studentId={studentId} />
-              </section>
+              </div>
             </>
           )}
-        </>
+        </section>
       )}
 
-      {!flags.isGuardian && !flags.canReviewLeave && !flags.canViewSchoolLeaves && (
+      {!flags.canApplyLeave && !flags.canReviewLeave && !flags.canViewSchoolLeaves && (
         <p className="text-sm text-gray-500">此功能目前沒有你可操作的項目。</p>
       )}
     </div>
