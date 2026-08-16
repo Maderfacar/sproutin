@@ -1,13 +1,13 @@
 # Current Status
 
 > 每次完成並**通過驗收**後更新。**逐日跟讀請看 [08-development-progress.md](./08-development-progress.md)**（本檔為 project-control 內部現況）。
-> Last updated: 2026-08-16（Phase 7 Step 7a/7b/7c ✅ ACCEPTED（手機實測）;Step 7d — 園長/ADMIN[稽核查詢頁 + 全校公告 + 全校待審總覽] IMPLEMENTED,本機 typecheck/test[146]/build 綠,待 push。7d 完成即 Phase 7 完成。）
+> Last updated: 2026-08-16（**Phase 7 — Core MVP ✅ COMPLETE**（Human Owner）。Step 1–7 全 ACCEPTED;LINE 推播線上實測收到。下一步 Phase 8 — Integration/Hardening,新 session。）
 
 Current Phase:
 Phase 7 — Core MVP（進行中;Step 7 = 前端可操作頁面 + 品牌 + Feature Flag,切子步驟先家長→老師→園長）。Phase 6 ✅ COMPLETE。
 
 Current Milestone:
-Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Step 7a/7b/7c**（前端地基 + 家長五卡 + 老師端）→ ✅ **ACCEPTED**（2026-08-16, Human Owner 手機實測）。**Step 7d**（園長/ADMIN:稽核查詢頁 + 全校公告 + 全校待審總覽 + 補 GET /leaves 全校模式）→ **IMPLEMENTED**（本機 typecheck ✓ / test ✓[146] / build ✓;待 push→CI + Vercel + Human 手機實測,需園長帳號）。設計決策:Tailwind + 自建元件、TanStack Query（§D 核准）、品牌=色/logo/banner、多重身份採聯集視圖。**7d 完成即 Phase 7 COMPLETE**。下一步:push 7d → 驗收 → Phase 8（Integration/Hardening）。
+Phase 7 Step 1/2/3/4/6 → ✅ **ACCEPTED**;Step 5（LINE Push）→ **IMPLEMENTED**。**Phase 7 — Core MVP = ✅ COMPLETE（2026-08-16, Human Owner）。** Step 1–7 全 ACCEPTED:後端全鏈 + 前端三角色可操作頁面 + 品牌 + Feature Flag + Dashboard 卡片 + 稽核查詢頁;LINE 推播線上實測收到（帶學生姓名）、通知顯示到秒。設計決策:Tailwind + 自建元件、TanStack Query（§D 核准）、品牌=色/logo/banner、多重身份採聯集視圖。**下一步:Phase 8 — Integration / Hardening（新 session,先計畫→確認）。** 候選:ESLint、append-only DB 鎖死(§D)、全域 exception filter 統一信封、web 元件測試、多校隔離/secret/效能、P5 demo 資料收尾。
 
 Status:
 ```text

@@ -2,54 +2,53 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-16（Phase 7 Step 7a/7b/7c 手機實測通過;Step 7d — 園長/ADMIN[稽核查詢頁 + 全校公告 + 全校待審總覽] IMPLEMENTED,本機 typecheck/test[146]/build 綠,待 push。7d 完成即 Phase 7 完成。）
+> Last updated: 2026-08-16（**Phase 7 — Core MVP ✅ COMPLETE**（Human Owner）。Step 1–7 全數 ACCEPTED;LINE 推播線上實測收到（帶學生姓名）。下一步:Phase 8 — Integration / Hardening,見新 session handoff。）
 
 ---
 
 ## Current Position
 
 **Phase:**
-Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice ✅ COMPLETE（2026-08-14, Human Owner）。
+**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）。** Phase 5 / 6 亦 COMPLETE。下一步 = Phase 8（Integration / Hardening）。
 
 **Milestone:**
-Phase 7 Step 1/2/3/4 → ✅ **ACCEPTED**。
-Step 5（LINE Push）→ **IMPLEMENTED**（線上驗證卡 Human Owner 填 Messaging token + LINE 好友/provider）。
-Step 6（Audit out-of-band durable path + 稽核查詢端點）→ ✅ **ACCEPTED**（2026-08-16, Human Owner;CI 綠 run 31904698836 + Render 線上 `/audit-logs` 401 missing_token/invalid_token + 帶 token 流程由 CI e2e 覆蓋）。append-only DB 層鎖死拆下一版（§D 提案）。
+Phase 7 Step 1–7 全數 ✅ **ACCEPTED**。Step 5 LINE 推播已**線上實測收到**（帶學生姓名）;Step 7（7a–7d）前端可操作頁面 + 品牌 + Feature Flag + 稽核頁全部上線並手機實測通過。
 
 **Status:**
 ```text
 Phase 5:  ✅ ACCEPTED（2026-08-14）
 Phase 6:  ✅ COMPLETE（2026-08-14, Human Owner）— Step 1–4 全數 ACCEPTED
-Phase 7:  IN_PROGRESS（Core MVP;前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）
-  Step 1 Leave 狀態機（+寫入端 Outbox +transactional audit）→ ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 2 Attendance（手動 SoT + ADR-002 override-on-edit）      → ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 3 Event 串接（Outbox → Worker dispatch;投影+回滾+Notification）→ ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 4 Message / Announcement / Notification（站內讀取端）    → ✅ ACCEPTED（2026-08-15, Human Owner）
-  Step 5 Notification / LINE Push                              → IMPLEMENTED（待 push + CI;線上驗卡 Human Owner 填 Messaging token + LINE 設定）
-  Step 6 Audit out-of-band durable path + 稽核查詢端點          → ✅ ACCEPTED（2026-08-16, Human Owner）
-    └ append-only DB 層鎖死（決策 2）→ 拆下一版獨立 release（§D 提案;本版先程式自律）
-  Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → IN_PROGRESS（切子步驟:家長→老師→園長;7a–7c 已驗收,剩 7d 待 push）
-    ├ 7a 前端地基 + 家長「請假」端到端                          → ✅ ACCEPTED（2026-08-16, Human Owner 手機實測）
-    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → ✅ ACCEPTED（2026-08-16, Human Owner 手機實測）
-    ├ 7c 老師端（審核/點名/班級訊息·公告）+ GET /classes、GET /leaves?classId= → ✅ ACCEPTED（2026-08-16, Human Owner 手機實測）
-    └ 7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）+ GET /leaves 全校 → IMPLEMENTED（本機 typecheck/test[146]/build 綠;待 push→CI + Vercel + Human 手機實測）
+Phase 7:  ✅ COMPLETE（2026-08-16, Human Owner）— Core MVP 全數 ACCEPTED
+  Step 1 Leave 狀態機                                          → ✅ ACCEPTED
+  Step 2 Attendance（手動 SoT + ADR-002 override）             → ✅ ACCEPTED
+  Step 3 Event 串接（Outbox → Worker dispatch）               → ✅ ACCEPTED
+  Step 4 Message / Announcement / Notification（站內讀取端）    → ✅ ACCEPTED
+  Step 5 Notification / LINE Push                              → ✅ ACCEPTED（線上實測收到推播,帶學生姓名）
+  Step 6 Audit out-of-band durable path + 稽核查詢端點          → ✅ ACCEPTED
+    └ append-only DB 層鎖死（決策 2）→ 留 Phase 8（§D 提案）
+  Step 7 Dashboard / Branding / Feature Flag（前端可操作頁面）   → ✅ ACCEPTED
+    ├ 7a 前端地基 + 家長「請假」端到端                          → ✅ ACCEPTED
+    ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → ✅ ACCEPTED
+    ├ 7c 老師端（審核/點名/班級訊息·公告）+ GET /classes、GET /leaves?classId= → ✅ ACCEPTED
+    └ 7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）+ GET /leaves 全校 → ✅ ACCEPTED
+Phase 8:  NOT_STARTED（Integration / Hardening）— 見新 session handoff
 ```
 
-> Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（先家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留下一版（§D）。多重身份（同帳號兼園長/老師/家長）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
+> Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留 Phase 8（§D）。多重身份（同帳號兼多角色）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
 
 ---
 
 ## Current Objective
 
-**Phase 7 Step 7d — IMPLEMENTED（2026-08-16）。Phase 7 最後一個子步驟。** 園長/ADMIN 全校視角三塊:① 稽核查詢頁（`/liff/audit`,篩選 資源/操作者/日期 + 分頁,端點 GET /audit-logs 已備）② 全校公告（發布面板加「全校/班級」範圍選擇,scope=SCHOOL）③ 全校待審請假總覽（跨班一次看;補後端 `GET /leaves` 全校模式,OWNER/ADMIN 唯讀,ADMIN 可直接核准/駁回）。Dashboard 新增「稽核」卡（只 OWNER/ADMIN 可見）。7a–7c 已由 Human Owner 手機實測 ACCEPTED。
-**下一步（等 Human Owner）**:確認是否 commit + push 7d。push + 驗收後 → **Phase 7 完成**。
+**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）。** 全部後端（Leave/Attendance/Event/Message/Announcement/Notification·LINE Push/Audit）+ 前端可操作頁面（家長/老師/園長三角色 + 品牌 + Feature Flag + Dashboard 卡片 + 稽核查詢頁）皆已 ACCEPTED,線上手機實測通過（含 LINE 推播）。
+**下一步**:Phase 8 — Integration / Hardening（先計畫 → Human Owner 確認 → 實作）。於新 session 啟動,見本檔末「Phase 8 Handoff」或 handoff prompt。**Phase 8 候選項**（未定序,待計畫）:① ESLint flat config（清 tech debt,CI 開 lint）② append-only DB 層鎖死（Step 6 決策 2 的 §D 提案,least-privilege app role,infra/ADR-003 破壞性）③ 多校隔離 / secret exposure / 錯誤處理（全域 exception filter 統一信封）/ 效能 hardening ④ 前端元件測試（RTL/vitest,web 目前無單元測試）⑤ **P5 demo 資料收尾**:seed 給園長加的 ADMIN + 監護 stu-sun-2 是「單帳號自測推播」的 demo hack,正式前需評估移除或改以獨立測試帳號。
 
 ---
 
 ## Current Task
 
-Phase 7 Step 7d — 園長/ADMIN 全校視角 + 稽核查詢頁 — **IMPLEMENTED**（2026-08-16）。
-後端:`LeavesService.listForSchool`（OWNER/ADMIN 全校待審）+ controller 無 classId/studentId 分支;+2 單元測試（api 138）。前端:proxy `/api/audit-logs`;`features/audit`（`useAuditLogs` + 稽核查詢頁 `/liff/audit`,篩選+分頁+result 標籤）;`SchoolLeaveOverviewPanel`（全校待審）;`TeacherAnnouncePanel` 加全校/班級範圍選擇;`shared.MVP_CARDS` 加 `audit` 卡（+單元測試,shared 8）;`lib/roles` 加 canAnnounceSchool/canViewSchoolLeaves/canViewAudit。
+**Phase 7 收尾完成。** 最後兩項 polish 已上線:LINE 推播帶學生姓名（如「范小陽 的請假申請已核准。」）、通知鈴鐺顯示到秒（本地時間）。Human Owner 確認 Phase 7 COMPLETE。
+下一步 = Phase 8 計畫（新 session）。
 本機驗證:typecheck ✓、test ✓（api 138 + shared 8 = 146）、`pnpm build` ✓（`/liff/audit`、`/api/audit-logs` 產出）。
 待:push → CI 綠 → Vercel Preview → Human Owner 手機實測（園長帳號）。**commit/push 前先問 Human Owner。**
 
@@ -273,11 +272,11 @@ Backend（Render 部署 2026-08-14，已驗證）
 ## Latest CI
 
 ```text
-Commit:  195cbfc（feat(web): Phase 7 Step 7a — 前端地基 + 家長請假端到端）
-Run:     31913609567
+Commit:  1181d10（feat: 推播帶學生姓名 + 通知鈴鐺顯示到秒）
+Run:     31940076688
 Status:  ✅ SUCCESS（build + db + docker-build 全綠）
 Date:    2026-08-16
-Note:    僅 Node 20 deprecation 警告（非致命）。待 Vercel Preview + Human Owner 手機實測（家長流程前置 B:先用園長帳號驗品牌+版面）。
+Note:    Phase 7 全部上線並手機實測通過（含 LINE 推播）。僅 Node 20 deprecation 警告（非致命）。
 ```
 
 ---
@@ -306,6 +305,21 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 7 — Core MVP ✅ COMPLETE（Human Owner）
+
+Completed:
+- Human Owner 確認 **Phase 7 COMPLETE**。Step 1–7 全數 ACCEPTED。
+- **Step 5 LINE 推播線上實測通過**:seed demo 讓園長單帳號自測（+ADMIN +監護 stu-sun-2）→ 申請范小陽請假 → 核准 → 手機收到 LINE 推播。過程修:① worker 未吃到 token（需重新部署）② 請假「申請區」原只給家長角色 → 改 `canApplyLeave`（家長/行政/老師,對齊 docs/05）③ seed 改為 re-run 安全（未帶 `DEMO_OWNER_LINE_USER_ID` 重跑不覆寫園長既有 LINE 對映）。
+- **Polish**:LINE 推播文字帶學生姓名（`push-notification.service`,查無回退「學生」）;通知鈴鐺顯示到秒 + 本地時區（`NotificationList`）。
+- CI 全綠;Production 部署;LINE 推播線上收到（帶姓名）。
+
+Tech Debt / Phase 8 候選:
+- **P5 demo hack**:seed 給 `user-owner` 加 ADMIN + 監護 stu-sun-2（單帳號自測推播用）。正式前評估移除或改獨立測試帳號。
+- ESLint flat config（CI 仍略過 lint）;append-only DB 層鎖死（§D）;全域 exception filter 統一信封;web 前端元件測試（目前無）;多校隔離/secret/效能 hardening。
+
+Next:
+- Phase 8 — Integration / Hardening（新 session;先計畫 → 確認 → 實作）。
 
 ### 2026-08-16 — Phase 7 / Step 5 — LINE 推播線上實測前置（seed demo 啟用單帳號自測）
 

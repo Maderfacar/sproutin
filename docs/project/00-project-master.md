@@ -20,7 +20,7 @@
 ## 4. 目前在哪
 ```text
 Current Phase:
-Phase 7 — Core MVP（進行中）。Phase 6 — Vertical Slice = ✅ COMPLETE（2026-08-14, Human Owner）。
+**Phase 7 — Core MVP = ✅ COMPLETE（2026-08-16, Human Owner）。** 下一步 = Phase 8（Integration / Hardening,新 session）。Phase 5/6 亦 COMPLETE。
 
 Current Status:
 Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 Step 7）。
@@ -33,8 +33,9 @@ Phase 7 進行中（前端排法 = 後端優先，主題/色彩/園方設定於 
 - Step 7 — Dashboard·Branding·Feature Flag（前端可操作頁面,切子步驟先家長→老師→園長）→ **IN_PROGRESS**。
   - 7a 前端地基（Tailwind + TanStack Query + runtime 品牌）+ 家長「請假」端到端 → **已上線待驗收**（2026-08-16;CI run 31913609567 綠 + Production 路由 200/401;待 Human 手機實測）。UI/資料抓取新 library 經 §D 核准;多重身份採聯集視圖。
   - 7a/7b/7c（前端地基 + 家長五卡 + 老師端 + 補 GET /classes、GET /leaves?classId=）→ ✅ **ACCEPTED**（2026-08-16, Human Owner 手機實測）。
-  - 7d 園長/ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽 + GET /leaves 全校模式）→ **IMPLEMENTED**（2026-08-16;本機 typecheck/test[146]/build 綠;待 push→CI + Vercel + Human 手機實測）。**7d 完成即 Phase 7 COMPLETE。**
-- 下一步：push 7d → 手機實測 acceptance → Phase 7 完成 → Phase 8（Integration/Hardening）。平行未了:append-only 鎖死（下一版 §D）、Step 5 LINE 推播線上實測前置。
+  - 7d 園長/ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽 + GET /leaves 全校模式）→ ✅ **ACCEPTED**（2026-08-16）。
+- **Phase 7 = COMPLETE**（Step 1–7 全 ACCEPTED;LINE 推播線上實測收到、帶學生姓名）。
+- 下一步：**Phase 8 — Integration / Hardening**（新 session,先計畫→確認）。候選:ESLint、append-only DB 鎖死(§D)、全域 exception filter 統一信封、web 元件測試、多校隔離/secret/效能、P5 demo 資料收尾（園長 ADMIN+監護 hack）。
 ```
 
 ## 5. 已完成什麼（Phase 0–4 通過；Phase 5 已實作）
