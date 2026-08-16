@@ -365,8 +365,24 @@ worker 對每個事件都會 enqueue `line-push`，過濾在 `PushNotificationSe
 2. **發的是班級公告、而該班與園長無關**（班級公告只推該班老師 + 該班家長；園長僅與向日葵班有監護關係，
    來自 `SEED_PUSH_DEMO` fixture）。
 
-**下一步診斷**：重發一則**全校公告** → ①App 鈴鐺是否出現該公告（有＝事件流程正常，問題僅在推播段）
-②手機是否收到 LINE。若仍無 → 查 Render `sproutin-worker` log 有無 `line-push` job 與 LINE API 回應。
+**複測結果（Human Owner，2026-08-17 第二次）**：確定發的是**全校公告**；**公告列表有顯示**（＝POST 成功、
+Announcement 已寫入），**LINE 仍未收到**。⚠ 注意：公告列表只讀 Announcement 資料表，**不能證明 outbox 事件
+已被 worker 處理**；真正的證據是「鈴鐺是否出現該則通知」（尚未確認）。
+
+**目前最可能原因（順位已更新）**
+1. ★ **Render `sproutin-worker` 服務未更新到新版**（api 與 worker 為 render.yaml 中兩個獨立服務；
+   已確認 **api 是新版**——線上 `/students/:id/detail`、`/users`、`/school/config` 皆回 401＝路由存在。
+   worker 的自動部署可能失敗或未觸發 → 跑舊 image ＝ 公告不推）。
+2. worker 未在運作（free 方案休眠/崩潰）→ 則站內通知也不會產生（鈴鐺可驗）。
+3. 首次測試時 worker 尚在部署（事件已標 DISPATCHED，不會補推）。
+
+**下一步診斷（兩個一分鐘檢查，可直接定位）**
+- **A 看鈴鐺**：有該則公告通知 → 事件流程正常，問題僅在推播段；無 → worker 沒在處理事件。
+- **B 核准一筆請假**（刀5 之前就會推播的功能）：收到 LINE → worker 活著但跑舊程式（＝原因 1）；
+  沒收到 → worker 整個沒運作（＝原因 2）。
+- **最可能的修法**：Render → `sproutin-worker` → Manual Deploy → Deploy latest commit → 再發一則全校公告。
+- 仍無 → 查 Render `sproutin-worker` log：有無 `[worker] dispatched event=AnnouncementPublished`、
+  有無 `line-push` job 失敗、LINE API 回應碼（token 未設會靜默略過）。
 
 
 
