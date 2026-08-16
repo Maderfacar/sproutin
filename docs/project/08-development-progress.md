@@ -11,7 +11,7 @@
 **Phase:**
 **Phase 9 — Demo（銷售用 demo，非 pilot）／階段2「後台管理 + 園所裝飾」進行中。** Phase 5–8 皆 COMPLETE。
 階段2 分 5 刀：**刀 1（園所外觀設定頁 + 功能藍圖佔位卡）＝ ✅ ACCEPTED（2026-08-17）**；**刀 2（班級 + 學生管理）＝ ✅ ACCEPTED（2026-08-17）**；**刀 3（人員帳號與關聯，含 migration 0004）＝ ✅ ACCEPTED**；
-**刀 5：學生整合視圖 ✅ ACCEPTED；公告 LINE 推播 — 根因已查明並修復（單一無效收件人中斷整批推播），待 Human Owner 複測確認**。
+**刀 5＝ ✅ ACCEPTED**（學生整合視圖 + 公告 LINE 推播;推播根因＝單一無效收件人中斷整批，已修復並複測收到）。
 **刀 4（每日聯絡簿本）尚未開始 —— Human Owner 決定另開新視窗執行**（需新 model + migration + 老師填寫端與家長閱讀端，為五刀中最大的一刀）。
 （歷史：**Phase 7 — Core MVP ✅ COMPLETE（2026-08-16, Human Owner）**；Phase 8 主體完成、#6 定案 B 延後。）
 
@@ -211,9 +211,9 @@ DONE
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
 NOW
-- **等 Render 重新部署完成後，複測公告 LINE 推播**（根因已修復：單一無效收件人不再中斷整批）。
-  發一則全校公告 → 手機應收到 `【全校公告】<標題>`。log 會出現「略過收件人（LINE 拒絕，HTTP 400）」，
-  那是 demo 假帳號，屬正常。
+- 無硬性待辦。階段2 的刀 1/2/3/5 皆已 ACCEPTED，**只剩刀 4（每日聯絡簿本）**，已於新視窗啟動。
+- （已完成）公告 LINE 推播複測 ✅ 收到。worker log 會出現「略過收件人（LINE 拒絕，HTTP 400）」，
+  那是 demo 假帳號被正確跳過，屬正常現象。
 
 DONE
 - ~~建立 Vercel Blob Store（access mode 選 Public）並連到 web 專案~~ ✅ 已完成，上傳實測通過（刀1 ACCEPTED）。
@@ -353,7 +353,11 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-17 — 🔎 公告/請假 LINE 推播收不到 — **根因查明並修復**
+### 2026-08-17 — 🔎 公告/請假 LINE 推播收不到 — **根因查明、修復、✅ Human Owner 複測收到（結案）**
+
+> **✅ 已結案（2026-08-17, Human Owner）**：修復部署後複測，**全校公告 LINE 推播已收到**。
+> → **刀 5 全數 ACCEPTED**（學生整合視圖 + 公告推播）。**階段2 的刀 1/2/3/5 皆已驗收完成，只剩刀 4。**
+
 
 **決定性證據（Human Owner 提供 Render worker log）**
 ```text
