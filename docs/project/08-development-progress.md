@@ -209,7 +209,9 @@ DONE
 - ✅ Phase 8 主體（ESLint / exception filter / web 測試 / 安全標頭 / P5 收尾）;#6 定案 B 延後。
 
 NOW
-- **建立 Vercel Blob Store**，把 `BLOB_READ_WRITE_TOKEN` 加到 web 專案環境變數 → 園所外觀的「上傳圖片」才會啟用（未設定時該按鈕會回報「尚未啟用上傳」，其餘功能不受影響）。
+- **建立 Vercel Blob Store（access mode 選 Public）並連到 web 專案** → 園所外觀的「上傳圖片」才會啟用（未接上時該按鈕回報「尚未啟用上傳」，其餘功能不受影響）。
+  連上專案後 Vercel 預設以 OIDC 注入 `BLOB_STORE_ID`（+ 自動輪替的 `VERCEL_OIDC_TOKEN`），不一定會有 `BLOB_READ_WRITE_TOKEN`；程式兩種都接受。
+  Blob 在 Hobby 方案免費（超出額度會停用而非扣款）。**store 的 public/private 建立後不可更改**，logo/封面需 Public。
 - 線上驗收刀 1：用園長帳號 → 我的 → 園所外觀 → 改名稱/顏色/園徽 → 儲存 → 看全站是否即時變樣。
 
 LATER（正式上線前）

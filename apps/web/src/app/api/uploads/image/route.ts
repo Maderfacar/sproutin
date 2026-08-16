@@ -9,9 +9,14 @@ import { SESSION_COOKIE } from '../../../../lib/server/session-cookie';
 //
 // 授權：same-origin 層先確認「這個人是不是校方管理者」——帶 cookie 的 JWT 向後端 /me 取角色，
 // 只有 OWNER/ADMIN 可上傳（與 PATCH /school/config 同一條線）。真正的資料授權仍在後端 Guard。
-// 未設定 BLOB_READ_WRITE_TOKEN（例如尚未建立 Blob Store）→ 503 upload_unconfigured，
-// 前端據此隱藏上傳按鈕、改用內建圖庫/貼網址，不會壞掉。
+// 尚未接上 Blob Store → 503 upload_unconfigured，前端改用內建圖庫/貼網址，不會壞掉。
+// 憑證有兩種：Vercel 專案連上 Blob Store 後預設走 OIDC（BLOB_STORE_ID + 自動輪替的 VERCEL_OIDC_TOKEN），
+// 專案外或 client upload 才用長期 token BLOB_READ_WRITE_TOKEN。SDK 會自行解析，這裡只判斷「有沒有接上」。
 export const dynamic = 'force-dynamic';
+
+function isBlobConfigured(): boolean {
+  return Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
+}
 
 const MAX_BYTES = 4 * 1024 * 1024; // 4MB（logo/封面綽綽有餘，避免大檔拖慢載入）
 // 不接受 SVG：SVG 可內嵌腳本，園所上傳的圖片不做消毒 → 只收點陣圖。
@@ -44,7 +49,7 @@ async function isSchoolManager(): Promise<boolean> {
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isBlobConfigured()) {
     return fail(503, 'upload_unconfigured');
   }
   if (!(await isSchoolManager())) {
