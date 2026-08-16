@@ -17,18 +17,22 @@ export function StatusScreen({ status, message, sub }: StatusScreenProps) {
   const isError = status === 'error';
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      {!isError && (
+      {isError ? (
+        <span className="text-4xl" aria-hidden>
+          🌱
+        </span>
+      ) : (
         <div
-          className="h-8 w-8 animate-spin rounded-full border-2 border-brand-secondary border-t-brand-primary"
+          className="h-9 w-9 animate-spin rounded-full border-[3px] border-brand-secondary border-t-brand-primary"
           aria-hidden
         />
       )}
-      <p className={isError ? 'font-medium text-red-600' : 'text-gray-500'}>
+      <p className={isError ? 'font-semibold text-red-600' : 'text-ink-soft'}>
         {message ?? DEFAULT_MESSAGE[status]}
       </p>
       {isError && sub && (
-        <p className="max-w-sm break-all rounded-lg bg-gray-100 p-3 text-sm text-gray-600">
-          你的 LINE User ID（sub）：<strong>{sub}</strong>
+        <p className="max-w-sm break-all rounded-card bg-surface p-3 text-sm text-ink-soft shadow-soft">
+          你的 LINE User ID（sub）：<strong className="text-ink">{sub}</strong>
         </p>
       )}
     </main>

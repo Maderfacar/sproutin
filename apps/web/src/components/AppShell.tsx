@@ -5,53 +5,64 @@ import type { ReactNode } from 'react';
 import { useBranding } from '../lib/branding';
 import { useSession } from '../lib/session';
 
-// 全站外框：園方品牌頁首（logo + 名稱）+ 選用 banner + 內容容器。
-// 品牌值皆來自 runtime config（ADR-001）。
+// 溫暖親和外框：柔和品牌漸層頁首（logo + 名稱 + 通知鈴）+ 選用 banner + 內容容器。
 export function AppShell({ children }: { children: ReactNode }) {
   const branding = useBranding();
   const { user } = useSession();
 
   return (
     <div className="min-h-screen">
-      <header className="bg-brand-primary text-white">
-        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
+      <header
+        className="text-white"
+        style={{
+          background:
+            'linear-gradient(135deg, var(--brand-primary), color-mix(in srgb, var(--brand-primary) 60%, #ffffff))',
+        }}
+      >
+        <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-4">
           <Link href="/liff" className="flex items-center gap-3">
             {branding.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={branding.logoUrl}
                 alt={branding.brandName}
-                className="h-9 w-9 rounded-full bg-white object-contain"
+                className="h-10 w-10 rounded-2xl bg-white object-contain shadow-sm"
               />
             ) : (
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg font-bold">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/25 text-lg font-extrabold backdrop-blur">
                 {branding.brandName.charAt(0)}
               </span>
             )}
-            <span className="text-lg font-semibold">{branding.brandName}</span>
+            <span className="text-lg font-extrabold tracking-tight">{branding.brandName}</span>
           </Link>
+
           <Link
             href="/liff/notification"
-            className="ml-auto text-xl"
             aria-label="通知"
             title="通知"
+            className="ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-lg transition hover:bg-white/30"
           >
             🔔
           </Link>
-          <span className="text-sm text-white/80">{user.displayName}</span>
         </div>
+
+        {branding.bannerUrl && (
+          <div className="mx-auto max-w-2xl px-5 pb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={branding.bannerUrl}
+              alt=""
+              className="h-32 w-full rounded-card object-cover shadow-soft"
+            />
+          </div>
+        )}
       </header>
 
-      {branding.bannerUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={branding.bannerUrl}
-          alt=""
-          className="h-32 w-full object-cover"
-        />
-      )}
+      <main className="mx-auto max-w-2xl px-5 py-6">{children}</main>
 
-      <main className="mx-auto max-w-2xl px-4 py-6">{children}</main>
+      <footer className="mx-auto max-w-2xl px-5 pb-8 pt-2 text-center text-xs text-ink-soft">
+        {branding.brandName}｜{user.displayName}
+      </footer>
     </div>
   );
 }

@@ -8,36 +8,45 @@ interface DashboardCardProps {
   icon: string;
   href?: string;
   enabled: boolean;
+  /** 進場動畫延遲（stagger），秒。 */
+  delay?: number;
 }
 
-// Dashboard 卡片。未啟用（本階段尚未實作的功能）顯示為「即將推出」，不可點擊。
-export function DashboardCard({ title, description, icon, href, enabled }: DashboardCardProps) {
+// 溫暖親和卡片：圓角、柔和陰影、品牌色圖示底、hover 輕抬。未啟用＝虛線 + 即將推出。
+export function DashboardCard({ title, description, icon, href, enabled, delay = 0 }: DashboardCardProps) {
   const inner = (
     <div
-      className={`flex h-full flex-col gap-1 rounded-card border bg-white p-4 transition ${
+      className={`rise-in flex h-full flex-col gap-3 rounded-card border bg-surface p-5 transition duration-300 ease-out-soft ${
         enabled
-          ? 'border-gray-200 hover:border-brand-primary hover:shadow-md'
-          : 'border-dashed border-gray-200 opacity-60'
+          ? 'border-line shadow-soft hover:-translate-y-1 hover:shadow-lift'
+          : 'border-dashed border-line opacity-70'
       }`}
+      style={{ animationDelay: `${delay}s` }}
     >
-      <div className="flex items-center gap-2">
-        <span className="text-2xl" aria-hidden>
+      <div className="flex items-start">
+        <span
+          className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl"
+          style={{ background: 'color-mix(in srgb, var(--brand-primary) 12%, #ffffff)' }}
+          aria-hidden
+        >
           {icon}
         </span>
-        <span className="font-semibold text-gray-900">{title}</span>
         {!enabled && (
-          <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+          <span className="ml-auto rounded-full bg-black/5 px-2.5 py-1 text-[11px] font-medium text-ink-soft">
             即將推出
           </span>
         )}
       </div>
-      <p className="text-sm text-gray-500">{description}</p>
+      <div>
+        <p className="font-extrabold text-ink">{title}</p>
+        <p className="mt-0.5 text-sm text-ink-soft">{description}</p>
+      </div>
     </div>
   );
 
   if (enabled && href) {
     return (
-      <Link href={href} className="block">
+      <Link href={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 rounded-card">
         {inner}
       </Link>
     );

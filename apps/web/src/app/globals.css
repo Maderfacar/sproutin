@@ -2,11 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 品牌色預設值（fallback）。BrandingProvider 於 runtime 依該校 SchoolConfig 覆寫，
-   確保同一 bundle 適用所有學校（ADR-001）。 */
+/* ===== 溫暖親和 設計系統 =====
+   品牌色（--brand-*）為 per-school，由 BrandingProvider 於 runtime 覆寫（ADR-001）。
+   暖色中性、圓角、柔和陰影為固定基調（全園一致的溫度）。 */
 :root {
+  /* 品牌（per-school fallback） */
   --brand-primary: #2e7d32;
   --brand-secondary: #a5d6a7;
+
+  /* 暖色中性 */
+  --bg: #faf6ef; /* 溫暖奶油底 */
+  --bg-deep: #f1e8da; /* 漸層深一階 */
+  --surface: #ffffff;
+  --ink: #40382f; /* 溫暖深字 */
+  --ink-soft: #8c8175; /* 柔和次要字 */
+  --line: #ece2d3; /* 暖色邊線 */
+
+  /* 形狀 / 陰影 */
+  --radius-card: 22px;
+  --radius-md: 14px;
+  --shadow-soft: 0 1px 2px rgba(94, 68, 40, 0.05), 0 10px 26px rgba(94, 68, 40, 0.07);
+  --shadow-lift: 0 10px 28px rgba(94, 68, 40, 0.16);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html,
@@ -15,7 +33,35 @@ body {
 }
 
 body {
-  background-color: #f7f8f7;
-  color: #1f2937;
+  color: var(--ink);
+  background-color: var(--bg);
+  /* 溫暖氛圍：奶油底 + 品牌色極淡光暈 */
+  background-image:
+    radial-gradient(1100px 480px at 100% -10%, color-mix(in srgb, var(--brand-secondary) 26%, transparent), transparent),
+    radial-gradient(900px 420px at -10% 0%, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent),
+    linear-gradient(180deg, var(--bg), var(--bg-deep));
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+  font-family: 'Nunito', ui-rounded, 'Segoe UI', system-ui, -apple-system, 'PingFang TC',
+    'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+}
+
+/* 進場動畫：卡片/區塊柔和升起（reduced-motion 尊重） */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: riseIn 0.5s var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+  }
 }
