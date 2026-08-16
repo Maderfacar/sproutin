@@ -24,13 +24,14 @@ jobs:
       # Prisma client 生成（typecheck / build 需要）
       - run: pnpm db:generate
 
+      # ESLint flat config（Phase 8）：lint gate。api / web / shared。
+      - run: pnpm lint
+
       - run: pnpm typecheck
 
       - run: pnpm test
 
       - run: pnpm build
-
-      # TODO(next step): 加入 pnpm lint（待 ESLint flat config 建置後）
 
   # ----------------------------------------------------------------
   # DB job（Phase 6 / Step 1）：於拋棄式 Postgres 驗證 migration + seed。

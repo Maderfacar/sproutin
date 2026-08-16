@@ -31,7 +31,9 @@ Phase 7:  ✅ COMPLETE（2026-08-16, Human Owner）— Core MVP 全數 ACCEPTED
     ├ 7b 家長其餘卡片（出缺勤/訊息/通知/公告）                 → ✅ ACCEPTED
     ├ 7c 老師端（審核/點名/班級訊息·公告）+ GET /classes、GET /leaves?classId= → ✅ ACCEPTED
     └ 7d 園長·ADMIN（稽核查詢頁 + 全校公告 + 全校待審總覽）+ GET /leaves 全校 → ✅ ACCEPTED
-Phase 8:  NOT_STARTED（Integration / Hardening）— 見新 session handoff
+Phase 8:  IN_PROGRESS（Integration / Hardening）
+  ESLint flat config（清 tech debt,CI lint gate）→ IMPLEMENTED（本機 pnpm lint 綠;待 push→CI）
+  其餘候選（append-only §D / 全域 exception filter / web 元件測試 / 多校隔離·secret·效能 / P5 demo 收尾）→ NOT_STARTED
 ```
 
 > Step 7 設計決策（Human Owner 拍板 2026-08-16）：範圍=一次一角色（家長→老師→園長）;UI=Tailwind+少量自建元件（§D 核准）;資料抓取=TanStack Query（§D 核准）;品牌=顏色+logo+banner;版型風格模板留 Phase 8（§D）。多重身份（同帳號兼多角色）架構本就支援（UserRole[] 多筆 + Guardianship + docs/05 §5），前端採聯集視圖。
@@ -305,6 +307,22 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-16 — Phase 8 / ESLint flat config（IMPLEMENTED）
+
+Completed（Human Owner 指示先做;清 tech debt「ESLint flat config」）:
+- 建 root `eslint.config.mjs`（ESLint 9 flat）：js + typescript-eslint recommended;web 另加 react-hooks + `@next/eslint-plugin-next`;測試檔加 jest 全域;忽略 dist/.next/coverage/config 檔/prisma 腳本。
+- 規則微調:`no-unused-vars` 忽略 `^_`（既有 mock/解構慣例）;`no-console: error`（entrypoint main/worker 已就地 disable,符合 coding-style）。
+- deps（root devDeps）:`eslint@9`、`@eslint/js`、`typescript-eslint@8`、`eslint-plugin-react-hooks@5`、`@next/eslint-plugin-next@15`、`globals`。
+- lint scripts:api/web/shared 皆 `eslint src`（web 由 `next lint` 改為直接 eslint,flat config)。CI `build` job 加 `pnpm lint` gate（移除舊 TODO）。
+- **踩雷修正**:`@next/eslint-plugin-next@14` 用了 ESLint 9 已移除的 `context.getAncestors` → 崩潰;升 `@15` 解決（plugin 獨立於 next runtime 版本）。
+
+Verification:
+- 本機 `pnpm lint` ✓（api/web/shared 全綠,0 error 0 warning）。typecheck/test/build 不受影響（僅設定 + script + devDeps 變更,無 src 邏輯改動）。
+- 待:push → CI（新增 lint gate）全綠。
+
+Next:
+- 與 Human Owner 排 Phase 8 後續優先序（append-only §D / 全域 exception filter / web 元件測試 / 多校隔離·secret·效能 / P5 demo 收尾）。
 
 ### 2026-08-16 — Phase 7 — Core MVP ✅ COMPLETE（Human Owner）
 

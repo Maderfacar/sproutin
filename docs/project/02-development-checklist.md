@@ -210,11 +210,18 @@
     - [x] 後端:`LeavesService.listForSchool`（OWNER/ADMIN 全校待審）+ controller 全校分支;+2 單元測試（api 138）
     - [x] 稽核查詢頁 `/liff/audit`（`features/audit`,篩選+分頁+result 標籤）+ proxy `/api/audit-logs`;`MVP_CARDS` 加 audit 卡（shared 8）
     - [x] 全校公告（`TeacherAnnouncePanel` 加全校/班級範圍）;全校待審總覽 `SchoolLeaveOverviewPanel`;`lib/roles` 加 canAnnounceSchool/canViewSchoolLeaves/canViewAudit
-    - [ ] push → CI 綠 → Vercel Preview → Human Owner 手機實測 acceptance → **Phase 7 完成**
+    - [x] push → CI 綠 → Human Owner 手機實測 → **✅ Phase 7 COMPLETE（2026-08-16）**
 
-## Phase 8 — Integration / Hardening  ⬜
+## Phase 8 — Integration / Hardening  🟡 IN_PROGRESS
+- [~] **ESLint flat config（清 Technical Debt,CI lint gate）** — `IMPLEMENTED`（本機 pnpm lint 綠;待 push→CI）
+  - [x] root `eslint.config.mjs`（ESLint 9 flat;js + typescript-eslint;web 加 react-hooks + @next/eslint-plugin-next@15）
+  - [x] no-unused-vars 忽略 `^_`;no-console error（entrypoint 已 disable）;測試檔 jest 全域
+  - [x] api/web/shared lint script = `eslint src`;CI `build` job 加 `pnpm lint`
+- [ ] append-only DB 層鎖死（Step 6 決策 2,§D 提案,infra/ADR-003 破壞性）— `NOT_STARTED`
+- [ ] 全域 exception filter（統一 docs/07 §1 信封）— `NOT_STARTED`
+- [ ] web 前端元件測試（RTL/vitest,§D）— `NOT_STARTED`
 - [ ] 多校隔離 / secret exposure / 錯誤處理 / 效能 — `NOT_STARTED`
-- [ ] **ESLint（清 Technical Debt）** — `NOT_STARTED`
+- [ ] P5 demo 資料收尾（seed 園長 ADMIN+監護 hack 移除/改測試帳號）— `NOT_STARTED`
 
 ## Phase 9–10 — Pilot / Production  ⬜  `NOT_STARTED`
 ## Phase 11+ — Future domains  ⬜  `DEFERRED`（需明確批准）

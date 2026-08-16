@@ -49,7 +49,8 @@ Blocked:
 - 無硬性 Blocker。（驗證依賴 Human Owner 接 GitHub/Vercel/CI）
 
 Technical Debt:
-- **ESLint flat config 未建** → CI 暫略 `lint`。列為 DEFERRED；**MVP Release Candidate（Phase 8）前必須完成**，不得永久忽略。
+- ~~**ESLint flat config 未建**~~ → ✅ **RESOLVED（Phase 8, 2026-08-16）**：root `eslint.config.mjs`（ESLint 9 flat;typescript-eslint + react-hooks + @next/eslint-plugin-next@15）;api/web/shared lint 綠;CI `build` job 已加 `pnpm lint` gate。
+- P5 demo hack（seed 給園長 ADMIN + 監護 stu-sun-2,單帳號自測推播用）→ 正式前移除或改獨立測試帳號（Phase 8 收尾）。
 - ~~**CI 未建置 Docker image**~~ → ✅ RESOLVED（Phase 7 Step 3）：CI 新增 `docker-build` job（同一 Dockerfile.api，push:false）。待 CI 綠驗證。
 - ~~**AuditLog append-only 尚未於 DB 權限層強制**~~ → ✅ **RESOLVED（Phase 7 Step 6 決策 A，migration 0002）**：以 trigger 擋 `AuditLog` UPDATE/DELETE/TRUNCATE（即使 owner 連線也擋）。append-only 已在 DB 層強制。**未來 hardening（非必要）**：least-privilege app role 分離（防 superuser 層級，需新 secret + 換連線，ADR-003 破壞性變更）→ Phase 8+ 正式營運/合規前評估。
 
