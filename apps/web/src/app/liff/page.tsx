@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { selectDashboardCards } from '@sproutin/shared';
 import { useSession } from '../../lib/session';
 import { usePublicConfig } from '../../lib/queries';
+import { usePreview } from '../../lib/preview';
 import { DashboardCard } from '../../components/DashboardCard';
 import { cardMeta } from '../../features/dashboard/cards';
 
@@ -33,17 +33,10 @@ export default function DashboardPage() {
   const cards = selectDashboardCards(roles, config?.featureFlags ?? {}, config?.cardOrder ?? []);
   const roleLabels = [...new Set(roles.map((r) => ROLE_LABEL[r] ?? r))];
 
-  // 預覽覆蓋（?layout=grid|list）：mount 後才讀,避免 hydration mismatch。不動資料。
-  const [layoutOverride, setLayoutOverride] = useState<string | null>(null);
-  useEffect(() => {
-    setLayoutOverride(new URLSearchParams(window.location.search).get('layout'));
-  }, []);
-  const layout =
-    layoutOverride === 'list' || layoutOverride === 'grid'
-      ? layoutOverride
-      : config?.dashboardLayout === 'list'
-        ? 'list'
-        : 'grid';
+  // 版型：外觀預覽覆蓋（null → 依該校預設）。
+  const preview = usePreview();
+  const effectiveLayout = preview.layout ?? config?.dashboardLayout;
+  const layout = effectiveLayout === 'list' ? 'list' : 'grid';
 
   return (
     <div>
