@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useBranding } from '../lib/branding';
+import { clearBackTarget } from '../lib/backTarget';
 import { Icon, type IconName } from './Icon';
 
 const TABS: { href: string; label: string; icon: IconName }[] = [
@@ -70,6 +71,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={tab.href}
                 href={tab.href}
+                // 按了底部頁籤＝決定留在手機版 → 忘掉「從後台進來」這條線，返回鍵回手機版首頁。
+                onClick={clearBackTarget}
                 aria-current={active ? 'page' : undefined}
                 className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-semibold transition ${
                   active ? 'text-brand-primary' : 'text-ink-soft'

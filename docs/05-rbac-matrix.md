@@ -33,6 +33,7 @@
 | Notification | R(自己) | R(自己) | R(自己) | R(自己) | R(自己) |
 | **AuditLog** | **R** | R(受限) | – | – | – |
 | **BindingCode**（發碼/作廢/解綁） | **CRUD** | **CRUD** | – | – | – |
+| **UserRole**（增減身分） | **CRUD** | **CRUD**（不含 OWNER 身分） | – | – | – |
 
 > 修正 A：Leave 的「審核」權限僅在 `leaveRequiresApproval=true` 時有意義；為 false 時申請即自動 APPROVED，無審核步驟。
 >
@@ -41,6 +42,8 @@
 > **新增（2026-08-17, 階段2 刀4）**：`CommunicationBook`（每日聯絡簿）比照 `Attendance` —— 老師填自班、行政全校、園長唯讀、家長只讀自己小孩。兩點差異：
 > ① **家長只看得到已送出的紀錄**（`publishedAt` 非 null），否則會看到老師填到一半的半成品；
 > ② **老師只能填寫/修改近 7 天**（`book_edit_window_expired`），避免事後改寫已交付家長的紀錄；家長端可回溯查閱全部歷史。
+>
+> **新增（2026-08-17, 階段3 ②b）**：`UserRole` 增減限 `OWNER/ADMIN`，但**「園長」這個身分的授予與移除只有 `OWNER` 能做**（`owner_role_requires_owner`）——否則行政可以自行升級為園長，整張矩陣形同虛設。另兩道防呆：最後一位園長的園長身分不可移除（園所會沒有人能管理）；每人至少保留一個身分（零身分的帳號登得進來卻什麼都看不到，那是離職，應該用停用帳號）。**移除身分會一併解除該身分附帶的關聯**（TeacherAssignment / Guardianship），因為 `ScopeResolver` 是依那些關聯放行的——留著就是幽靈權限。詳見 docs/07 §4e。
 >
 > **新增（2026-08-17, 階段3）**：`BindingCode` 限 `OWNER/ADMIN` —— 發碼等同「把人放進系統」的開門權，不下放給老師。兌換端 `POST /auth/line/bind` 無需認證（本來就還沒有身分），安全性由碼本身的熵、期限與一次性保證。
 >

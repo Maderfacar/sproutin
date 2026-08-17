@@ -70,7 +70,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   return (
                     <li key={item.href}>
                       <Link
-                        href={item.href}
+                        // 帶 from=admin：那些頁面是手機版版型，返回鍵才知道要回後台而不是手機版首頁。
+                        href={item.onlyMobile ? `${item.href}?from=admin` : item.href}
                         aria-current={active ? 'page' : undefined}
                         className={`flex items-center gap-2.5 whitespace-nowrap rounded-md2 px-2.5 py-2 text-sm transition ${
                           active

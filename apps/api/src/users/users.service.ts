@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { AuthUser } from '@sproutin/shared';
 import type { Role, UserStatus } from '@sproutin/db';
 import { PrismaService } from '../core/prisma/prisma.service';
@@ -175,6 +180,97 @@ export class UsersService {
       });
     });
     return this.getById(id);
+  }
+
+  // POST /users/:id/roles — 增加一個身分。
+  // 為什麼需要：建錯了要能改；老師自己的小孩也在園裡（同時是老師與家長）是幼兒園常態；
+  // 升任行政、園長交接也都靠這裡。資料模型本就支援多角色，先前只是沒有寫入端點。
+  async grantRole(actor: UserActor, id: string, role: Role): Promise<UserView> {
+    const target = await this.getById(id);
+
+    // 園長身分只有現任園長能給 —— 否則行政可以自行升級，權限矩陣形同虛設。
+    this.assertMayChangeOwnerRole(actor, role);
+
+    if (target.roles.some((r) => r.role === role)) {
+      throw new BadRequestException('role_already_granted');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userRole.create({
+        data: { userId: id, role, scopeType: 'SCHOOL', scopeId: null },
+      });
+      await this.audit.record(tx, {
+        actorUserId: actor.id,
+        actorRole: this.actorRole(actor),
+        action: 'user.role_grant',
+        resourceType: 'User',
+        resourceId: id,
+        result: 'SUCCESS',
+        metadata: { role },
+      });
+    });
+    return this.getById(id);
+  }
+
+  // DELETE /users/:id/roles/:role — 移除一個身分。
+  // 一併解除該身分附帶的關聯（不再是老師就不該還掛在班上 —— 幽靈權限比沒有權限更危險）。
+  async revokeRole(actor: UserActor, id: string, role: Role): Promise<UserView> {
+    const target = await this.getById(id);
+
+    this.assertMayChangeOwnerRole(actor, role);
+
+    if (!target.roles.some((r) => r.role === role)) {
+      throw new NotFoundException('role_not_found');
+    }
+    // 一個身分都沒有的帳號登得進來卻什麼都看不到 —— 那是離職，該用停用而不是拔光身分。
+    if (target.roles.length === 1) {
+      throw new BadRequestException('last_role_cannot_be_removed');
+    }
+    if (role === 'OWNER') {
+      await this.assertNotLastActiveOwner(id);
+    }
+
+    // 移除後是否還保有同類身分（例如同時是 TEACHER 與 BUS_TEACHER，拔掉一個不該連帶清空班級）。
+    const remaining = target.roles.filter((r) => r.role !== role).map((r) => r.role);
+    const keepsTeaching = remaining.some((r) => r === 'TEACHER' || r === 'BUS_TEACHER');
+    const keepsGuardian = remaining.some((r) => r === 'PARENT' || r === 'GUARDIAN');
+    const dropTeaching = !keepsTeaching && (role === 'TEACHER' || role === 'BUS_TEACHER');
+    const dropGuardian = !keepsGuardian && (role === 'PARENT' || role === 'GUARDIAN');
+
+    await this.prisma.$transaction(async (tx) => {
+      // scope 不限：seed 建立的 TEACHER 帶 CLASS scope，後台建立的帶 SCHOOL scope，兩種都要清掉。
+      await tx.userRole.deleteMany({ where: { userId: id, role } });
+      if (dropTeaching) {
+        await tx.teacherAssignment.deleteMany({ where: { userId: id } });
+      }
+      if (dropGuardian) {
+        await tx.guardianship.deleteMany({ where: { userId: id } });
+      }
+      await this.audit.record(tx, {
+        actorUserId: actor.id,
+        actorRole: this.actorRole(actor),
+        action: 'user.role_revoke',
+        resourceType: 'User',
+        resourceId: id,
+        result: 'SUCCESS',
+        // 只記數量與角色，不記班名/學生姓名（PII，修正 C）。
+        metadata: {
+          role,
+          removedTeaching: dropTeaching ? target.teaching.length : 0,
+          removedGuardianships: dropGuardian ? target.guardianOf.length : 0,
+        },
+      });
+    });
+    return this.getById(id);
+  }
+
+  private assertMayChangeOwnerRole(actor: UserActor, role: Role): void {
+    if (role !== 'OWNER') {
+      return;
+    }
+    if (!actor.roles.some((r) => r.role === 'OWNER')) {
+      throw new ForbiddenException('owner_role_requires_owner');
+    }
   }
 
   private async assertNotLastActiveOwner(id: string): Promise<void> {

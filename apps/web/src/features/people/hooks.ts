@@ -67,6 +67,22 @@ export function useRemoveTeacherAssignment() {
   );
 }
 
+// --- 身分（角色）增刪（階段3 ②b）---
+// 為什麼要能改：建錯要能修；老師自己的小孩也在園裡是常態（同時是老師與家長）；
+// 升任行政、園長交接也走這裡。移除身分會連帶解除該身分附帶的班級/監護關聯（後端處理）。
+
+export function useGrantRole() {
+  return usePeopleMutation<{ userId: string; role: UserRoleName }>(({ userId, role }) =>
+    apiSend<UserView>(`/api/users/${userId}/roles`, 'POST', { role }),
+  );
+}
+
+export function useRevokeRole() {
+  return usePeopleMutation<{ userId: string; role: UserRoleName }>(({ userId, role }) =>
+    apiSend<UserView>(`/api/users/${userId}/roles/${role}`, 'DELETE'),
+  );
+}
+
 // --- LINE 綁定碼（階段3）---
 // 後台建立的帳號本人無法登入，直到綁定碼把「園所帳號」與「本人的 LINE」接起來。
 
@@ -150,6 +166,14 @@ export function peopleErrorMessage(error: unknown, fallback: string): string {
       return '這個帳號目前沒有綁定 LINE，不需要解除。';
     case 'binding_code_not_found':
       return '找不到這組綁定碼，可能已經被作廢了。';
+    case 'role_already_granted':
+      return '這個人已經有這個身分了。';
+    case 'role_not_found':
+      return '這個人沒有這個身分，不需要移除。';
+    case 'last_role_cannot_be_removed':
+      return '每個人至少要有一個身分。如果這個人已離職或退園，請用「停用帳號」而不是移除身分。';
+    case 'owner_role_requires_owner':
+      return '只有園長本人可以指派或取消園長身分。';
     default:
       return fallback;
   }

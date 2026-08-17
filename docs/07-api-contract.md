@@ -32,6 +32,8 @@ POST /auth/line/login
 | **GET/POST** | **`/binding-codes`** | 綁定碼：列出有效 / 簽發 | OWNER/ADMIN | ✔ |
 | **DELETE** | **`/binding-codes/:id`** | 作廢綁定碼 | OWNER/ADMIN | ✔ |
 | **DELETE** | **`/users/:id/line`** | 解除 LINE 綁定（帳號不刪除） | OWNER/ADMIN | ✔ |
+| **POST** | **`/users/:id/roles`** | 增加身分（OWNER 身分限園長操作） | OWNER/ADMIN | ✔ |
+| **DELETE** | **`/users/:id/roles/:role`** | 移除身分 + 附帶關聯 | OWNER/ADMIN | ✔ |
 | GET | `/me` | 目前使用者 + 角色 | auth | – |
 | GET | `/me/dashboard` | 動態 card 清單（後端過濾） | auth | – |
 | GET | `/students?classId=` | 學生清單（scope 過濾；classId 只縮小不放寬） | Roles | – |
@@ -142,6 +144,8 @@ PATCH  /students/:id   { name?, classId?, status? } → StudentView（未知欄�
 GET    /users?role=                              → UserView[]（含角色、綁定小孩、任教班級、是否已綁 LINE）
 POST   /users            { displayName, role }   → UserView（建立帳號 + 一個角色）
 PATCH  /users/:id        { displayName?, status? } → UserView（**無 DELETE**）
+POST   /users/:id/roles  { role }                → UserView（增加身分；階段3 ②b）
+DELETE /users/:id/roles/:role                    → UserView（移除身分 + 附帶關聯）
 
 POST   /guardianships    { userId, studentId, relation, isPrimary? } → { id }
 DELETE /guardianships/:id                        → 204
@@ -156,8 +160,31 @@ DELETE /teacher-assignments/:id                  → 204
 - **UserRole 一律建 SCHOOL scope**：班級層級授權的真正依據是 `TeacherAssignment`（見 `ScopeResolver`），
   避免班級歸屬存在兩處而不同步。
 - 重複綁定 → 409 `guardianship_exists` / `assignment_exists`；對象不存在 → 400。
-- **尚未綁定 LINE 的帳號本人無法登入**（`user_not_provisioned`）。綁定機制為開賣前必要項，
-  demo 不做（見 `docs/project/08` Human Owner Action / LATER）。
+- **尚未綁定 LINE 的帳號本人無法登入**（`user_not_provisioned`）。綁定機制見 §4g。
+
+### 身分（角色）增刪（階段3 ②b）
+
+原本角色只能在建立帳號時給一次，之後無法變更或增補。實務上必然發生：建錯要能改、
+**老師自己的小孩也在園裡（同時是老師與家長）是幼兒園常態**、升任行政、園長交接。
+資料模型（`UserRole` 多筆 + `@@unique([userId, role, scopeType, scopeId])`）本就支援，缺的只是寫入端點。
+
+```text
+POST   /users/:id/roles        { role }   → UserView   （OWNER/ADMIN）
+DELETE /users/:id/roles/:role             → UserView   （OWNER/ADMIN）
+稽核：user.role_grant / user.role_revoke（metadata 只記角色與解除數量，不記姓名/班名）
+```
+
+- **園長身分只有園長能給或拿掉** → 403 `owner_role_requires_owner`。
+  否則行政可自行升級為園長，權限矩陣形同虛設。
+- **最後一位園長的園長身分不可移除** → 400（沿用 `assertNotLastActiveOwner`）。
+- **每人至少保留一個身分** → 400 `last_role_cannot_be_removed`。
+  零身分的帳號登得進來卻什麼都看不到 —— 那是離職，應該用「停用帳號」。
+- **移除身分時一併解除該身分附帶的關聯**：拔掉 TEACHER/BUS_TEACHER（且不再保有任一教職身分）
+  → 刪除其 `TeacherAssignment`；拔掉 PARENT/GUARDIAN（且不再保有任一家長身分）
+  → 刪除其 `Guardianship`。理由：**幽靈權限比沒有權限更危險** —— 不再是老師卻還掛在班上，
+  ScopeResolver 仍會放行。前端在按下之前明講「會同時取消他帶的 N 個班」。
+- 移除以 `deleteMany({ userId, role })` 不限 scope —— seed 建立的 TEACHER 帶 CLASS scope，
+  後台建立的帶 SCHOOL scope，兩種都要清得掉。
 
 ## 4f. 每日聯絡簿（Phase 9 階段2 刀4）
 

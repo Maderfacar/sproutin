@@ -20,6 +20,7 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
   const schoolItems: AdminNavItem[] = [{ href: '/admin', label: '總覽', icon: 'home' }];
   if (flags.canManageSchool) {
     schoolItems.push({ href: '/admin/people', label: '人員與綁定', icon: 'user' });
+    schoolItems.push({ href: '/admin/roles', label: '權限設定', icon: 'shield' });
   }
 
   const sections: AdminNavSection[] = [{ title: '園務', items: schoolItems }];

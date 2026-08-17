@@ -5,6 +5,7 @@ import type { AdminStudentView, ClassView, GuardianRelation, UserView } from '..
 import { apiErrorMessage } from '../../lib/api';
 import { ROLE_LABEL } from '../../lib/roleLabels';
 import { BindingSection } from './BindingSection';
+import { RolesSection } from './RolesSection';
 import {
   RELATION_LABEL,
   peopleErrorMessage,
@@ -107,6 +108,8 @@ export function PersonEditor({ person, classes, students, onClose }: PersonEdito
           {isActive ? '停用帳號' : '重新啟用'}
         </button>
       </div>
+
+      <RolesSection person={person} />
 
       {isGuardianRole && (
         <div className="border-t border-line pt-4">

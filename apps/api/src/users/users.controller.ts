@@ -28,6 +28,8 @@ const createUserSchema = z.object({
   role: z.enum(ROLE_VALUES),
 });
 
+const roleBodySchema = z.object({ role: z.enum(ROLE_VALUES) });
+
 const updateUserSchema = z
   .object({
     displayName: z.string().trim().min(1).max(40),
@@ -75,6 +77,37 @@ export class UsersController {
       throw new BadRequestException('invalid_input');
     }
     return this.users.update(req.user!, id, parsed.data);
+  }
+
+  // POST /users/:id/roles — 增加身分（docs/07 §4e）。
+  // 授權：OWNER/ADMIN;**授予「園長」另需本人為園長**（於 service 再擋一層，前端只決定顯示）。
+  @Post(':id/roles')
+  @Roles('OWNER', 'ADMIN')
+  async grantRole(
+    @Req() req: AuthedRequest,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ): Promise<UserView> {
+    const parsed = roleBodySchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException('invalid_input');
+    }
+    return this.users.grantRole(req.user!, id, parsed.data.role as Role);
+  }
+
+  // DELETE /users/:id/roles/:role — 移除身分（連同該身分附帶的班級/監護關聯）。
+  @Delete(':id/roles/:role')
+  @Roles('OWNER', 'ADMIN')
+  async revokeRole(
+    @Req() req: AuthedRequest,
+    @Param('id') id: string,
+    @Param('role') role: string,
+  ): Promise<UserView> {
+    const valid = ROLE_VALUES.find((r) => r === role);
+    if (!valid) {
+      throw new BadRequestException('invalid_input');
+    }
+    return this.users.revokeRole(req.user!, id, valid as Role);
   }
 
   // DELETE /users/:id/line — 解除 LINE 綁定（換手機、綁錯人、家長換 LINE 帳號的救援出口）。

@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**階段3：綁定碼 IMPLEMENTED 待驗收；桌面版專屬後台骨架 IMPLEMENTED**——LINE Login 網頁版 OAuth、`/admin/*` 桌面外框、桌面版綁定畫面。待 CI → 線上驗收。）
+> Last updated: 2026-08-17（**階段3：綁定碼 / 桌面後台骨架 / 人員權限設定 皆 IMPLEMENTED 待驗收**——LINE Login 網頁版 OAuth、`/admin/*` 桌面外框、桌面版綁定畫面、身分增減 + 權限總覽頁，另修好「從後台進手機版頁面後返回鍵跑掉」。）
 
 ---
 
@@ -66,8 +66,8 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 ## Current Task
 
-**Phase 9 階段3 — 桌面版專屬後台「骨架」IMPLEMENTED（2026-08-17）。** 待 CI 綠 + Human Owner 線上驗收。
-本機四項全綠：lint / typecheck / **測試 262（api 221 + shared 12 + web 29）** / build。
+**Phase 9 階段3 — 桌面後台骨架 + 人員權限設定 IMPLEMENTED（2026-08-17）。** 待 CI 綠 + Human Owner 線上驗收。
+本機四項全綠：lint / typecheck / **測試 279（api 234 + shared 12 + web 33）** / build。
 
 ### 骨架定案（Human Owner 拍板 2026-08-17）
 
@@ -224,13 +224,9 @@ Required decision:
    rate limiting 上線後應一併涵蓋 `/auth/line/bind`（見第 5 項）。
    新增：`/api/admin/oauth/start` 與 `/admin/callback` 也是未認證即可呼叫的入口，rate limiting 時一併涵蓋。
 
-9. ★ **建好的人員無法改變角色**（2026-08-17 發現，Human Owner 已指定要做）
-   - Priority: High（CSV 批次匯入之前必須有）
-   - 現況: `POST /users` 建帳號時指定一次角色;`PATCH /users/:id` 只能改 displayName / status
-     （`apps/api/src/users/users.controller.ts`）。**建錯角色改不回來，也無法為一人加第二個角色**
-     （例如老師本身也是家長）。可改的只有 Guardianship / TeacherAssignment 那一層。
-   - 為什麼擋在匯入之前: CSV 一次會建幾百人，角色若不能事後修正，匯入等於不能反悔的動作。
-   - 需求: 新後端端點（增/刪 UserRole）→ 屬 §D，屆時提案 + 定案後才實作。
+9. ~~建好的人員無法改變角色~~ → ✅ RESOLVED（階段3 ②b, 2026-08-17）：
+   §D 提案 + Human Owner 三題定案 → `POST /users/:id/roles` / `DELETE /users/:id/roles/:role`
+   + 權限設定頁。詳見 docs/07 §4e、docs/05 矩陣。
 
 10. 桌面後台的 Vercel 預覽環境無法登入 —— LINE 只登記一組 Callback URL（正式網域），
     預覽網域的 redirect_uri 不匹配會被 LINE 拒絕。demo 階段直接上 main，不影響;
@@ -330,10 +326,9 @@ LATER（正式上線前）
 **Phase 9 階段3（Human Owner 2026-08-17 拍板的執行順序）：**
 
   ① 專屬後台骨架        → IMPLEMENTED（2026-08-17），待線上驗收
-  ② 管理首頁            → 概況數字 + 所有管理入口聚成一頁
-  ②b 人員權限設定頁      → **新插入**（Technical Debt #9）。理由：CSV 一次建幾百人，
-                          角色若不能事後修正，匯入就是不能反悔的動作 → 必須排在匯入之前。
-                          需新後端端點 → §D 提案後才動工。
+  ②b 人員權限設定頁      → IMPLEMENTED（2026-08-17），待線上驗收。§D 已提案並由 Human Owner
+                          三題定案（三題全採建議）。提前於 ② 完成，因為 CSV 匯入必須排在它之後。
+  ② 管理首頁            → 概況數字 + 所有管理入口聚成一頁（**下一步**）
   ③ CSV 批次匯入        → 帳號/學生/班級 + 批次發綁定碼（範本 8 分頁）
   ④ 圖文選單設計器      → 模板式（換底圖 + 選連結 + 填字），依角色顯示不同選單；
                           需新 model + LINE Messaging API。**實作前先查清 LINE 的選單數量與
@@ -480,6 +475,48 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — 🔑 階段3 ②b：**人員權限設定（IMPLEMENTED，待線上驗收）** + 修返回鍵
+
+**§D 提案 → Human Owner 三題全採建議（2026-08-17）**
+
+| 決策 | 定案 | 為什麼 |
+|------|------|--------|
+| 誰能改權限 | OWNER/ADMIN 都能改，**但「園長」身分的授予與移除只有 OWNER** | 不然行政可以自行升級為園長，整張權限矩陣形同虛設 |
+| 拔掉身分時附帶關聯 | **一起解除**，並在按下之前明講「會同時取消他帶的 N 個班」 | `ScopeResolver` 是依 TeacherAssignment/Guardianship 放行的，留著就是幽靈權限 |
+| 可否在後台指派園長 | **可以**，但只有現任園長看得到這個選項，且需二次確認 | 不給的話園長交接永遠只能改資料庫 |
+
+**採用方案 A（增/刪各一個端點），不採「全量取代」**：全量取代在兩人同時操作時會互相蓋掉，
+稽核也只記得到結果、記不到意圖，而且容易一次刪光。增刪分開則每個動作對應一筆稽核
+（`user.role_grant` / `user.role_revoke`），記得下「誰在什麼時候給了誰什麼權限」。
+
+**兩道把園所鎖死的防呆**
+```text
+最後一位園長的園長身分不可移除（沿用既有 assertNotLastActiveOwner）。
+每人至少保留一個身分 —— 零身分的帳號登得進來卻什麼都看不到，那是離職，應該用「停用帳號」。
+移除以 deleteMany({ userId, role }) 不限 scope：seed 的 TEACHER 帶 CLASS scope、
+後台建的帶 SCHOOL scope，兩種都要清得掉，否則會留下清不掉的殘角色。
+同時是 TEACHER 與 BUS_TEACHER 時，拔掉其中一個不會清空班級（仍是教職身分）。
+```
+
+**順手修掉的 bug（Human Owner 回報）**：從桌面後台點進手機版功能後按「上一頁」，
+會被丟到手機版首頁而不是回後台 —— `PageHeader` 的返回鍵寫死 `href="/liff"`。
+修法刻意**只改變「從後台進來」的情形**：後台的連結帶 `?from=admin`，記在 sessionStorage，
+之後同分頁的子頁都回得去；按了手機版底部頁籤即清除（＝決定留在手機版）。
+**不用 `router.back()`**：LIFF 在 LINE 內是經過多次轉址進來的，彈回去會掉進登入鏈。
+
+**做了什麼（檔案）**
+```text
+api   users.service.ts grantRole/revokeRole + assertMayChangeOwnerRole
+      users.controller.ts POST /users/:id/roles、DELETE /users/:id/roles/:role
+      users.service.spec.ts +13（含行政不能自我升級、最後園長、最後身分、CLASS scope 清除）
+web   features/people/RolesSection.tsx（身分增減 + 移除前明講附帶影響）→ 併入 PersonEditor
+      app/admin/(app)/roles/page.tsx（權限總覽：一頁看完誰有什麼身分，點「調整」開同一個編輯器）
+      lib/backTarget.ts + spec（返回目標）;PageHeader / AppShell / AdminShell 配合
+      2 條 proxy route;hooks 加 useGrantRole/useRevokeRole + 4 則錯誤訊息
+docs  07 §4e（身分增刪）+ 端點表、05 矩陣新增 UserRole 列與說明、本檔
+測試  262 → 279（api 234 + shared 12 + web 33）
+```
 
 ### 2026-08-17 — 🖥 階段3 ①：**桌面版專屬後台骨架（IMPLEMENTED，待線上驗收）**
 
