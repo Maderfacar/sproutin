@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useBranding } from '../lib/branding';
+import { useEffect, useState } from 'react';
+import type { PublicConfig } from '@sproutin/shared';
+import { loadPublicConfig } from '../lib/config';
 
 // 網站根路徑。任何人（含搜尋引擎、隨手貼網址的人）都會看到這一頁，
 // 因此**不顯示任何系統內部資訊** —— 這裡原本是 Phase 5 驗證 runtime config 管線的骨架頁，
@@ -9,17 +11,37 @@ import { useBranding } from '../lib/branding';
 // 但把系統的內部結構攤給不特定人看沒有任何好處，對要拿去賣的產品更是難看。
 //
 // 這一頁只回答「我該從哪裡進去」：家長從 LINE 進、園所人員用電腦進。
+//
+// **品牌自己抓，不用 BrandingProvider**：BrandingProvider 掛在 AppShell / AdminShell 裡，
+// 根路徑不在任何一個之下。原本直接呼叫 useBranding 會在沒有 provider 時丟例外，
+// 導致 `next build` 預先產生這一頁時失敗（CI 自 cc9f04f 起紅燈）。
+// 這裡改成自己載入，且**載不到就用中性文案**——公開頁面不該因為後端沒回應就整頁爆掉。
+const FALLBACK_BRAND = 'Sproutin';
+
 export default function Home() {
-  const branding = useBranding();
+  const [config, setConfig] = useState<PublicConfig | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPublicConfig()
+      .then((c) => !cancelled && setConfig(c))
+      .catch(() => undefined); // 連不上就維持中性外觀，不在公開頁顯示錯誤細節
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const brandName = config?.brandName ?? FALLBACK_BRAND;
+  const logoUrl = config?.logoUrl ?? null;
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="card w-full max-w-md p-8 text-center">
-        {branding.logoUrl ? (
+        {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={branding.logoUrl}
-            alt={branding.brandName}
+            src={logoUrl}
+            alt={brandName}
             className="mx-auto h-14 w-14 rounded-full border border-brand-primary/40 bg-surface object-contain"
           />
         ) : (
@@ -27,12 +49,12 @@ export default function Home() {
             className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] text-xl font-bold"
             style={{ borderColor: 'var(--brand-primary)', color: 'var(--brand-primary)' }}
           >
-            {branding.brandName.charAt(0)}
+            {brandName.charAt(0)}
           </span>
         )}
 
         <h1 className="mt-5 font-serif text-2xl font-semibold tracking-tight text-ink">
-          {branding.brandName}
+          {brandName}
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
           園所與家長的每日聯繫。請從下面選擇你要進入的方式。
