@@ -109,6 +109,41 @@ model BindingCode {
   @@index([userId])
 }
 
+// 園所的 LINE 圖文選單設計（Phase 9 階段3 ④）。一個對象一份設計。
+// 設計（本表）與「已套用到 LINE 的那一份」（lineRichMenuId）刻意分開：
+// LINE 的 API 不允許覆蓋既有選單的底圖 —— 換圖必須建新選單、把人綁過去、再刪舊的
+// （官方後台的「換底圖」也是這樣做的，只是幫使用者藏起來了）。
+// 加上「建立選單」有每小時 100 次的上限，因此**儲存設計不碰 LINE，只有「套用」才碰**。
+model RichMenuConfig {
+  id          String           @id @default(cuid())
+  audience    RichMenuAudience @unique // 這份選單給誰看
+  template    RichMenuTemplate @default(SIX)
+  imageUrl    String? // 底圖（Vercel Blob）;LINE 限 JPEG/PNG、寬 800–2500、比例 ≥1.45、≤1MB
+  chatBarText String           @default("開啟選單") // LINE 聊天列上的文字（LINE 限 14 字）
+  items       Json             @default("[]") // [{ index, target }]；target 對應 App 內的功能
+
+  // 已套用到 LINE 的那一份（用於下次套用時解除與清除，避免吃掉 1000 份的額度）
+  lineRichMenuId String?
+  appliedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum RichMenuAudience {
+  PARENT // 家長／監護人
+  STAFF // 園長、行政、老師
+  UNBOUND // 還沒綁定的人（只給一顆「開始使用」）
+}
+
+// 模板式（Human Owner 拍板）：園所換底圖 + 選每格連到哪，不做自由拉區域。
+// 設計骨架鎖住＝填空題不是作文。LINE 一份選單最多 20 格，這裡遠低於上限。
+enum RichMenuTemplate {
+  SIX // 3×2 六格
+  FOUR // 2×2 四格
+  TWO // 1×2 兩格
+}
+
 model LineIdentity {
   id         String @id @default(cuid())
   lineUserId String @unique // 僅供認證；不得作為業務外鍵 (修正 D)

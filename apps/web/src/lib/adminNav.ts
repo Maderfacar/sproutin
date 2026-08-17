@@ -29,9 +29,9 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
     sections.push({
       title: '設定',
       items: [
+        { href: '/admin/appearance', label: '園所外觀設計', icon: 'image' },
         { href: '/liff/admin/classes', label: '班級', icon: 'doc', onlyMobile: true },
         { href: '/liff/admin/students', label: '學生', icon: 'heart', onlyMobile: true },
-        { href: '/liff/admin/appearance', label: '園所外觀', icon: 'image', onlyMobile: true },
       ],
     });
   }

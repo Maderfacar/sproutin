@@ -26,7 +26,7 @@ export function useUpdateSchoolConfig() {
   });
 }
 
-export type UploadKind = 'logo' | 'banner';
+export type UploadKind = 'logo' | 'banner' | 'richmenu';
 
 // 圖片上傳（→ Vercel Blob，回傳公開網址）。未設定 Blob Store 時後端回 503 upload_unconfigured。
 export function useUploadImage() {
@@ -59,6 +59,10 @@ export function uploadErrorMessage(error: unknown): string {
         return '只接受 PNG / JPG / WebP 圖片。';
       case 'image_too_large':
         return '圖片超過 4MB，請換一張小一點的。';
+      case 'rich_menu_image_format':
+        return 'LINE 的選單底圖只接受 PNG 或 JPG（不能用 WebP）。';
+      case 'rich_menu_image_too_large':
+        return 'LINE 規定選單底圖不能超過 1MB，請壓縮後再上傳。';
       case 'out_of_scope':
         return '你沒有修改園所外觀的權限。';
       default:

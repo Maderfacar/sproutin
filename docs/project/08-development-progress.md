@@ -66,9 +66,9 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 ## Current Task
 
-**Phase 9 階段3 ① 骨架 + ②b 權限設定 — ✅ ACCEPTED（2026-08-17）；② 管理首頁 — IMPLEMENTED，待驗收。**
-四項全綠：lint / typecheck / **測試 283（api 234 + shared 12 + web 37）** / build。
-**③ CSV 批次匯入已由 Human Owner 暫停**（欄位需等功能完善才明確）→ 下一步方向待拍板。
+**Phase 9 階段3 ① 骨架 + ②b 權限設定 — ✅ ACCEPTED（2026-08-17）；② 管理首頁 + ④ 園所外觀設計（含圖文選單）— IMPLEMENTED，待驗收。**
+四項全綠：lint / typecheck / **測試 299（api 250 + shared 12 + web 37）** / build。
+**③ CSV 批次匯入已由 Human Owner 暫停**（欄位需等功能完善才明確）→ 剩 ⑤ 打磨。
 
 ### 骨架定案（Human Owner 拍板 2026-08-17）
 
@@ -338,9 +338,10 @@ LATER（正式上線前）
                           理由：匯入範本要收哪些欄位，取決於系統實際有哪些功能;現在做等於猜。
                           等後續功能陸續完善、欄位明確之後再回來做。
                           （先決條件已備妥：②b 權限設定已完成 → 匯入建錯角色有救。）
-  ④ 圖文選單設計器      → 模板式（換底圖 + 選連結 + 填字），依角色顯示不同選單；
-                          需新 model + LINE Messaging API。**實作前先查清 LINE 的選單數量與
-                          API 呼叫限制，不憑印象編數字。** 每園需自己的 OA，故先做介面與設定儲存。
+  ④ 園所外觀設計        → IMPLEMENTED（2026-08-17），待線上驗收。
+                          **Human Owner 定調：圖文選單併入園所外觀，一頁四段**（選單/品牌/卡片/請假）。
+                          限制數字已逐項查證（見 docs/07 §4i）。**連「套用到 LINE」一起做**
+                          —— Human Owner 說明目前 OA 只有內部人員測試，沒有真實使用者會被影響。
   ⑤ 打磨（走查全站細節）→ **一定放最後**，否則新做的頁面又要再打磨一次。
 
 （歷史候選方向，保留紀錄）
@@ -489,6 +490,57 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — 🎛 階段3 ④：**園所外觀設計＝品牌 + LINE 圖文選單（IMPLEMENTED，待線上驗收）**
+
+**Human Owner 定調：圖文選單不是獨立功能，它和園所外觀是同一件事**——都是「這間園所在家長
+眼中長什麼樣子」。因此收成一頁「園所外觀設計」（桌面版 `/admin/appearance`），順序刻意把
+**圖文選單放第一**：家長最先看到的是 LINE 選單，不是 App 內頁。
+
+**先查證再動工（Human Owner 明確要求不可憑印象編數字）**
+```text
+底圖 JPEG/PNG、≤1MB、寬 800–2500、高 ≥250、寬/高 ≥1.45
+一份選單最多 20 格；name ≤300 字、chatBarText ≤14 字
+一個官方帳號最多 1000 份選單；**建立選單 100 次/小時**
+批次綁定一次 500 人、2000 次/秒、非同步（202 不等於全部成功）
+每格連到 https://liff.line.me/{liffId}/{path}（LIFF 以 liff.state 轉址）
+出處：LINE Messaging API reference（2026-08-17 逐項查證）
+```
+
+**一個被更正的說法**：先前引用官方文件寫「底圖不能替換」，Human Owner 指出他實際操作可以換。
+兩者都對，只是角度不同 —— **官方後台的「換底圖」是幫使用者在背後重建一份**；用 API 時同一個
+選單 ID 的圖確實不可覆蓋。我們的系統做的是同一件事，使用者感受到的就是「換好了」。
+
+**因此有兩個設計決定**
+```text
+① 儲存與套用分開：園長調版面會存很多次，若每次都建選單會撞上每小時 100 次上限。
+   PUT 只寫本地資料庫；apply 才動 LINE。
+② 套用順序＝建新的 → 上傳圖 → 綁人 → **最後**刪舊的。
+   先刪的話中途失敗會讓全園所暫時沒有選單。這一點有測試釘住（順序斷言）。
+```
+
+**還沒綁定的人怎麼辦**：不逐一綁定（我們根本不知道他們是誰），而是設為 LINE 的「預設選單」。
+個別綁定的優先權高於預設，所以已綁定者不受影響。**綁定成功的當下**由
+`BindingCodeService.redeem()` → `RichMenuLinkService` 換上對應身分那一份；
+**這一步失敗絕不可讓綁定失敗**（錯誤只記錄不丟出），沒換到的話園所下次套用會補上。
+為避免 AuthModule ↔ RichMenuModule 循環相依，換選單那一支獨立成不依賴 AuthModule 的小模組。
+
+**做了什麼（檔案）**
+```text
+DB    RichMenuConfig + enum RichMenuAudience/RichMenuTemplate + migration 0007（expand-only）
+api   rich-menu/{types,line-rich-menu.client,rich-menu.service,rich-menu-link.service,
+      rich-menu.controller,rich-menu.module,rich-menu-link.module} + spec（16）
+      binding-code.service 綁定成功後換選單
+web   features/rich-menu/{types,hooks,MenuPreview,RichMenuSection}
+      app/admin/(app)/appearance/page.tsx（圖文選單 + 品牌 + 卡片 + 請假流程，四段一頁）
+      features/school/AppearanceEditor.tsx（自手機版抽出，兩邊共用）
+      3 條 proxy route;uploads/image 加 richmenu 類型（PNG/JPG + 1MB 上限）
+docs  03（RichMenuConfig）05（矩陣）07（§4i，含查證到的限制表）+ 本檔
+測試  283 → 299（api 250 + shared 12 + web 37）
+```
+
+**預覽刻意把格線疊在底圖上**：底圖是園所自己畫的，「圖上的按鈕」與「實際可點的區域」對不齊
+是這類設計器最常見的失誤，看得到格線才發現得了。
 
 ### 2026-08-17 — 🏠 階段3 ②：**管理首頁（IMPLEMENTED，待線上驗收）**
 

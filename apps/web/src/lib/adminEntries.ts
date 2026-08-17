@@ -30,10 +30,10 @@ export function adminEntries(flags: RoleFlags): AdminEntry[] {
         hint: '新增學生、調整班級',
       },
       {
-        href: '/liff/admin/appearance?from=admin',
+        href: '/admin/appearance',
         icon: 'image',
-        label: '園所外觀',
-        hint: '園名、顏色、園徽、封面圖',
+        label: '園所外觀設計',
+        hint: 'LINE 選單、園名、顏色、園徽、封面圖',
       },
     );
   }

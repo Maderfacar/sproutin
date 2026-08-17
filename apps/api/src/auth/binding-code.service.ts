@@ -4,6 +4,7 @@ import type { AuthUser } from '@sproutin/shared';
 import type { BindingCode } from '@sproutin/db';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { AuditService } from '../core/audit/audit.service';
+import { RichMenuLinkService } from '../rich-menu/rich-menu-link.service';
 
 // LINE 帳號綁定碼（Phase 9 階段3）。
 //
@@ -68,6 +69,7 @@ export class BindingCodeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly richMenuLink: RichMenuLinkService,
   ) {}
 
   // GET /binding-codes?userId= — 未使用且未作廢的碼（供後台顯示與列印）。
@@ -168,7 +170,7 @@ export class BindingCodeService {
     const existing = await this.prisma.lineIdentity.findUnique({ where: { lineUserId } });
     if (existing) throw new BadRequestException('line_already_bound');
 
-    return this.prisma.$transaction(async (tx) => {
+    const userId = await this.prisma.$transaction(async (tx) => {
       // 條件式更新＝樂觀鎖：兩個人同時送同一組碼時，只有一個會更新到列。
       const claimed = await tx.bindingCode.updateMany({
         where: { id: row.id, usedAt: null, revokedAt: null },
@@ -191,6 +193,12 @@ export class BindingCodeService {
 
       return row.userId;
     });
+
+    // 綁定成功 → 立刻把他的 LINE 選單換成對應身分那一份（綁定前看到的是「還沒綁定」那份）。
+    // 這一步失敗不影響綁定（service 內部自行吞掉錯誤），沒換到的話園所下次套用會補上。
+    await this.richMenuLink.linkAfterBinding(userId, lineUserId);
+
+    return userId;
   }
 
   // 解除綁定（DELETE /users/:id/line）：換手機、綁錯人、家長換 LINE 帳號時的救援出口。

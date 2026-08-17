@@ -10,6 +10,7 @@ import { RolesGuard } from './roles.guard';
 import { ScopeGuard } from './scope.guard';
 import { ScopeResolver } from './scope-resolver.service';
 import { AuditModule } from '../core/audit/audit.module';
+import { RichMenuLinkModule } from '../rich-menu/rich-menu-link.module';
 
 // JWT 簽章金鑰由平台注入（Render generateValue，ADR-004）。
 // 本地/測試無 JWT_SECRET 時用臨時值；正式環境永遠有真值。
@@ -24,6 +25,9 @@ const jwtSecret = process.env.JWT_SECRET ?? 'dev-only-insecure-secret';
     }),
     // guards（RolesGuard / ScopeGuard）的 DENIED out-of-band audit 需 AuditEnqueuer。
     AuditModule,
+    // 綁定成功當下要把人換上對應身分的 LINE 選單。
+    // 這個模組刻意不依賴 AuthModule，因此不會形成循環相依。
+    RichMenuLinkModule,
   ],
   controllers: [AuthController, BindingCodeController],
   providers: [

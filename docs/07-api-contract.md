@@ -269,6 +269,50 @@ POST /api/auth/line/bind      （web）body 未帶 idToken 時改讀 httpOnly co
 - `redirect_uri` 必須與 LINE 後台登記的 Callback URL 完全一致，不一致由 LINE 直接拒絕。
 - LINE 憑證（id_token）**全程不進前端**：只存在伺服器端與 httpOnly cookie。
 
+## 4i. 園所 LINE 圖文選單（Phase 9 階段3 ④）
+
+```text
+GET    /rich-menus                    → RichMenuConfigView[]（三份：PARENT/STAFF/UNBOUND）
+PUT    /rich-menus/:audience          → RichMenuConfigView（**儲存設計，不碰 LINE**）
+POST   /rich-menus/:audience/apply    → { audience, linkedUsers, appliedAt }（真的送到 LINE）
+稽核：rich_menu.save / rich_menu.apply（metadata 只記對象、版面、格數與人數）
+```
+
+全部 `OWNER/ADMIN`（園所外觀屬園務管理）。模板式：園所換底圖 + 選每格連到哪 + 填字，
+不做自由拉區域 —— 設計骨架鎖住＝填空題不是作文。
+
+**LINE 的實際限制**（2026-08-17 查證自 Messaging API reference，非憑印象）：
+
+| 項目 | 值 |
+|---|---|
+| 底圖格式 / 大小 | JPEG 或 PNG、**≤1MB** |
+| 底圖尺寸 | 寬 800–2500px、高 ≥250px、寬/高 **≥1.45** |
+| 一份選單最多格數 | **20**（我們最多用 6） |
+| name / chatBarText | 300 字 / **14 字** |
+| 一個官方帳號最多選單數 | **1000** |
+| 建立選單頻率 | **100 次/小時** |
+| 批次綁定 | 一次 **500** 人、2000 次/秒、非同步（202 不等於全部成功） |
+
+**為什麼儲存與套用要分開**：LINE 不允許覆蓋既有選單的底圖（換圖＝建新選單），而
+「建立選單」有每小時 100 次上限。園長調版面時會存很多次，若每次儲存都建選單很快就撞上限。
+因此 `PUT` 只寫本地資料庫，`apply` 才動 LINE。
+
+**套用的順序**（順序有意義，寫反會出事）：
+```text
+建新選單 → 上傳底圖 → 綁人（或設為預設）→ **最後**才刪舊的
+先刪舊的話，中途任一步失敗會讓全園所暫時沒有選單可用。
+刪除失敗不使整個套用失敗（新選單已生效），只記錄 —— 但額度會累積，需留意 1000 份上限。
+```
+
+- **UNBOUND 設為「預設選單」**而非逐一綁定 —— 還沒綁定的人我們根本不知道是誰。
+  個別綁定的優先權高於預設，所以已綁定者不受影響（LINE 官方定義的優先序）。
+- **綁定成功當下自動換選單**：`BindingCodeService.redeem()` 成功後呼叫 `RichMenuLinkService`，
+  依其角色換上家長版或老師版。**這一步失敗絕不可讓綁定失敗**（錯誤只記錄不丟出），
+  沒換到的話園所下次套用會補上。
+- 每格連到帶路徑的 LIFF URL：`https://liff.line.me/{liffId}/{path}`
+  （LIFF SDK 以 `liff.state` 轉址到 Endpoint URL + 該路徑）。
+- **前提**：每園需有自己的 OA 與 channel token。目前共用 demo OA（Human Owner 確認為內部測試用）。
+
 ## 5. 驗證與授權
 
 - **輸入驗證**：每個 body 用 Zod（`packages/shared/dto`），fail-fast。

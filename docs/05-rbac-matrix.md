@@ -34,6 +34,7 @@
 | **AuditLog** | **R** | R(受限) | – | – | – |
 | **BindingCode**（發碼/作廢/解綁） | **CRUD** | **CRUD** | – | – | – |
 | **UserRole**（增減身分） | **CRUD** | **CRUD**（不含 OWNER 身分） | – | – | – |
+| **RichMenuConfig**（圖文選單設計 / 套用） | **CRUD** | **CRUD** | – | – | – |
 
 > 修正 A：Leave 的「審核」權限僅在 `leaveRequiresApproval=true` 時有意義；為 false 時申請即自動 APPROVED，無審核步驟。
 >

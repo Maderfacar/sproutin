@@ -20,6 +20,7 @@
 | Message, MessageRead, Announcement | **SoT** | |
 | CommunicationBookEntry | **SoT** | 老師記錄的當日觀察（每生每日一筆）。出缺勤/請假/親師對話**不複製**進本表 |
 | BindingCode | **SoT** | 園所簽發的一次性憑證，把「園所帳號」接上「本人的 LINE」（見 docs/07 §4g） |
+| RichMenuConfig | **SoT** | 園所的 LINE 圖文選單設計（一個對象一份）;已套用的 LINE 選單 ID 另存（見 docs/07 §4i） |
 | Notification | **Derived** | 由事件產生 |
 | AuditLog | **SoT (append-only)** | 只增不改不刪 |
 | OutboxEvent | 基礎設施 | 事件可靠交付 |
@@ -268,6 +269,23 @@ model BindingCode {
   createdBy        String
   createdAt        DateTime  @default(now())
   @@index([userId])
+}
+
+// ---------- LINE 圖文選單設計（SoT；Phase 9 階段3；規則見 docs/07 §4i）----------
+// 設計（本表）與「已套用到 LINE 的那一份」（lineRichMenuId）刻意分開：
+// LINE 不允許覆蓋既有選單的底圖 —— 換圖必須建新選單、綁人、再刪舊的。
+// 加上「建立選單」有每小時 100 次上限，因此**儲存設計不碰 LINE，只有「套用」才碰**。
+model RichMenuConfig {
+  id             String           @id @default(cuid())
+  audience       RichMenuAudience @unique  // 一個對象一份設計
+  template       RichMenuTemplate @default(SIX)
+  imageUrl       String?                   // 底圖（Vercel Blob）
+  chatBarText    String           @default("開啟選單")  // LINE 限 14 字
+  items          Json             @default("[]")        // [{ index, target }]
+  lineRichMenuId String?                   // 已套用的那一份（下次套用時解除並刪除）
+  appliedAt      DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 // ---------- Transactional Outbox（事件可靠交付，§4）----------

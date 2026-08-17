@@ -25,7 +25,13 @@ const ALLOWED: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
 };
-const KINDS = new Set(['logo', 'banner']);
+const KINDS = new Set(['logo', 'banner', 'richmenu']);
+
+// LINE 圖文選單底圖另有更嚴格的限制（查證自 LINE Messaging API reference）：
+// 只收 JPEG/PNG（不收 WebP）、檔案 ≤1MB、寬 800–2500、寬/高 ≥1.45。
+// 這裡先擋格式與大小 —— 尺寸要讀圖才知道，交給前端預檢與套用時的後端驗證。
+const RICH_MENU_MAX_BYTES = 1024 * 1024;
+const RICH_MENU_TYPES = new Set(['image/png', 'image/jpeg']);
 
 function fail(status: number, code: string): NextResponse {
   return NextResponse.json({ success: false, error: { code, message: code } }, { status });
@@ -72,6 +78,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
   if (file.size > MAX_BYTES) {
     return fail(400, 'image_too_large');
+  }
+  if (kind === 'richmenu') {
+    if (!RICH_MENU_TYPES.has(file.type)) {
+      return fail(400, 'rich_menu_image_format');
+    }
+    if (file.size > RICH_MENU_MAX_BYTES) {
+      return fail(400, 'rich_menu_image_too_large');
+    }
   }
 
   // 每校一個資料夾（logo/封面本就是公開資產;幼兒照片等敏感媒體未來需另設計獨立空間 + 簽名網址）。

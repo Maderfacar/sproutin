@@ -50,9 +50,16 @@ function makePrisma(tx: TxMock): PrismaMock {
   };
 }
 
+// 綁定成功後會換 LINE 選單。那一步刻意不可影響綁定本身，因此測試用一個什麼都不做的替身
+// —— 若哪天它變成會丟出錯誤而讓綁定失敗，既有的綁定測試會立刻紅燈。
+const richMenuLinkStub = { linkAfterBinding: jest.fn(async () => undefined) };
+
 function makeService(prisma: PrismaMock): BindingCodeService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BindingCodeService(prisma as any, new AuditService(prisma as any));
+  return new BindingCodeService(
+    prisma as never,
+    new AuditService(prisma as never),
+    richMenuLinkStub as never,
+  );
 }
 
 const role = (r: AuthUser['roles'][number]['role']) => ({
