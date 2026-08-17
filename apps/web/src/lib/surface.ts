@@ -19,10 +19,13 @@ interface RoutePair {
 const PAIRS: RoutePair[] = [
   { mobile: '/liff/admin/appearance', desktop: '/admin/appearance' },
   { mobile: '/liff/admin/students', desktop: '/admin/students' },
+  { mobile: '/liff/admin/messages', desktop: '/admin/messages' },
   { mobile: '/liff/admin/classes', desktop: '/admin/classes' },
   { mobile: '/liff/admin/people', desktop: '/admin/people' },
+  { mobile: '/liff/admin/roles', desktop: '/admin/roles' },
   { mobile: '/liff/admin/bus', desktop: '/admin/bus' },
   { mobile: '/liff/student', desktop: '/admin/students' },
+  { mobile: '/liff/audit', desktop: '/admin/audit' },
 ];
 
 export function surfaceOf(pathname: string): Surface {

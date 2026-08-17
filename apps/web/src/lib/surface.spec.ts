@@ -19,7 +19,16 @@ describe('toSurfaceHref', () => {
   it('在桌面外框把已搬過去的功能翻成桌面網址（含動態路由）', () => {
     expect(toSurfaceHref('/liff/admin/students', 'admin')).toBe('/admin/students');
     expect(toSurfaceHref('/liff/admin/classes', 'admin')).toBe('/admin/classes');
+    expect(toSurfaceHref('/liff/admin/roles', 'admin')).toBe('/admin/roles');
+    expect(toSurfaceHref('/liff/admin/messages', 'admin')).toBe('/admin/messages');
+    expect(toSurfaceHref('/liff/audit', 'admin')).toBe('/admin/audit');
     expect(toSurfaceHref('/liff/student/s1', 'admin')).toBe('/admin/students/s1');
+  });
+
+  // /liff/admin/bus（設定）與 /liff/bus（點名）是兩頁，前綴比對不可以把後者吃掉。
+  it('娃娃車設定與娃娃車點名不會互相誤中', () => {
+    expect(toSurfaceHref('/liff/admin/bus', 'admin')).toBe('/admin/bus');
+    expect(toSurfaceHref('/liff/bus', 'admin')).toBe('/liff/bus?from=admin');
   });
 
   // 網址上原本就帶著的 query 不能弄丟（例如從娃娃車設定頁帶篩選條件過去）。
@@ -32,11 +41,13 @@ describe('toSurfaceHref', () => {
 
   // 少了 from=admin，返回鍵會把人丟到手機版首頁而不是後台（見 lib/backTarget）。
   it('還沒搬到桌面的功能留在手機版，但自動補上 from=admin', () => {
-    expect(toSurfaceHref('/liff/audit', 'admin')).toBe('/liff/audit?from=admin');
-    expect(toSurfaceHref('/liff/leave?studentId=s1', 'admin')).toBe(
-      '/liff/leave?studentId=s1&from=admin',
+    expect(toSurfaceHref('/liff/soon/payment', 'admin')).toBe('/liff/soon/payment?from=admin');
+    expect(toSurfaceHref('/liff/soon/portfolio?tab=photo', 'admin')).toBe(
+      '/liff/soon/portfolio?tab=photo&from=admin',
     );
-    expect(toSurfaceHref('/liff/audit?from=admin', 'admin')).toBe('/liff/audit?from=admin');
+    expect(toSurfaceHref('/liff/soon/payment?from=admin', 'admin')).toBe(
+      '/liff/soon/payment?from=admin',
+    );
   });
 
   it('外部與非 /liff 網址原樣放行', () => {

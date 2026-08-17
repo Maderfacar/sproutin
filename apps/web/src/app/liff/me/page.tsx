@@ -29,6 +29,19 @@ const ADMIN_LINKS: { href: string; title: string; description: string; icon: Ico
     description: '老師與家長帳號、帶班與綁定小孩',
     icon: 'chat',
   },
+  { href: '/liff/admin/roles', title: '權限設定', description: '一頁看完誰有什麼身分', icon: 'shield' },
+  {
+    href: '/liff/admin/bus',
+    title: '娃娃車設定',
+    description: '路線、接送點順序、指派隨車老師',
+    icon: 'bus',
+  },
+  {
+    href: '/liff/admin/messages',
+    title: '發送訊息',
+    description: '做一張卡片送到家長的 LINE（送出後不可收回）',
+    icon: 'mega',
+  },
 ];
 
 async function handleLogout(): Promise<void> {

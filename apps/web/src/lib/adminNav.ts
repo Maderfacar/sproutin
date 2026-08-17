@@ -60,7 +60,7 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
   if (flags.canViewAudit) {
     sections.push({
       title: '紀錄',
-      items: [{ href: '/liff/audit', label: '稽核紀錄', icon: 'shield', onlyMobile: true }],
+      items: [{ href: '/admin/audit', label: '稽核紀錄', icon: 'shield' }],
     });
   }
 

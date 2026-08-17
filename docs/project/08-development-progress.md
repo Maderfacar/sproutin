@@ -2,10 +2,11 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**功能對等 批1 IMPLEMENTED，待線上驗收**——學生整合視圖／學生管理／班級管理
-> 三頁抽成共用元件並補上桌面外框，**桌面的娃娃車設定流程接回來了**；新增 `lib/surface.ts` 讓共用元件裡的
-> 連結依外框自動翻譯。Human Owner 定案：家長維持只能用手機；首頁與「我的」列為對等原則的例外（docs/04 §3b）。
-> 四項全綠、測試 412 → **420**。下一批：權限設定 / 發送訊息 / 稽核紀錄。）
+> Last updated: 2026-08-18（**功能對等 批1 ✅ ACCEPTED；批2 IMPLEMENTED，待線上驗收**——
+> 批1＝學生整合視圖／學生管理／班級管理補上桌面版，**桌面的娃娃車設定流程接回來了**，
+> 並新增 `lib/surface.ts` 讓共用元件裡的連結依外框自動翻譯。
+> 批2＝權限設定與發送訊息補手機版、稽核紀錄補桌面版，`/liff/me` 補上入口。
+> 四項全綠、測試 412 → **421**。下一批（最後一批）：聯絡簿／出缺勤／請假／公告／娃娃車點名／通知。）
 >
 > （前次）2026-08-18（**⑦ 娃娃車刀1 IMPLEMENTED，待線上驗收**——migration 0009、`/bus/*` 與 `/me/bus`
 > 端點、後台設定頁（**電腦＋手機兩邊都有**）、隨車老師點名、家長今日狀態、請假自動移出名單。
@@ -87,11 +88,13 @@ Human Owner 更正：door-to-door →「站點」改稱**接送點**（`BusPoint
 **下一步（Human Owner 2026-08-18 指定）：① 補齊電腦版與手機版的功能對等 → ② 打磨。**
 新原則見 docs/04 §3b；待補清單見下方 Recent Work Log。
 
-**功能對等 批1（學生整合視圖 + 學生管理 + 班級管理）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
-四項全綠：lint / typecheck / **測試 420（api 338 + shared 12 + web 70）** / build。**無 migration、無新後端端點。**
+**功能對等 批1（學生整合視圖 + 學生管理 + 班級管理）— ✅ ACCEPTED（2026-08-18, Human Owner）。**
 桌面的娃娃車設定流程（排路線 → 指派每個孩子的接送點）已接回來。
-Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」列為對等原則的明文例外。
-批2 = 權限設定 + 發送訊息 + 稽核紀錄；批3 = 聯絡簿／出缺勤／請假／公告／娃娃車點名／通知。
+Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」列為對等原則的明文例外（docs/04 §3b）。
+
+**功能對等 批2（權限設定 + 發送訊息 + 稽核紀錄）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 421（api 338 + shared 12 + web 71）** / build。**無 migration、無新後端端點。**
+批3（聯絡簿／出缺勤／請假／公告／娃娃車點名／通知）緊接著做。
 
 **Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
 四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
@@ -555,6 +558,40 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-18 — 🖥️📱 **功能對等 批2：權限設定 + 發送訊息 + 稽核紀錄（IMPLEMENTED，待線上驗收）**
+
+批1 已由 Human Owner **ACCEPTED（2026-08-18）**。這一批補三個各差一邊的功能。
+
+**做了什麼（檔案）**
+```text
+web  features/people/RolesOverview.tsx          ← 從 /admin/roles 搬出（原本邏輯全在頁面裡）
+     features/push-campaign/PushCampaignPanel.tsx ← 把權限判斷 + 兩個既有元件收成一個面板
+     features/audit/AuditPanel.tsx              ← 從 /liff/audit 搬出（原本邏輯全在頁面裡）
+     新增外框 app/liff/admin/roles、app/liff/admin/messages、app/admin/(app)/audit
+     瘦身外框 app/admin/(app)/{roles,messages}、app/liff/audit
+     lib/adminNav.ts：稽核紀錄改指 /admin/audit，拿掉 onlyMobile
+     lib/surface.ts：PAIRS 加 roles / messages / audit
+     app/liff/me：園所管理清單補上「權限設定」「娃娃車設定」「發送訊息」
+docs 本檔
+測試 420 → 421（api 338 + shared 12 + web 71）
+```
+
+**手機上找得到才叫做得到**：`/liff/me` 的「園所管理」清單原本只有外觀、班級、學生、人員四條。
+新做的手機版權限設定與發送訊息如果不掛上去，等於做了一個沒有入口的頁面。
+順帶把**娃娃車設定**也補進去 —— 它原本只能從 `/liff/bus` 點進去，園長要先想到「先開點名頁」才找得到。
+
+**發送訊息為什麼手機也要有**：停課、颱風這類最需要群發的時刻，園長往往不在辦公室。
+
+**稽核的篩選欄位在寬螢幕改成一排**（`sm:` 之後四欄並排）。這是唯一一處我動到排版的地方 ——
+四個欄位在 1000px 寬的頁面上直向堆疊會像壞掉的。功能與欄位完全沒變，只有排法隨寬度變，
+符合「差別只在操作介面」。
+
+**權限總覽的表格在手機上橫向捲動**，不另做一套窄版排版：兩套排版就是兩份要維護的東西，
+而這張表的重點（誰有哪幾個點）橫捲一樣看得到。
+
+**剩下的不對等**（批3）：聯絡簿（兩頁）、出缺勤、請假、公告、娃娃車點名、通知
+—— 元件都已抽出，缺的是桌面外框。
 
 ### 2026-08-18 — 🖥️📱 **功能對等 批1：學生整合視圖 + 學生 + 班級（IMPLEMENTED，待線上驗收）**
 
