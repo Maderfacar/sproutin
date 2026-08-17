@@ -1,0 +1,57 @@
+import type { IconName } from '../components/Icon';
+import type { RoleFlags } from './roles';
+
+export interface AdminEntry {
+  href: string;
+  icon: IconName;
+  label: string;
+  hint: string;
+}
+
+// 管理首頁的「常用」入口。
+// 連到手機版版型的頁面一律帶 from=admin —— 少了它，使用者按返回會被丟到手機版首頁
+// （Human Owner 2026-08-17 回報的問題;見 lib/backTarget）。有測試守著這件事。
+export function adminEntries(flags: RoleFlags): AdminEntry[] {
+  const entries: AdminEntry[] = [];
+
+  if (flags.canManageSchool) {
+    entries.push(
+      {
+        href: '/admin/people',
+        icon: 'user',
+        label: '人員與綁定',
+        hint: '新增帳號、指派班級、發綁定碼',
+      },
+      { href: '/admin/roles', icon: 'shield', label: '權限設定', hint: '一頁看完誰有什麼身分' },
+      {
+        href: '/liff/admin/students?from=admin',
+        icon: 'heart',
+        label: '學生管理',
+        hint: '新增學生、調整班級',
+      },
+      {
+        href: '/liff/admin/appearance?from=admin',
+        icon: 'image',
+        label: '園所外觀',
+        hint: '園名、顏色、園徽、封面圖',
+      },
+    );
+  }
+
+  entries.push(
+    {
+      href: '/liff/announcement?from=admin',
+      icon: 'mega',
+      label: '公告',
+      hint: '發布給全校或單一班級',
+    },
+    {
+      href: '/liff/communication-book?from=admin',
+      icon: 'book',
+      label: '聯絡簿',
+      hint: '填寫與送出當日聯絡簿',
+    },
+  );
+
+  return entries;
+}

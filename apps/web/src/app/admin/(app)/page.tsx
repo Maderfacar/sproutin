@@ -3,7 +3,11 @@
 import Link from 'next/link';
 import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
+import { adminEntries, type AdminEntry } from '../../../lib/adminEntries';
 import { usePeople } from '../../../features/people/hooks';
+import { useSchoolPendingLeaves } from '../../../features/leave/hooks';
+import { useMyClasses } from '../../../features/classes/hooks';
+import { useAdminStudents } from '../../../features/students/adminHooks';
 import { Icon, type IconName } from '../../../components/Icon';
 
 const WEEKDAY = ['日', '一', '二', '三', '四', '五', '六'];
@@ -13,19 +17,90 @@ function today(): string {
   return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日 · 星期${WEEKDAY[d.getDay()]}`;
 }
 
-interface EntryProps {
-  href: string;
-  icon: IconName;
-  label: string;
-  hint: string;
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return '早安';
+  if (h < 18) return '午安';
+  return '晚安';
 }
 
-function Entry({ href, icon, label, hint }: EntryProps) {
+function Metric({ label, value, unit }: { label: string; value: number | null; unit?: string }) {
+  return (
+    <div className="rounded-md2 bg-black/[0.025] p-4">
+      <p className="text-xs text-ink-soft">{label}</p>
+      <p className="mt-0.5 font-serif text-3xl font-semibold text-ink">
+        {value === null ? '—' : value}
+        {unit && value !== null && <span className="ml-1 text-xs font-normal text-ink-soft">{unit}</span>}
+      </p>
+    </div>
+  );
+}
+
+function TodoRow({ href, icon, text }: { href: string; icon: IconName; text: string }) {
   return (
     <Link
       href={href}
-      className="card flex items-start gap-3 p-4 transition hover:shadow-lift"
+      className="flex items-center gap-3 border-b border-line py-2.5 text-sm text-ink-soft transition last:border-0 hover:text-ink"
     >
+      <Icon name={icon} className="h-4 w-4 shrink-0 text-brand-primary" />
+      <span className="min-w-0 flex-1">{text}</span>
+      <Icon name="chev" className="h-4 w-4 shrink-0" />
+    </Link>
+  );
+}
+
+// 全校概況。獨立成元件是因為這些 API 只開放園長/行政，老師呼叫會 403，
+// 而 hook 不能寫在條件式裡 —— 由上層決定要不要掛載這個元件。
+function SchoolOverview() {
+  const { data: people } = usePeople();
+  const { data: pendingLeaves } = useSchoolPendingLeaves(true);
+  const { data: classes } = useMyClasses();
+  const { data: students } = useAdminStudents();
+
+  const unbound =
+    people?.filter((p) => !p.hasLineLinked && p.status === 'ACTIVE').length ?? null;
+  const pending = pendingLeaves?.length ?? null;
+
+  const todos: { href: string; icon: IconName; text: string }[] = [];
+  if (pending) {
+    todos.push({ href: '/liff/leave?from=admin', icon: 'cal', text: `${pending} 筆請假等待審核` });
+  }
+  if (unbound) {
+    todos.push({
+      href: '/admin/people',
+      icon: 'user',
+      text: `${unbound} 位人員尚未綁定 LINE，本人還無法登入`,
+    });
+  }
+
+  return (
+    <>
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Metric label="待審請假" value={pending} />
+        <Metric label="尚未綁定" value={unbound} unit="人" />
+        <Metric label="班級" value={classes?.length ?? null} unit="班" />
+        <Metric label="在學學生" value={students?.length ?? null} unit="人" />
+      </section>
+
+      <section className="card p-5">
+        <p className="eyebrow">需要你處理</p>
+        {todos.length === 0 ? (
+          <p className="mt-3 text-sm text-ink-soft">今天沒有待辦，一切正常。</p>
+        ) : (
+          <div className="mt-2">
+            {todos.map((t) => (
+              <TodoRow key={t.href} {...t} />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
+function Entry({ href, icon, label, hint }: AdminEntry) {
+  return (
+    <Link href={href} className="card flex items-start gap-3 p-4 transition hover:shadow-lift">
       <Icon name={icon} className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary" />
       <span className="min-w-0">
         <span className="block text-sm font-semibold text-ink">{label}</span>
@@ -35,33 +110,12 @@ function Entry({ href, icon, label, hint }: EntryProps) {
   );
 }
 
-// 尚未綁定的人數。獨立成元件是因為只有園長/行政取得到人員名單，
-// 老師登入時不該送出那支 API（會 403），而 hook 不能寫在條件式裡。
-function UnboundSummary() {
-  const { data: people } = usePeople();
-  if (!people) return null;
-  const unbound = people.filter((p) => !p.hasLineLinked && p.status === 'ACTIVE').length;
-  if (unbound === 0) return null;
-
-  return (
-    <section className="card flex items-center gap-4 p-5">
-      <span className="font-serif text-4xl font-semibold text-brand-primary">{unbound}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-ink">位人員尚未綁定 LINE</span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink-soft">
-          他們的帳號已經建好，但本人還無法登入。發一組綁定碼給他們就能開始使用。
-        </span>
-      </span>
-      <Link href="/admin/people" className="btn-secondary shrink-0 text-xs">
-        去處理
-      </Link>
-    </section>
-  );
-}
-
-// 後台總覽（骨架版）。這一刀先把「進得來、看得到自己是誰、到得了下一頁」做對；
-// 完整的園務數字（今日到校 / 待審請假 / 未送出聯絡簿）是下一刀的管理首頁。
-// 這裡刻意先放一個真實數字——尚未綁定人數——因為它直接對應園所導入時最會卡住的地方。
+// 管理首頁（階段3 ②）。
+// 這一頁回答的是「今天有沒有事要我處理」，所以順序是：數字 → 待辦 → 常用入口。
+//
+// **刻意先不放「今日到校」與各班一覽**（Human Owner 決策 C, 2026-08-17）：
+// 出缺勤與聯絡簿的查詢端點都必須指定班級，全校統計需要逐班發請求或新增後端端點，
+// 兩者都不划算 —— 先把拿得到的數字做好，那兩塊等真的需要時再一併處理。
 export default function AdminHomePage() {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
@@ -71,35 +125,25 @@ export default function AdminHomePage() {
       <header>
         <p className="eyebrow">園務後台</p>
         <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-ink">
-          {user.displayName}，早安
+          {user.displayName}，{greeting()}
         </h1>
         <p className="mt-1.5 text-sm text-ink-soft">{today()}</p>
       </header>
 
-      {flags.canManageSchool && <UnboundSummary />}
+      {flags.canManageSchool && <SchoolOverview />}
 
       <section>
-        <p className="eyebrow">你可以做的事</p>
+        <p className="eyebrow">常用</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {flags.canManageSchool && (
-            <Entry
-              href="/admin/people"
-              icon="user"
-              label="人員與綁定"
-              hint="新增帳號、指派班級、發綁定碼"
-            />
-          )}
-          <Entry
-            href="/liff"
-            icon="home"
-            label="切換到手機版"
-            hint="聯絡簿、點名、請假審核目前在手機版操作"
-          />
+          {adminEntries(flags).map((entry) => (
+            <Entry key={entry.href} {...entry} />
+          ))}
         </div>
       </section>
 
       <p className="border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
-        接下來會加上：今日到校人數、待審請假、未送出的聯絡簿，以及把班級、學生、園所外觀也搬到這個桌面版後台。
+        今日到校人數與各班一覽會在之後加上（需要一支專門統計的後端端點）。
+        班級、學生、園所外觀等頁面目前是手機版版型，之後會陸續搬到這個桌面版後台。
       </p>
     </div>
   );
