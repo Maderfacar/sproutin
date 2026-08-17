@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { RichMenuService, type RichMenuActor } from './rich-menu.service';
+import { LineRichMenuError } from './line-rich-menu.client';
 import { AuditService } from '../core/audit/audit.service';
 import type { AuthUser } from '@sproutin/shared';
 
@@ -73,11 +74,23 @@ function makeLine(enabled = true): LineMock {
   };
 }
 
-function mockImage(contentType = 'image/png', size = 1000): void {
+// 產生一張真的能被讀出尺寸的 PNG 標頭（簽章 + IHDR 的 width/height）。
+// 用真位元組而不是空 buffer，是因為 apply 現在會從圖片讀出實際尺寸當作選單尺寸。
+function pngBytes(width: number, height: number): ArrayBuffer {
+  const buf = new ArrayBuffer(64);
+  const view = new DataView(buf);
+  view.setUint32(0, 0x89504e47);
+  view.setUint32(4, 0x0d0a1a0a);
+  view.setUint32(16, width);
+  view.setUint32(20, height);
+  return buf;
+}
+
+function mockImage(contentType = 'image/png', bytes = pngBytes(2500, 1686)): void {
   global.fetch = jest.fn(async () => ({
     ok: true,
     headers: { get: () => contentType },
-    arrayBuffer: async () => new ArrayBuffer(size),
+    arrayBuffer: async () => bytes,
   })) as never;
 }
 
@@ -173,12 +186,49 @@ describe('RichMenuService.apply', () => {
   });
 
   it('底圖超過 LINE 的 1MB 上限 → 400', async () => {
-    mockImage('image/png', 1024 * 1024 + 1);
+    mockImage('image/png', new ArrayBuffer(1024 * 1024 + 1));
     const line = makeLine();
     await expect(makeService(makePrisma(), line).apply(owner, 'PARENT')).rejects.toBeInstanceOf(
       BadRequestException,
     );
     expect(line.createMenu).not.toHaveBeenCalled();
+  });
+
+  it('太方的底圖先擋在自己這關（LINE 要求寬/高 ≥1.45，且它的錯誤訊息很難懂）', async () => {
+    mockImage('image/png', pngBytes(1000, 1000));
+    const line = makeLine();
+    await expect(makeService(makePrisma(), line).apply(owner, 'PARENT')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(line.createMenu).not.toHaveBeenCalled();
+  });
+
+  it('太窄的底圖（寬 < 800）→ 400', async () => {
+    mockImage('image/png', pngBytes(600, 300));
+    await expect(
+      makeService(makePrisma(), makeLine()).apply(owner, 'PARENT'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('選單尺寸＝底圖的實際尺寸（LINE 要求兩者一致;寫死會逼園所去湊圖）', async () => {
+    mockImage('image/png', pngBytes(1200, 800));
+    const line = makeLine();
+    await makeService(makePrisma(), line).apply(owner, 'PARENT');
+
+    const payload = line.createMenu.mock.calls[0][0];
+    expect(payload.size).toEqual({ width: 1200, height: 800 });
+    // 六格 → 3 欄 2 列；最後一欄吃掉餘數，不留下點不到的縫。
+    expect(payload.areas[0].bounds).toEqual({ x: 0, y: 0, width: 400, height: 400 });
+  });
+
+  it('LINE 拒絕時翻成看得懂的 400，而不是 INTERNAL_ERROR', async () => {
+    const line = makeLine();
+    line.createMenu.mockRejectedValue(
+      new LineRichMenuError(400, '{"message":"invalid richmenu image"}'),
+    );
+    await expect(
+      makeService(makePrisma(), line).apply(owner, 'PARENT'),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('底圖不是 JPEG 或 PNG → 400', async () => {

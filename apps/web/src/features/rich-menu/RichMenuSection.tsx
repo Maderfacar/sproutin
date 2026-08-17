@@ -203,8 +203,10 @@ export function RichMenuSection() {
               )}
             </div>
             <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-              LINE 規定：PNG 或 JPG、**不超過 1MB**、寬 800–2500 像素、寬要比高多至少 1.45 倍。
-              建議 2500 × 1686（六格、四格）或 2500 × 843（兩格）。
+              LINE 的規定：PNG 或 JPG、不超過 1MB、寬 800–2500 像素、
+              <span className="text-ink">寬要至少是高的 1.45 倍</span>（不能太方）。
+              符合這些就可以，不必湊到特定尺寸——格子會照你的圖去切。
+              常見尺寸：2500 × 1686（六格、四格）、2500 × 843（兩格）。
             </p>
             {upload.isError && (
               <p className="mt-1.5 text-xs text-red-700">{uploadErrorMessage(upload.error)}</p>

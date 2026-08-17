@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import type { AuthUser } from '@sproutin/shared';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { AuditService } from '../core/audit/audit.service';
@@ -6,12 +6,16 @@ import {
   LINE_CHAT_BAR_TEXT_MAX,
   LINE_IMAGE_MAX_BYTES,
   LineRichMenuClient,
+  LineRichMenuError,
   type RichMenuArea,
 } from './line-rich-menu.client';
+import { imageSizeProblem, readImageSize, type ImageSize } from './image-size';
 import {
   TARGET_PATHS,
-  TEMPLATES,
+  TEMPLATE_SHAPES,
   UNBOUND_DEFAULT_ITEMS,
+  cellCount,
+  cellsFor,
   type RichMenuAudienceName,
   type RichMenuItem,
   type RichMenuTemplateName,
@@ -58,6 +62,8 @@ const PARENT_ROLES = ['PARENT', 'GUARDIAN'];
 // 使用者感受到的是「換好了」，與官方後台的行為一致。
 @Injectable()
 export class RichMenuService {
+  private readonly logger = new Logger('RichMenu');
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
@@ -160,9 +166,10 @@ export class RichMenuService {
     const liffId = await this.requireLiffId();
     const image = await this.fetchImage(row.imageUrl);
 
-    const spec = TEMPLATES[design.template];
+    // **選單尺寸＝底圖的實際尺寸**。LINE 要求兩者完全一致，寫死尺寸會逼園所去湊圖。
+    const cells = cellsFor(design.template, image.size.width, image.size.height);
     const areas: RichMenuArea[] = design.items.map((item) => {
-      const cell = spec.cells[item.index];
+      const cell = cells[item.index];
       if (!cell) {
         throw new BadRequestException('rich_menu_item_out_of_range');
       }
@@ -174,24 +181,27 @@ export class RichMenuService {
       };
     });
 
-    const newId = await this.line.createMenu({
-      size: { width: spec.width, height: spec.height },
-      selected: false,
-      name: `sproutin-${audience.toLowerCase()}-${Date.now()}`,
-      chatBarText: design.chatBarText,
-      areas,
-    });
-    await this.line.uploadImage(newId, image.bytes, image.contentType);
+    // LINE 拒絕時要讓園長看得懂是哪裡不對，而不是丟一個 INTERNAL_ERROR 出去。
+    const newId = await this.callLine(() =>
+      this.line.createMenu({
+        size: { width: image.size.width, height: image.size.height },
+        selected: false,
+        name: `sproutin-${audience.toLowerCase()}-${Date.now()}`,
+        chatBarText: design.chatBarText,
+        areas,
+      }),
+    );
+    await this.callLine(() => this.line.uploadImage(newId, image.bytes, image.contentType));
 
     let linkedUsers = 0;
     if (audience === 'UNBOUND') {
       // 還沒綁定的人我們根本不知道是誰 → 設為預設選單。
       // 個別綁定的優先權高於預設，所以已綁定的人不會被這一步影響。
-      await this.line.setDefault(newId);
+      await this.callLine(() => this.line.setDefault(newId));
     } else {
       const userIds = await this.lineUserIdsFor(audience);
       if (userIds.length > 0) {
-        await this.line.linkUsers(newId, userIds);
+        await this.callLine(() => this.line.linkUsers(newId, userIds));
       }
       linkedUsers = userIds.length;
     }
@@ -225,16 +235,16 @@ export class RichMenuService {
   }
 
   private assertValidDesign(input: SaveRichMenuInput): void {
-    const spec = TEMPLATES[input.template];
-    if (!spec) {
+    if (!TEMPLATE_SHAPES[input.template]) {
       throw new BadRequestException('rich_menu_template_invalid');
     }
+    const cells = cellCount(input.template);
     if (input.chatBarText.length === 0 || input.chatBarText.length > LINE_CHAT_BAR_TEXT_MAX) {
       throw new BadRequestException('rich_menu_chat_bar_text_length');
     }
     const seen = new Set<number>();
     for (const item of input.items) {
-      if (item.index < 0 || item.index >= spec.cells.length) {
+      if (item.index < 0 || item.index >= cells) {
         throw new BadRequestException('rich_menu_item_out_of_range');
       }
       if (seen.has(item.index)) {
@@ -259,7 +269,23 @@ export class RichMenuService {
     return config.liffId;
   }
 
-  private async fetchImage(url: string): Promise<{ bytes: ArrayBuffer; contentType: string }> {
+  // LINE 端的錯誤翻成看得懂的 400（帶上 LINE 自己的說明），而不是讓它變成 INTERNAL_ERROR。
+  // 園長看到「圖片尺寸不符」才知道要怎麼修；看到「操作失敗」只能來問人。
+  private async callLine<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (e: unknown) {
+      if (e instanceof LineRichMenuError) {
+        this.logger.warn(`LINE 拒絕：HTTP ${e.status} ${e.body}`);
+        throw new BadRequestException(`line_rejected: ${e.body}`.slice(0, 300));
+      }
+      throw e;
+    }
+  }
+
+  private async fetchImage(
+    url: string,
+  ): Promise<{ bytes: ArrayBuffer; contentType: string; size: ImageSize }> {
     const res = await fetch(url);
     if (!res.ok) {
       throw new BadRequestException('rich_menu_image_unreachable');
@@ -272,7 +298,16 @@ export class RichMenuService {
     if (bytes.byteLength > LINE_IMAGE_MAX_BYTES) {
       throw new BadRequestException('rich_menu_image_too_large');
     }
-    return { bytes, contentType };
+    const size = readImageSize(bytes, contentType);
+    if (!size) {
+      throw new BadRequestException('rich_menu_image_unreadable');
+    }
+    // 先擋在自己這一關 —— LINE 對尺寸不合的回覆很難懂，而且要等到上傳那一步才會知道。
+    const problem = imageSizeProblem(size);
+    if (problem) {
+      throw new BadRequestException(problem);
+    }
+    return { bytes, contentType, size };
   }
 
   private async lineUserIdsFor(audience: RichMenuAudienceName): Promise<string[]> {

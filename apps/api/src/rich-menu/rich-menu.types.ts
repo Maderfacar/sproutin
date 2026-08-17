@@ -12,31 +12,47 @@ export interface Cell {
   height: number;
 }
 
-export interface TemplateSpec {
-  width: number;
-  height: number;
-  cells: Cell[];
+export interface TemplateShape {
+  cols: number;
+  rows: number;
 }
 
-// LINE 的限制：寬 800–2500、高 ≥250、寬/高 ≥1.45、最多 20 格。
-// 2500×1686 → 比例 1.48 ✔；2500×843 → 2.97 ✔。格數最多 6，遠低於 20。
-function grid(width: number, height: number, cols: number, rows: number): TemplateSpec {
+// 版面只定義「切幾格」，**實際座標依底圖的真實尺寸計算**。
+// 原因：LINE 要求上傳的底圖尺寸必須與選單宣告的尺寸完全一致。若寫死 2500×1686，
+// 園所就得剛好湊出那個尺寸，否則被 LINE 拒絕 —— 改成看圖說話，園所上傳什麼就用什麼。
+export const TEMPLATE_SHAPES: Record<RichMenuTemplateName, TemplateShape> = {
+  SIX: { cols: 3, rows: 2 },
+  FOUR: { cols: 2, rows: 2 },
+  TWO: { cols: 2, rows: 1 },
+};
+
+export function cellCount(template: RichMenuTemplateName): number {
+  const shape = TEMPLATE_SHAPES[template];
+  return shape.cols * shape.rows;
+}
+
+// 依底圖實際尺寸切格。最後一欄／最後一列吃掉整除的餘數，避免右側或底部留下無法點擊的縫。
+export function cellsFor(
+  template: RichMenuTemplateName,
+  width: number,
+  height: number,
+): Cell[] {
+  const { cols, rows } = TEMPLATE_SHAPES[template];
   const cellW = Math.floor(width / cols);
   const cellH = Math.floor(height / rows);
   const cells: Cell[] = [];
   for (let r = 0; r < rows; r += 1) {
     for (let c = 0; c < cols; c += 1) {
-      cells.push({ x: c * cellW, y: r * cellH, width: cellW, height: cellH });
+      cells.push({
+        x: c * cellW,
+        y: r * cellH,
+        width: c === cols - 1 ? width - c * cellW : cellW,
+        height: r === rows - 1 ? height - r * cellH : cellH,
+      });
     }
   }
-  return { width, height, cells };
+  return cells;
 }
-
-export const TEMPLATES: Record<RichMenuTemplateName, TemplateSpec> = {
-  SIX: grid(2500, 1686, 3, 2),
-  FOUR: grid(2500, 1686, 2, 2),
-  TWO: grid(2500, 843, 2, 1),
-};
 
 // 一格可以連到的目的地。值即 LIFF 附加路徑（LIFF URL 支援 https://liff.line.me/{liffId}/{path}，
 // 由 SDK 以 liff.state 轉址到 Endpoint URL + 該路徑）。

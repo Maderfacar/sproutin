@@ -57,6 +57,14 @@ export function richMenuErrorMessage(error: unknown, fallback: string): string {
       return 'LINE 的底圖只接受 PNG 或 JPG。';
     case 'rich_menu_image_unreachable':
       return '讀不到底圖，請重新上傳一次。';
+    case 'rich_menu_image_unreadable':
+      return '這張圖讀不出尺寸，可能檔案損毀。請換一張 PNG 或 JPG。';
+    case 'rich_menu_image_width':
+      return '底圖的寬度必須在 800 到 2500 像素之間（這是 LINE 的規定）。';
+    case 'rich_menu_image_height':
+      return '底圖的高度至少要 250 像素（這是 LINE 的規定）。';
+    case 'rich_menu_image_ratio':
+      return '底圖太方了。LINE 規定寬度至少要是高度的 1.45 倍，例如 2500 × 1686。';
     case 'rich_menu_no_items':
       return '至少要設定一格，否則選單點下去什麼都不會發生。';
     case 'rich_menu_item_duplicated':
@@ -68,6 +76,11 @@ export function richMenuErrorMessage(error: unknown, fallback: string): string {
     case 'liff_id_not_configured':
       return '園所還沒設定 LIFF ID，選單無法連到 App。請聯絡系統管理者。';
     default:
+      // LINE 自己回的錯誤原樣帶出來 —— 內容是英文，但至少說得出是哪裡不對，
+      // 比一句「操作失敗」有用得多（也方便回報給我們查）。
+      if (typeof code === 'string' && code.startsWith('line_rejected:')) {
+        return `LINE 不接受這份選單：${code.slice('line_rejected:'.length).trim()}`;
+      }
       return fallback;
   }
 }
