@@ -32,6 +32,11 @@ export interface RichMenuArea {
   action: { type: 'uri'; uri: string };
 }
 
+export interface LinkOutcome {
+  linked: number; // 已送出綁定的人數
+  skipped: number; // LINE 不認得而被略過的人數（假資料、已刪帳號、未加好友…）
+}
+
 export interface RichMenuPayload {
   size: { width: number; height: number };
   selected: boolean;
@@ -88,15 +93,54 @@ export class LineRichMenuClient {
 
   // 一次最多 500 人;LINE 端非同步處理，回 202 不代表每個人都成功
   // （已刪帳號、封鎖 OA、未加好友者會被略過），因此呼叫端不可把 202 當成「全部完成」。
-  async linkUsers(richMenuId: string, userIds: string[]): Promise<void> {
+  //
+  // **批次含一個無效 ID，LINE 會整批拒絕**（官方明講：回錯誤時沒有任何人被綁定）。
+  // 實務上一定會遇到：demo 的假資料、離職後刪帳號的人、封鎖過官方帳號的家長。
+  // 因此整批被拒時改成逐一綁定，讓其餘的人照樣拿到選單 —— 這是先前推播踩過的同一個坑
+  // （單一收件人失敗中斷整批，排在後面的人永遠收不到）。
+  // 4xx＝這個人永遠不會成功 → 略過;5xx／網路錯誤＝暫時性 → 往上丟，不要假裝成功。
+  async linkUsers(richMenuId: string, userIds: string[]): Promise<LinkOutcome> {
+    let linked = 0;
+    let skipped = 0;
+
     for (let i = 0; i < userIds.length; i += LINE_BULK_LINK_MAX) {
       const batch = userIds.slice(i, i + LINE_BULK_LINK_MAX);
-      await this.call(`${API}/richmenu/bulk/link`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ richMenuId, userIds: batch }),
-      });
+      try {
+        await this.call(`${API}/richmenu/bulk/link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ richMenuId, userIds: batch }),
+        });
+        linked += batch.length;
+      } catch (e: unknown) {
+        if (!(e instanceof LineRichMenuError) || e.status >= 500) {
+          throw e;
+        }
+        this.logger.warn(`整批綁定被拒（${e.body}）→ 改為逐一綁定，略過無效的帳號`);
+        const outcome = await this.linkOneByOne(richMenuId, batch);
+        linked += outcome.linked;
+        skipped += outcome.skipped;
+      }
     }
+
+    return { linked, skipped };
+  }
+
+  private async linkOneByOne(richMenuId: string, userIds: string[]): Promise<LinkOutcome> {
+    let linked = 0;
+    let skipped = 0;
+    for (const userId of userIds) {
+      try {
+        await this.linkUser(richMenuId, userId);
+        linked += 1;
+      } catch (e: unknown) {
+        if (!(e instanceof LineRichMenuError) || e.status >= 500) {
+          throw e;
+        }
+        skipped += 1;
+      }
+    }
+    return { linked, skipped };
   }
 
   async linkUser(richMenuId: string, userId: string): Promise<void> {

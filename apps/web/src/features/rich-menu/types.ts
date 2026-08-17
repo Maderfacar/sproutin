@@ -39,6 +39,7 @@ export interface SaveRichMenuBody {
 export interface ApplyResult {
   audience: RichMenuAudience;
   linkedUsers: number;
+  skippedUsers: number;
   appliedAt: string;
 }
 

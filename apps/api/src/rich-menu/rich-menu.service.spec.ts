@@ -68,7 +68,7 @@ function makeLine(enabled = true): LineMock {
     createMenu: jest.fn(async () => 'rich-new'),
     uploadImage: jest.fn(async () => undefined),
     setDefault: jest.fn(async () => undefined),
-    linkUsers: jest.fn(async () => undefined),
+    linkUsers: jest.fn(async () => ({ linked: 2, skipped: 0 })),
     linkUser: jest.fn(async () => undefined),
     deleteMenu: jest.fn(async () => undefined),
   };
@@ -279,6 +279,7 @@ describe('RichMenuService.apply', () => {
     });
     line.linkUsers.mockImplementation(async () => {
       order.push('link');
+      return { linked: 2, skipped: 0 };
     });
     line.deleteMenu.mockImplementation(async () => {
       order.push('delete');
@@ -295,6 +296,14 @@ describe('RichMenuService.apply', () => {
     const line = makeLine();
     await makeService(makePrisma(), line).apply(owner, 'PARENT');
     expect(line.deleteMenu).not.toHaveBeenCalled();
+  });
+
+  it('被 LINE 略過的人數如實回報（demo 假資料、已刪帳號、未加好友）', async () => {
+    const line = makeLine();
+    line.linkUsers.mockResolvedValue({ linked: 1, skipped: 1 });
+    const result = await makeService(makePrisma(), line).apply(owner, 'PARENT');
+
+    expect(result).toMatchObject({ linkedUsers: 1, skippedUsers: 1 });
   });
 
   it('稽核記對象與人數，不記 lineUserId', async () => {

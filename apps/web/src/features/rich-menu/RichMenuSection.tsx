@@ -291,10 +291,16 @@ export function RichMenuSection() {
       {apply.isSuccess && !apply.isPending && (
         <p className="mt-4 rounded-md2 border border-line bg-black/[0.02] p-3 text-sm leading-relaxed text-ink">
           已送到 LINE。
-          {apply.data.linkedUsers > 0
-            ? `已為 ${apply.data.linkedUsers} 位換上這份選單。`
-            : '這份選單已設為預設，還沒綁定的人就會看到它。'}
-          尚未加入官方帳號好友的人不會受影響。
+          {audience === 'UNBOUND'
+            ? '這份選單已設為預設，還沒綁定的人就會看到它。'
+            : `已為 ${apply.data.linkedUsers} 位換上這份選單。`}
+          {apply.data.skippedUsers > 0 && (
+            <span className="mt-1 block text-ink-soft">
+              另有 {apply.data.skippedUsers} 位被略過：LINE 不認得他們的帳號，
+              通常是示範用的假資料、已刪除的 LINE 帳號，或還沒把園所的官方帳號加為好友。
+              其他人不受影響。
+            </span>
+          )}
         </p>
       )}
 

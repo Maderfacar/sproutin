@@ -46,6 +46,7 @@ export interface SaveRichMenuInput {
 export interface ApplyResult {
   audience: RichMenuAudienceName;
   linkedUsers: number; // 送出綁定的人數（LINE 端非同步處理，不等於全部成功）
+  skippedUsers: number; // LINE 不認得而略過的人數（demo 假資料、已刪帳號、未加好友…）
   appliedAt: string;
 }
 
@@ -194,6 +195,7 @@ export class RichMenuService {
     await this.callLine(() => this.line.uploadImage(newId, image.bytes, image.contentType));
 
     let linkedUsers = 0;
+    let skippedUsers = 0;
     if (audience === 'UNBOUND') {
       // 還沒綁定的人我們根本不知道是誰 → 設為預設選單。
       // 個別綁定的優先權高於預設，所以已綁定的人不會被這一步影響。
@@ -201,9 +203,11 @@ export class RichMenuService {
     } else {
       const userIds = await this.lineUserIdsFor(audience);
       if (userIds.length > 0) {
-        await this.callLine(() => this.line.linkUsers(newId, userIds));
+        // LINE 不認得的帳號會被略過而不是讓整批失敗（見 client 的說明）。
+        const outcome = await this.callLine(() => this.line.linkUsers(newId, userIds));
+        linkedUsers = outcome.linked;
+        skippedUsers = outcome.skipped;
       }
-      linkedUsers = userIds.length;
     }
 
     const previousId = row.lineRichMenuId;
@@ -222,7 +226,7 @@ export class RichMenuService {
         resourceId: audience,
         result: 'SUCCESS',
         // 只記數量與對象，不記 lineUserId（識別性資料，修正 C）。
-        metadata: { audience, linkedUsers },
+        metadata: { audience, linkedUsers, skippedUsers },
       });
     });
 
@@ -231,7 +235,7 @@ export class RichMenuService {
       await this.line.deleteMenu(previousId);
     }
 
-    return { audience, linkedUsers, appliedAt: appliedAt.toISOString() };
+    return { audience, linkedUsers, skippedUsers, appliedAt: appliedAt.toISOString() };
   }
 
   private assertValidDesign(input: SaveRichMenuInput): void {
