@@ -2,7 +2,11 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**電腦版／手機版功能對等全數補齊**——批1 ✅ ACCEPTED，批2＋批3 待線上驗收。
+> Last updated: 2026-08-18（**親師對話多了發話者標示**——泡泡上顯示「陳美玲 · 母親」；
+> `/messages` 原本連名字都沒回，只有一串 ID。無 migration、無新端點。
+> 對話圖片經 Human Owner 定案**先不做**（需私有儲存 + 簽名網址）。測試 428。
+>
+> （同日）**電腦版／手機版功能對等全數補齊**——批1 ✅ ACCEPTED，批2＋批3 待線上驗收。
 > 批1＝學生整合視圖／學生管理／班級管理補桌面版，**桌面的娃娃車設定流程接回來了**，
 > 並新增 `lib/surface.ts` 讓共用元件裡的連結依外框自動翻譯。
 > 批2＝權限設定與發送訊息補手機版、稽核紀錄補桌面版，`/liff/me` 補上入口。
@@ -98,6 +102,12 @@ Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」�
 四項全綠：lint / typecheck / **測試 425（api 338 + shared 12 + web 75）** / build。**無 migration、無新後端端點。**
 
 ✅ **電腦版與手機版功能對等已全數補齊**（三類明文例外見 docs/04 §3b 的對照表）。
+
+**親師對話標出發話者 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 428（api 341 + shared 12 + web 75）** / build。
+**無 migration、無新端點**（改既有 `/messages` 的回應）。詳見 docs/07「親師對話的發話者」。
+Human Owner 定案：顯示「名字 + 身分」；**對話圖片先不做**（需私有儲存 + 簽名網址，屆時另提 §D）。
+
 **下一步：② 打磨**（Human Owner 早已定案的順序：功能對等 → 打磨）。
 
 **Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
@@ -562,6 +572,56 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-18 — 💬 **親師對話標出發話者（IMPLEMENTED，待線上驗收）**
+
+Human Owner：「對話框泡泡表示出每一句話是來自哪一個家長、老師、或其它人」。
+
+**「這應該不難吧」—— 前端確實不難，卡住的是後端**：`GET /messages` 原本只回 `senderId`（一串 cuid），
+前端拿它做的唯一一件事是比對「是不是我自己」以決定靠左還是靠右。**連名字都沒有。**
+資料庫裡該有的都有（`User.displayName`、`Guardianship.relation`、`UserRole`），
+所以是改一支既有端點的回應，**不新增端點、不動 schema、無 migration**。
+
+**做了什麼（檔案）**
+```text
+api  messages.service：MessageView 多 senderName / senderRelation / senderRole
+     describeSenders()：整串固定兩次查詢（user + guardianship），不隨則數成長
+     send() 的發話者在交易外先查好——與這次寫入無關的資料沒有理由佔著交易
+web  lib/types：MessageView 同步
+     features/message/MessageThread：泡泡上方顯示「陳美玲 · 母親」+ 首字圓形頭像
+docs 07（§4f 之後新增一段「親師對話的發話者」）、本檔
+測試 425 → 428（api 341 + shared 12 + web 75）
+```
+
+**Human Owner 逐項定案**
+```text
+① 顯示到什麼程度 → **名字 + 身分**（「陳美玲 · 母親」）。
+   只顯示身分的話，一班兩位老師就分不出是哪一位，家長問「誰跟我說的」答不出來。
+② 圖片 → **先不做**（見下）。
+```
+
+**同時是校方又是這個孩子的家長時，顯示家長身分**：老師自己的小孩也在園裡是常見的事，
+在那個孩子的對話串裡，他是以家人的身分在講話。有測試釘住。
+
+**同一個人連著講好幾句只標第一句**（換日期重新標）。每句都標，一來一往幾輪就滿版都是名字。
+
+**刻意沒有給家長第二個顏色**：品牌色是每個園所自己設定的，硬配第二個顏色不一定搭。
+改成校方實心圓、家長外框圓 —— 任何品牌色都成立。
+
+**中文留在前端**（`RELATION_LABEL` / `ROLE_LABEL` 已存在），後端只給事實。
+沿用既有詞彙「父親／母親」而不是另造「爸爸／媽媽」—— 全站同一個孩子的家長在別頁也是這樣寫的。
+
+**查不到發話者時回「未知的發話者」**。帳號一律停用不刪除，理論上不會發生；
+真的發生要明講，不能顯示空白讓人以為是系統漏字。有測試釘住。
+
+**圖片為什麼要另外開一刀（§D 已提，Human Owner 定案「先不做」）**
+```text
+現有的 /api/uploads/image 是 access:'public'（公開網址）且只放行 OWNER/ADMIN，
+Message 也只有 body 一個文字欄位。親師對話傳圖 = 老師與家長上傳幼兒照片，三件事都不符合。
+公開網址一旦發出就收不回來——那是出事會上新聞的東西。
+要做需要：私有 Blob store + 簽名網址（新 infra）、Message 加附件（migration）、
+改上傳授權（放行老師與家長但限制範圍）。工程量約娃娃車刀1 的一半。
+```
 
 ### 2026-08-18 — 🖥️📱 **功能對等 批3：聯絡簿 / 出缺勤 / 請假 / 公告 / 娃娃車點名 / 通知（IMPLEMENTED，待線上驗收）**
 

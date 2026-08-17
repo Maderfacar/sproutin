@@ -45,6 +45,11 @@ export interface MessageView {
   studentId: string;
   classId: string;
   senderId: string;
+  // 發話者是誰。後端只保證給「事實」（姓名 + 對這個學生的身分），中文由前端的
+  // RELATION_LABEL / ROLE_LABEL 決定。同時是校方又是這個孩子的家長時，後端給的是家長身分。
+  senderName: string;
+  senderRelation: GuardianRelation | null; // 家長／監護人才有
+  senderRole: UserRoleName | null; // 校方身分；家長為 null
   category: MessageCategory;
   body: string;
   createdAt: string; // ISO

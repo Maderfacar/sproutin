@@ -5,10 +5,24 @@ import { useMessages, useSendMessage, useMarkMessageRead } from './hooks';
 import { useSession } from '../../lib/session';
 import { apiErrorMessage } from '../../lib/api';
 import { Icon } from '../../components/Icon';
+import { ROLE_LABEL } from '../../lib/roleLabels';
+import { RELATION_LABEL } from '../people/hooks';
 import type { MessageView } from '../../lib/types';
 
 function byCreatedAsc(a: MessageView, b: MessageView): number {
   return a.createdAt.localeCompare(b.createdAt);
+}
+
+// 「陳美玲 · 母親」。一個學生的對話串裡可能同時有父、母、導師、園長 ——
+// 只有時間的話，三個人講的話長得一模一樣。
+// 身分翻不出來時只顯示名字，不硬掰一個稱呼（後端保證兩者至少有一個有值，這是保險）。
+function senderLabel(msg: MessageView): string {
+  const role = msg.senderRelation
+    ? RELATION_LABEL[msg.senderRelation]
+    : msg.senderRole
+      ? ROLE_LABEL[msg.senderRole]
+      : null;
+  return role ? `${msg.senderName} · ${role}` : msg.senderName;
 }
 
 function dayLabel(iso: string): string {
@@ -51,8 +65,12 @@ export function MessageThread({ studentId }: { studentId: string }) {
           {sorted.map((msg, i) => {
             const mine = msg.senderId === user.id;
             const showUnread = !mine && !msg.isRead;
-            const prevDay = i > 0 ? (sorted[i - 1]?.createdAt.slice(0, 10) ?? null) : null;
+            const prev = i > 0 ? (sorted[i - 1] ?? null) : null;
+            const prevDay = prev?.createdAt.slice(0, 10) ?? null;
             const showDay = msg.createdAt.slice(0, 10) !== prevDay;
+            // 同一個人連著講好幾句時只在第一句標名字 —— 每句都標，一來一往幾輪就滿版都是名字。
+            // 換日期就重新標（隔了一天再看，記得上一句是誰講的才怪）。
+            const showSender = !mine && (showDay || prev?.senderId !== msg.senderId);
             return (
               <Fragment key={msg.id}>
                 {showDay && (
@@ -63,6 +81,28 @@ export function MessageThread({ studentId }: { studentId: string }) {
                   </div>
                 )}
                 <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+                  {showSender && (
+                    <div className="mb-1.5 flex items-center gap-1.5">
+                      {/* 校方實心、家長外框。刻意不給家長另一個顏色 ——
+                          品牌色是每個園所自己設定的，第二個顏色不一定跟它搭。 */}
+                      <span
+                        aria-hidden
+                        className={`flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-bold ${
+                          msg.senderRelation
+                            ? 'border border-line bg-surface text-ink-soft'
+                            : 'text-white'
+                        }`}
+                        style={
+                          msg.senderRelation ? undefined : { background: 'var(--brand-primary)' }
+                        }
+                      >
+                        {msg.senderName.charAt(0)}
+                      </span>
+                      <span className="text-[11.5px] font-semibold text-ink-soft">
+                        {senderLabel(msg)}
+                      </span>
+                    </div>
+                  )}
                   <div
                     className={`max-w-[82%] px-4 py-2.5 text-sm leading-relaxed ${
                       mine

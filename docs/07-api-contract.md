@@ -219,6 +219,32 @@ POST /communication-book/publish
   **metadata 只記欄位名與 studentId，不記留言內容、症狀與姓名**（修正 C）。
 - 入口：「訊息」卡片已併入「聯絡簿」（見 docs/05）；`/messages` 端點與權限不變。
 
+### 親師對話的發話者（2026-08-18）
+
+`GET /messages` 與 `POST /messages` 的每一則多回三個欄位。原本只有 `senderId`（cuid），
+前端唯一做得到的事是比對「是不是我自己」—— 一個學生的對話串裡可能同時有父、母、導師、園長，
+畫面上長得一模一樣。**未新增端點、未改 schema、無 migration。**
+
+```text
+senderName      String              User.displayName
+senderRelation  GuardianRelation?   對「這一個學生」的關係（FATHER/MOTHER/GRANDPARENT/GUARDIAN）
+senderRole      Role?               校方身分（OWNER/ADMIN/TEACHER/BUS_TEACHER）
+```
+
+- **兩者互斥**：是這個孩子的家人 → 給 relation、role 為 null；否則給 role。
+  老師自己的小孩也在園裡時，在那個孩子的串裡他是以家人的身分講話。
+- 多個校方身分取 `OWNER > ADMIN > TEACHER > BUS_TEACHER` 之一（對家長最有意義的稱呼）。
+- **中文由前端決定**（`RELATION_LABEL` / `ROLE_LABEL` 已存在）；後端只給事實。
+- 查不到使用者時回 `未知的發話者` —— 帳號一律停用不刪除，理論上不會發生；
+  真的發生要明講，不能顯示空白讓人以為是漏字。
+- 成本固定兩次查詢（`user` + `guardianship`），不隨訊息則數成長。
+- 隱私：可見範圍與訊息本身完全相同（`canAccessStudent`）—— 看得到這則訊息的人，
+  本來就看得到這個孩子的家長名單。
+
+**圖片附件不在此範圍**（Human Owner 2026-08-18 定案「先不做」）：`Message` 只有 `body`，
+且現有的 `/api/uploads/image` 是公開網址 + 僅 OWNER/ADMIN，兩者都不適用於幼兒照片。
+要做需要私有儲存 + 簽名網址（新 infra）+ migration，屆時另提 §D。
+
 ## 4g. LINE 帳號綁定（Phase 9 階段3）
 
 ```text

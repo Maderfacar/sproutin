@@ -14,6 +14,8 @@ type PrismaMock = {
   student: { findUnique: jest.Mock };
   message: { findUnique: jest.Mock; findMany: jest.Mock };
   messageRead: { findMany: jest.Mock; upsert: jest.Mock };
+  user: { findMany: jest.Mock };
+  guardianship: { findMany: jest.Mock };
   $transaction: jest.Mock;
 };
 type ScopeMock = { canAccessStudent: jest.Mock; canManageStudentClass: jest.Mock };
@@ -41,6 +43,16 @@ function makePrisma(tx: TxMock): PrismaMock {
     student: { findUnique: jest.fn(async () => ({ classId: 'class-sun' })) },
     message: { findUnique: jest.fn(async () => null), findMany: jest.fn(async () => []) },
     messageRead: { findMany: jest.fn(async () => []), upsert: jest.fn(async () => ({})) },
+    // 發話者標示（姓名 + 對這個學生的身分）。u-parent 是媽媽、u-teacher 是老師。
+    user: {
+      findMany: jest.fn(async () => [
+        { id: 'u-parent', displayName: '陳美玲', roles: [{ role: 'PARENT' }] },
+        { id: 'u-teacher', displayName: '林曉萱', roles: [{ role: 'TEACHER' }] },
+      ]),
+    },
+    guardianship: {
+      findMany: jest.fn(async () => [{ userId: 'u-parent', relation: 'MOTHER' }]),
+    },
     $transaction: jest.fn(async (cb: (t: TxMock) => Promise<unknown>) => cb(tx)),
   };
 }
@@ -113,6 +125,59 @@ describe('MessagesService.listForStudent', () => {
     const list = await service.listForStudent(parent, 'stu-sun-1');
     expect(list.find((m) => m.id === 'm1')!.isRead).toBe(true); // 有 MessageRead
     expect(list.find((m) => m.id === 'm2')!.isRead).toBe(true); // 自己發的
+  });
+
+  // 沒有這一段，對話串上三個人講的話長得一模一樣。
+  it('每則帶發話者：家長給對這個學生的關係，校方給身分', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.message.findMany.mockResolvedValue([
+      { id: 'm1', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-teacher', category: 'GENERAL', body: 'a', createdAt: new Date() },
+      { id: 'm2', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-parent', category: 'GENERAL', body: 'b', createdAt: new Date() },
+    ]);
+    const service = makeService(prisma, makeScope());
+
+    const list = await service.listForStudent(parent, 'stu-sun-1');
+    const fromTeacher = list.find((m) => m.id === 'm1')!;
+    const fromParent = list.find((m) => m.id === 'm2')!;
+
+    expect(fromTeacher).toMatchObject({
+      senderName: '林曉萱',
+      senderRole: 'TEACHER',
+      senderRelation: null,
+    });
+    expect(fromParent).toMatchObject({
+      senderName: '陳美玲',
+      senderRelation: 'MOTHER',
+      senderRole: null, // 是這個孩子的家人時，顯示的是家人身分
+    });
+  });
+
+  // 老師自己的小孩也在園裡：在那個孩子的對話串裡，他是以家人的身分在講話。
+  it('同時是校方又是這個孩子的家長 → 顯示家長身分', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.message.findMany.mockResolvedValue([
+      { id: 'm1', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-both', category: 'GENERAL', body: 'a', createdAt: new Date() },
+    ]);
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'u-both', displayName: '林曉萱', roles: [{ role: 'TEACHER' }, { role: 'PARENT' }] },
+    ]);
+    prisma.guardianship.findMany.mockResolvedValue([{ userId: 'u-both', relation: 'MOTHER' }]);
+
+    const list = await makeService(prisma, makeScope()).listForStudent(parent, 'stu-sun-1');
+    expect(list[0]).toMatchObject({ senderRelation: 'MOTHER', senderRole: null });
+  });
+
+  // 帳號一律停用不刪除，所以理論上不會發生；真的發生時要明講，不能顯示空白。
+  it('查不到發話者 → 明白標示，不留空白', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.message.findMany.mockResolvedValue([
+      { id: 'm1', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-ghost', category: 'GENERAL', body: 'a', createdAt: new Date() },
+    ]);
+    prisma.user.findMany.mockResolvedValue([]);
+    prisma.guardianship.findMany.mockResolvedValue([]);
+
+    const list = await makeService(prisma, makeScope()).listForStudent(parent, 'stu-sun-1');
+    expect(list[0]!.senderName).toBe('未知的發話者');
   });
 
   it('scope deny → Forbidden', async () => {
