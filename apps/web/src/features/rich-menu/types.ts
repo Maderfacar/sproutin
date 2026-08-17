@@ -12,6 +12,7 @@ export type RichMenuTarget =
   | 'attendance'
   | 'announcement'
   | 'notification'
+  | 'bus'
   | 'me';
 
 export interface RichMenuItem {
@@ -75,6 +76,7 @@ export const TARGET_LABEL: Record<RichMenuTarget, string> = {
   attendance: '出缺勤',
   announcement: '公告',
   notification: '通知',
+  bus: '娃娃車點名',
   me: '我的',
 };
 
@@ -85,10 +87,23 @@ export const TARGET_ICON: Record<RichMenuTarget, IconName> = {
   attendance: 'check',
   announcement: 'mega',
   notification: 'bell',
+  bus: 'bus',
   me: 'user',
 };
 
 export const TARGET_VALUES = Object.keys(TARGET_LABEL) as RichMenuTarget[];
+
+// 只有教職員能用的目的地（與 api 的 STAFF_ONLY_TARGETS 對應）。
+// 娃娃車**點名**是隨車老師在車上用的頁面，家長按下去只會撞到權限牆；
+// 家長要看的今日搭車狀態本來就在首頁的卡片上，不需要另一個入口。
+const STAFF_ONLY_TARGETS: RichMenuTarget[] = ['bus'];
+
+export function targetsFor(audience: RichMenuAudience): RichMenuTarget[] {
+  if (audience === 'STAFF') {
+    return TARGET_VALUES;
+  }
+  return TARGET_VALUES.filter((t) => !STAFF_ONLY_TARGETS.includes(t));
+}
 
 // LINE 的限制（查證自官方 API reference，2026-08-17）。前端先擋，後端再擋一次。
 export const CHAT_BAR_TEXT_MAX = 14;

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- 分頁小圖示：一株嫩芽。Next.js 會自動把 app/icon.svg 掛成 favicon。
+       **刻意用固定的森綠而不是園所品牌色**：favicon 是瀏覽器在頁面載入前就要的東西，
+       而品牌色是連上線之後才拿得到的（ADR-001）—— 做成 per-school 會先閃一個空白圖示。 -->
+  <rect width="32" height="32" rx="8" fill="#2f6b4f"/>
+  <path d="M16 25V13.5" stroke="#f4f2ea" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M16 15.2c-3.6 0-6.2-2.1-6.6-5.6 3.6-.5 6.4 1.5 6.6 5.6Z" fill="#a8d5b5"/>
+  <path d="M16 13c3.2 0 5.6-2.3 5.9-5.9C18.4 6.6 16 8.9 16 13Z" fill="#f4f2ea"/>
+</svg>

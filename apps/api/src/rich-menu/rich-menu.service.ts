@@ -16,6 +16,7 @@ import {
   UNBOUND_DEFAULT_ITEMS,
   cellCount,
   cellsFor,
+  isTargetAllowedFor,
   type RichMenuAudienceName,
   type RichMenuItem,
   type RichMenuTemplateName,
@@ -106,7 +107,7 @@ export class RichMenuService {
     audience: RichMenuAudienceName,
     input: SaveRichMenuInput,
   ): Promise<RichMenuConfigView> {
-    this.assertValidDesign(input);
+    this.assertValidDesign(audience, input);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.richMenuConfig.upsert({
@@ -162,7 +163,7 @@ export class RichMenuService {
       chatBarText: row.chatBarText,
       items: (row.items as unknown as RichMenuItem[]) ?? [],
     };
-    this.assertValidDesign(design);
+    this.assertValidDesign(audience, design);
 
     const liffId = await this.requireLiffId();
     const image = await this.fetchImage(row.imageUrl);
@@ -238,7 +239,7 @@ export class RichMenuService {
     return { audience, linkedUsers, skippedUsers, appliedAt: appliedAt.toISOString() };
   }
 
-  private assertValidDesign(input: SaveRichMenuInput): void {
+  private assertValidDesign(audience: RichMenuAudienceName, input: SaveRichMenuInput): void {
     if (!TEMPLATE_SHAPES[input.template]) {
       throw new BadRequestException('rich_menu_template_invalid');
     }
@@ -257,6 +258,10 @@ export class RichMenuService {
       seen.add(item.index);
       if (!(item.target in TARGET_PATHS)) {
         throw new BadRequestException('rich_menu_target_invalid');
+      }
+      // 目的地本身有效，但不適用於這個對象（例如把「娃娃車點名」放進家長的選單）。
+      if (!isTargetAllowedFor(audience, item.target)) {
+        throw new BadRequestException('rich_menu_target_not_for_audience');
       }
     }
     if (input.items.length === 0) {

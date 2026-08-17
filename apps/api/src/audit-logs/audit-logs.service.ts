@@ -16,6 +16,12 @@ export interface AuditLogFilters {
 export interface AuditLogView {
   id: string;
   actorUserId: string | null;
+  // 操作者的顯示名。稽核列只存 actorUserId（一串 cuid），畫面上沒有人看得懂是誰。
+  // **讀取時才join**，不寫進 AuditLog —— 稽核列本身不存 PII（docs/03），
+  // 且改名之後歷史紀錄應該跟著顯示新名字，而不是留下當時的快照。
+  actorName: string | null;
+  // 操作當下的身分（**存在列上的快照，不是現在的身分**）。稽核要的是「他當時以什麼身分做的」，
+  // 事後被拿掉權限不能讓歷史紀錄跟著變。因此這一欄不重新 join。
   actorRole: string | null;
   action: string;
   resourceType: string;
@@ -33,6 +39,9 @@ export interface AuditLogPage {
   limit: number;
   offset: number;
 }
+
+// 從 DB 取出來的原始列（尚未補上操作者姓名）。
+type AuditLogRow = Omit<AuditLogView, 'actorName'>;
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -69,7 +78,7 @@ export class AuditLogsService {
       ...(createdAt ? { createdAt } : {}),
     };
 
-    const [data, total] = await this.prisma.$transaction([
+    const [rows, total] = await this.prisma.$transaction([
       this.prisma.auditLog.findMany({
         where,
         select: AUDIT_VIEW,
@@ -80,8 +89,32 @@ export class AuditLogsService {
       this.prisma.auditLog.count({ where }),
     ]);
 
-    return { data, total, limit, offset };
+    return { data: await this.withActorNames(rows), total, limit, offset };
   }
+
+  // 補上操作者姓名。一次查詢涵蓋整頁（最多 100 列），不隨列數成長。
+  //
+  // 查不到人時回 null 而**不是**填一個看起來正常的空字串 —— 前端會退回顯示 ID，
+  // 讓「這筆查不到是誰」看得出來，而不是變成一列沒有操作者的紀錄。
+  private async withActorNames(rows: AuditLogRow[]): Promise<AuditLogView[]> {
+    const ids = [...new Set(rows.map((r) => r.actorUserId).filter(isUserId))];
+    if (ids.length === 0) {
+      return rows.map((r) => ({ ...r, actorName: null }));
+    }
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, displayName: true },
+    });
+    const nameOf = new Map(users.map((u) => [u.id, u.displayName]));
+    return rows.map((r) => ({
+      ...r,
+      actorName: r.actorUserId ? (nameOf.get(r.actorUserId) ?? null) : null,
+    }));
+  }
+}
+
+function isUserId(value: string | null): value is string {
+  return typeof value === 'string' && value !== '';
 }
 
 function clamp(value: number, min: number, max: number): number {

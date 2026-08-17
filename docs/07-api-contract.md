@@ -245,6 +245,25 @@ senderRole      Role?               校方身分（OWNER/ADMIN/TEACHER/BUS_TEACH
 且現有的 `/api/uploads/image` 是公開網址 + 僅 OWNER/ADMIN，兩者都不適用於幼兒照片。
 要做需要私有儲存 + 簽名網址（新 infra）+ migration，屆時另提 §D。
 
+### 稽核紀錄的操作者姓名（2026-08-18 打磨）
+
+`GET /audit-logs` 的每一列多回一個欄位。原本畫面上只有 `actorUserId`（cuid），
+園長查紀錄時看不出來是誰做的，也沒有任何地方可以把那串 ID 換成名字。
+**未新增端點、未改 schema、無 migration。**
+
+```text
+actorName  String?   User.displayName；查不到人時為 null
+```
+
+- **讀取時才 join，不寫進 AuditLog**：稽核列本身不存 PII（修正 C / docs/03），
+  而且改名之後歷史紀錄應該跟著顯示新名字，不是留下當時的快照。
+- **`actorRole` 維持是列上的快照，不重新 join**：稽核要回答的是「他**當時**以什麼身分做的」，
+  事後被拿掉權限不能讓歷史紀錄跟著變。
+- 查不到人時回 `null`，前端退回顯示 ID —— 不填空字串假裝這筆沒有操作者。
+- 成本固定一次查詢（一頁最多 100 列），不隨列數成長；`actorUserId` 為 null（系統動作）時不發查詢。
+- 隱私：可見範圍不變（`OWNER/ADMIN`）——他們本來就看得到全校人員名單，
+  這裡沒有多洩漏任何一個人（Human Owner 2026-08-18 定案「顯示姓名 + 身分」）。
+
 ## 4g. LINE 帳號綁定（Phase 9 階段3）
 
 ```text
@@ -339,6 +358,13 @@ POST   /rich-menus/:audience/apply    → { audience, linkedUsers, appliedAt }�
   沒換到的話園所下次套用會補上。
 - 每格連到帶路徑的 LIFF URL：`https://liff.line.me/{liffId}/{path}`
   （LIFF SDK 以 `liff.state` 轉址到 Endpoint URL + 該路徑）。
+- **可選的目的地**（`TARGET_PATHS`，api 與 web 各一份對應）：
+  `home` / `communication-book` / `leave` / `attendance` / `announcement` / `notification` /
+  **`bus`（娃娃車點名）** / `me`。
+- **`bus` 只適用於 STAFF**（`STAFF_ONLY_TARGETS`，2026-08-18 打磨新增）：
+  `/liff/bus` 是隨車老師在車上用的點名頁，家長按下去只會撞到權限牆；
+  家長要看的今日搭車狀態本來就在首頁的卡片上。前端不列給家長，後端於
+  `assertValidDesign(audience, …)` 再擋一次 → `400 rich_menu_target_not_for_audience`。
 - **前提**：每園需有自己的 OA 與 channel token。目前共用 demo OA（Human Owner 確認為內部測試用）。
 
 ## 4j. 後台的 LINE 群發（Flex Message；Phase 9 階段3）

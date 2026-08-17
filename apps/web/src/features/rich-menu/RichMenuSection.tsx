@@ -12,8 +12,8 @@ import {
   AUDIENCE_LABEL,
   CHAT_BAR_TEXT_MAX,
   TARGET_LABEL,
-  TARGET_VALUES,
   TEMPLATE_SHAPE,
+  targetsFor,
   cellCount,
   type RichMenuAudience,
   type RichMenuConfigView,
@@ -240,7 +240,7 @@ export function RichMenuSection() {
                     className="field"
                   >
                     <option value="">不使用這一格</option>
-                    {TARGET_VALUES.map((t) => (
+                    {targetsFor(audience).map((t) => (
                       <option key={t} value={t}>
                         {TARGET_LABEL[t]}
                       </option>

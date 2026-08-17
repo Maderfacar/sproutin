@@ -149,6 +149,26 @@ describe('RichMenuService.save', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('娃娃車點名放進家長的選單 → 400（家長按下去只會撞到權限牆）', async () => {
+    const prisma = makePrisma();
+    await expect(
+      makeService(prisma, makeLine()).save(owner, 'PARENT', {
+        ...base,
+        items: [{ index: 0, target: 'bus' }],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('娃娃車點名放進教職員的選單 → 可以', async () => {
+    const prisma = makePrisma();
+    await makeService(prisma, makeLine()).save(owner, 'STAFF', {
+      ...base,
+      items: [{ index: 0, target: 'bus' }],
+    });
+
+    expect(prisma.tx.richMenuConfig.upsert).toHaveBeenCalledTimes(1);
+  });
+
   it('一格都沒設定 → 400（點下去什麼都不會發生，比沒有選單更糟）', async () => {
     const prisma = makePrisma();
     await expect(

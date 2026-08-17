@@ -8,6 +8,7 @@ import { SessionProvider } from '../../lib/session';
 import { resolveLiffStatePath } from '../../lib/liffState';
 import { AppShell } from '../../components/AppShell';
 import { StatusScreen } from '../../components/StatusScreen';
+import { DocumentTitle } from '../../components/DocumentTitle';
 
 // /liff/* 的共用外框：先處理 LINE 指定的目的頁 → 取 runtime config（品牌 + liffId）
 // → 套品牌 → LIFF 登入 → AppShell。
@@ -29,14 +30,15 @@ export default function LiffLayout({ children }: { children: ReactNode }) {
   }, [router, pathname]);
 
   if (redirecting) {
-    return <StatusScreen status="loading" />;
+    return <StatusScreen fullScreen status="loading" />;
   }
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入園所設定中…" />;
+    return <StatusScreen fullScreen status="loading" message="載入園所設定中…" />;
   }
   if (isError || !config) {
     return (
       <StatusScreen
+        fullScreen
         status="error"
         message={error instanceof Error ? error.message : '無法載入園所設定'}
         onRetry={() => void refetch()}
@@ -46,6 +48,7 @@ export default function LiffLayout({ children }: { children: ReactNode }) {
 
   return (
     <BrandingProvider config={config}>
+      <DocumentTitle />
       <SessionProvider liffId={config.liffId}>
         <AppShell>{children}</AppShell>
       </SessionProvider>

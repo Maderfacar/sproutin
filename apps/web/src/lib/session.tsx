@@ -108,6 +108,7 @@ export function SessionProvider({
   if (state.status !== 'authed' || !state.user) {
     return (
       <StatusScreen
+        fullScreen
         // 'authed'（缺 user）與 'needs-binding'（缺 idToken）都是不該發生的中間態，
         // 一律退回 loading 而不是讓畫面崩掉。
         status={state.status === 'authed' || state.status === 'needs-binding' ? 'loading' : state.status}

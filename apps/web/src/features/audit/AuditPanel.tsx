@@ -6,7 +6,7 @@ import { roleFlags } from '../../lib/roles';
 import { apiErrorMessage } from '../../lib/api';
 import type { AuditLogFilters, AuditResult } from '../../lib/types';
 import { useAuditLogs } from './hooks';
-import { AUDIT_RESOURCE_TYPES, AUDIT_RESULT_LABEL } from './labels';
+import { AUDIT_RESOURCE_TYPES, AUDIT_RESULT_LABEL, actorText } from './labels';
 
 const PAGE_SIZE = 50;
 
@@ -52,6 +52,15 @@ export function AuditPanel() {
     setApplied(form);
   }
 
+  // 從某一列直接套用「只看這個人」。表單與已套用的條件一起更新，
+  // 否則畫面上的欄位會跟實際的查詢條件對不起來。
+  function filterByActor(actorUserId: string): void {
+    const next = { ...form, actor: actorUserId };
+    setForm(next);
+    setOffset(0);
+    setApplied(next);
+  }
+
   const total = data?.meta.total ?? 0;
   const canPrev = offset > 0;
   const canNext = offset + PAGE_SIZE < total;
@@ -78,12 +87,12 @@ export function AuditPanel() {
           </label>
 
           <label className="field-label sm:flex-1">
-            <span>操作者 User ID</span>
+            <span>操作者</span>
             <input
               type="text"
               value={form.actor}
               onChange={(e) => setForm({ ...form, actor: e.target.value })}
-              placeholder="留空 = 全部"
+              placeholder="留空 = 全部；用下方「只看這個人」自動帶入"
               className="field"
             />
           </label>
@@ -132,6 +141,7 @@ export function AuditPanel() {
                 label: log.result,
                 className: 'bg-black/5 text-ink-soft',
               };
+              const actorId = log.actorUserId;
               return (
                 <li key={log.id} className="card p-3 text-sm">
                   <div className="flex items-center gap-2">
@@ -146,8 +156,18 @@ export function AuditPanel() {
                     {log.resourceId ? `｜${log.resourceId}` : ''}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-soft">
-                    操作者：{log.actorRole ?? '系統'}
-                    {log.actorUserId ? `（${log.actorUserId}）` : ''}
+                    操作者：{actorText(log.actorName, actorId, log.actorRole)}
+                    {actorId && (
+                      // 「操作者」欄位要填的是一串沒人記得住的 ID。從這裡按一下就填好，
+                      // 不必為了追一個人的操作而去別的頁面複製 ID。
+                      <button
+                        type="button"
+                        onClick={() => filterByActor(actorId)}
+                        className="ml-2 underline underline-offset-2 transition hover:text-brand-primary"
+                      >
+                        只看這個人
+                      </button>
+                    )}
                   </p>
                 </li>
               );

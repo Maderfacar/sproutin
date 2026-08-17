@@ -63,12 +63,25 @@ export const TARGET_PATHS = {
   attendance: 'attendance',
   announcement: 'announcement',
   notification: 'notification',
+  bus: 'bus',
   me: 'me',
 } as const;
 
 export type RichMenuTarget = keyof typeof TARGET_PATHS;
 
 export const TARGET_VALUES = Object.keys(TARGET_PATHS) as RichMenuTarget[];
+
+// 只有教職員能用的目的地。`bus` 是娃娃車**點名**頁（隨車老師在車上用），
+// 家長按下去只會撞到權限牆 —— 家長要看的今日搭車狀態本來就在首頁的卡片上。
+// 前端不列給家長，後端再擋一次（前端只決定顯示，授權一律在後端）。
+export const STAFF_ONLY_TARGETS: RichMenuTarget[] = ['bus'];
+
+export function isTargetAllowedFor(
+  audience: RichMenuAudienceName,
+  target: RichMenuTarget,
+): boolean {
+  return audience === 'STAFF' || !STAFF_ONLY_TARGETS.includes(target);
+}
 
 export interface RichMenuItem {
   index: number; // 對應 TEMPLATES[template].cells 的索引

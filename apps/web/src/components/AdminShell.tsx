@@ -73,8 +73,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   return (
                     <li key={item.href}>
                       <Link
-                        // 帶 from=admin：那些頁面是手機版版型，返回鍵才知道要回後台而不是手機版首頁。
-                        href={item.onlyMobile ? `${item.href}?from=admin` : item.href}
+                        href={item.href}
                         aria-current={active ? 'page' : undefined}
                         className={`flex items-center gap-2.5 whitespace-nowrap rounded-md2 px-2.5 py-2 text-sm transition ${
                           active
@@ -84,11 +83,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
                       >
                         <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
                         <span className="flex-1">{item.label}</span>
-                        {item.onlyMobile && (
-                          <span className="hidden shrink-0 rounded-full border border-line px-1.5 py-0.5 text-[10px] font-normal text-ink-soft md:inline">
-                            手機版
-                          </span>
-                        )}
                       </Link>
                     </li>
                   );

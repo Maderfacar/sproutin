@@ -5,10 +5,6 @@ export interface AdminNavItem {
   href: string;
   label: string;
   icon: IconName;
-  // 這條在桌面後台還沒做 → 連到現有的手機版頁面，不做成點不下去的死角。
-  // 目前是空的（功能對等已補齊）；docs/04 §3b 規定新頁面兩個外框一起做，
-  // 這個欄位留著是為了「萬一又出現不對等，至少不是死角」的退路，不是常態。
-  onlyMobile?: boolean;
 }
 
 export interface AdminNavSection {
@@ -16,7 +12,8 @@ export interface AdminNavSection {
   items: AdminNavItem[];
 }
 
-// 桌面後台的導覽。**只列真的到得了的頁面**——尚未搬到桌面版的功能標「手機版」並連到 /liff/*。
+// 桌面後台的導覽。**每一條都是桌面版自己的頁面**——功能對等補齊後不再有指向 /liff/* 的項目，
+// 新頁面依 docs/04 §3b 兩個外框一起做（adminNav.spec.ts 有一條測試釘住這件事）。
 // 顯示與否依角色（僅影響畫面；真正授權一律在後端 Guard）。
 export function adminNav(flags: RoleFlags): AdminNavSection[] {
   const schoolItems: AdminNavItem[] = [{ href: '/admin', label: '總覽', icon: 'home' }];

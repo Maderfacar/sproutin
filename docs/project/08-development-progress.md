@@ -2,7 +2,12 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**親師對話多了發話者標示**——泡泡上顯示「陳美玲 · 母親」；
+> Last updated: 2026-08-18（**打磨第一批 IMPLEMENTED，待線上驗收**——七項：載入畫面的空白、
+> 自己的「找不到頁面」、分頁標題與小圖示、圖文選單可指到娃娃車（只給老師）、
+> 稽核紀錄顯示操作者姓名、寬螢幕雙欄（出缺勤／請假／公告）、清掉沒人用的 `onlyMobile`。
+> 無 migration、無新端點。測試 428 → **445**。範圍由 Human Owner 四題定案。
+>
+> （前次）2026-08-18（**親師對話多了發話者標示 ✅ ACCEPTED**——泡泡上顯示「陳美玲 · 母親」；
 > `/messages` 原本連名字都沒回，只有一串 ID。無 migration、無新端點。
 > 對話圖片經 Human Owner 定案**先不做**（需私有儲存 + 簽名網址）。測試 428。
 >
@@ -103,12 +108,31 @@ Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」�
 
 ✅ **電腦版與手機版功能對等已全數補齊**（三類明文例外見 docs/04 §3b 的對照表）。
 
-**親師對話標出發話者 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+**親師對話標出發話者 — ✅ ACCEPTED（2026-08-18, Human Owner）。**
 四項全綠：lint / typecheck / **測試 428（api 341 + shared 12 + web 75）** / build。
 **無 migration、無新端點**（改既有 `/messages` 的回應）。詳見 docs/07「親師對話的發話者」。
 Human Owner 定案：顯示「名字 + 身分」；**對話圖片先不做**（需私有儲存 + 簽名網址，屆時另提 §D）。
 
-**下一步：② 打磨**（Human Owner 早已定案的順序：功能對等 → 打磨）。
+**② 打磨 第一批 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 445（api 346 + shared 12 + web 87）** / build。
+**無 migration、無新後端端點**（改既有 `/audit-logs` 與 `/rich-menus` 的行為）。
+
+範圍由 Human Owner 走查後四題定案：① A 組四項全做 ② 稽核顯示「姓名 + 身分」
+③ 圖文選單的娃娃車那一格**只給老師**（家長首頁本來就有卡片，不另做家長版頁面）
+④ `onlyMobile` 欄位**刪掉**。
+
+```text
+A1 載入／沒權限畫面在桌面外框裡撐出一整個螢幕高的空白   → StatusScreen 加 fullScreen（預設 false）
+   順帶修好巢狀 <main>（外框已經有一個，HTML 不合法）
+A2 打錯網址跳出系統預設的英文 404                       → app/not-found.tsx（清葉版，給得出下一步）
+A3 分頁永遠寫「Sproutin」、沒有分頁小圖示               → lib/pageTitle + components/DocumentTitle + app/icon.svg
+A4 圖文選單不能指到娃娃車                               → TARGET_PATHS 加 bus；STAFF_ONLY_TARGETS 後端再擋一次
+B1 桌面每日類頁面在寬螢幕上只用左半邊                   → components/SplitColumns（出缺勤／請假／公告）
+B2 稽核紀錄的「操作者」是一串看不懂的 ID                → /audit-logs 多回 actorName；另加「只看這個人」
+B3 lib/adminNav.ts 的 onlyMobile 沒有任何一條在用       → 刪除（含 AdminShell 的「手機版」標籤與那條測試）
+```
+
+**下一步：等 Human Owner 線上驗收，再排打磨第二批**（走查時留下但這一輪沒做的，見 Recent Work Log）。
 
 **Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
 四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
@@ -260,10 +284,8 @@ Required decision:
 7b. 聯絡簿的常用短語目前寫死在前端（`features/communication-book/labels.ts`）。
    若園所想自訂，屬 `SchoolConfig` 的小擴充（需 migration）——等實際回饋再做（YAGNI）。
 
-7. 清葉改版後的殘留死碼（低風險，隨手清）：
-   - `apps/web/src/components/DashboardCard.tsx` — 首頁改為內嵌細線列表後已無人使用。
-   - `apps/web/src/lib/preview.tsx` — 單一主題（清葉）下 theme/layout 預覽已無作用;
-     其角色由「園所外觀設定頁」取代。
+7. ~~清葉改版後的殘留死碼（DashboardCard.tsx / lib/preview.tsx）~~ → ✅ 已不存在
+   （2026-08-18 打磨走查對帳：兩個檔案早已刪除，這條是過期的文件）。
 
 8. ~~LINE 帳號綁定機制~~ → ✅ RESOLVED（階段3, 2026-08-17）：綁定碼（8 碼、一次性、可作廢、可解綁）。
    殘留：QR 圖需新套件（§D 待核准）;綁定端點的暴力嘗試防護目前**倚賴碼本身的熵**，
@@ -573,7 +595,42 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 
 ## Recent Work Log
 
-### 2026-08-18 — 💬 **親師對話標出發話者（IMPLEMENTED，待線上驗收）**
+### 2026-08-18 — ✨ **打磨 第一批（IMPLEMENTED，待線上驗收）**
+
+功能對等補齊之後的第一輪打磨。**先走查、列清單、由 Human Owner 挑範圍，才動手**
+（他四題全選建議案）。七項都不動資料庫、不加端點。
+
+| | 問題 | 做法 |
+|---|---|---|
+| A1 | 「載入中」「只有園長可以…」在桌面外框裡撐出一整個螢幕高的空白 | `StatusScreen` 加 `fullScreen`（**預設 false**）。只有四個「還沒套上外框」的地方傳 true：`/admin` 與 `/liff` 的 layout、兩個 SessionProvider。順帶修好巢狀 `<main>` —— 外框已經有一個，非整頁時改用 `<div>` |
+| A2 | 打錯網址跳出 Next 預設的英文黑白 404 | `app/not-found.tsx`。**不套園所品牌**（它只掛在 RootLayout 底下，拿不到 BrandingProvider，與根路徑同一個限制），清葉的底色字體寫在 `:root` 所以仍然對。一定給得出下一步：回首頁 + 園務後台 |
+| A3 | 瀏覽器分頁永遠寫「Sproutin」、沒有分頁小圖示 | `lib/pageTitle.ts`（對照表**只以手機版網址為鍵**，桌面版用新的 `toMobileHref()` 翻回來再查）+ `components/DocumentTitle`（掛在兩個 BrandingProvider 底下各一次）+ `app/icon.svg`。**metadata 用不了**：園名是 runtime 才拿得到的（ADR-001），而全站頁面都是 client component |
+| A4 | 圖文選單的格子不能指到娃娃車 | `TARGET_PATHS` 加 `bus`。**只給 STAFF**（`STAFF_ONLY_TARGETS`）—— `/liff/bus` 是隨車老師在車上用的點名頁，家長按下去只會撞到權限牆；家長要看的今日搭車狀態本來就在首頁的卡片上。前端不列給家長，後端 `assertValidDesign(audience, …)` 再擋一次 |
+| B1 | 桌面的出缺勤／請假／公告在寬螢幕上只用左半邊 | `components/SplitColumns`：「要動手做的事」左欄、「查詢與翻閱」右欄。**只在桌面外框且兩塊都有內容時**才切（家長只有「申請請假」一塊 → 不切，免得右半邊開一個空洞）。判斷用 `surfaceOf(pathname)`，**不由呼叫端傳 prop** —— 否則兩個十行的 page.tsx 各要記得傳一次 |
+| B2 | 稽核紀錄的「操作者」是一串看不懂的 ID | `/audit-logs` 多回 `actorName`（**讀取時才 join，不寫進 AuditLog**：稽核列不存 PII，且改名後歷史紀錄該顯示新名字）。`actorRole` 維持是列上的快照不重新 join —— 稽核要的是「他**當時**以什麼身分做的」 |
+| B3 | `lib/adminNav.ts` 的 `onlyMobile` 沒有任何一條在用 | 刪除（含 `AdminShell` 的「手機版」標籤與那條已經失去意義的測試）。守住對等原則的是「導覽已經沒有手機版專屬項目」那一條，它留著 |
+
+**Human Owner 四題定案（2026-08-18）**：
+① 這一輪範圍＝A 組四項 + B1 + B2 + C（全選）
+② 稽核顯示「**姓名 + 身分**」（例：`王園長（園長）`）—— 能看稽核的本來就看得到全校人員名單，沒有多洩漏
+③ 娃娃車那一格**只給老師**；不另做家長版的娃娃車頁（刀2 的「預計抵達時間／明天不搭車」本來就規劃在那一頁，現在做會做半套）
+④ `onlyMobile` **刪掉**
+
+**超出範圍的一項（明講）**：稽核每一列加了「只看這個人」的按鈕。原本「操作者」篩選欄要人自己
+貼一串 cuid，沒有任何地方查得到 —— 只把 ID 換成姓名的話，看得懂了但還是查不動。約十行。
+
+**走查時發現但這一輪沒做的**（留給第二批，非窮舉）：
+- 程式執行期出錯時仍是 Next 預設的錯誤頁（`app/error.tsx` 沒有）—— 與 A2 同一類，但這輪只選了 404。
+- 根路徑 `/` 與「找不到頁面」的分頁標題仍是靜態的「Sproutin」（那兩頁刻意不套園所品牌）。
+- 通知頁在寬螢幕上仍是單欄（單一列表切兩欄反而難讀，先不動）。
+
+**對帳**：技術債 #7（`DashboardCard.tsx` / `lib/preview.tsx` 死碼待清）**是過期的文件** ——
+兩個檔案早就不存在了，已標記為 RESOLVED。
+
+四項全綠：lint / typecheck / **測試 445（api 346 + shared 12 + web 87）** / build。
+文件同步：docs/04 §3b（`SplitColumns` + `toMobileHref`）、docs/07（稽核 `actorName`、圖文選單 `bus`）。
+
+### 2026-08-18 — 💬 **親師對話標出發話者（✅ ACCEPTED, Human Owner）**
 
 Human Owner：「對話框泡泡表示出每一句話是來自哪一個家長、老師、或其它人」。
 

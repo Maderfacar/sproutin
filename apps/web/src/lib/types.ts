@@ -161,7 +161,8 @@ export type AuditResult = 'SUCCESS' | 'FAILURE' | 'DENIED';
 export interface AuditLogView {
   id: string;
   actorUserId: string | null;
-  actorRole: string | null;
+  actorName: string | null; // 讀取時 join 出來的顯示名；查不到人時為 null
+  actorRole: string | null; // 操作當下的身分快照（可能是逗號分隔的多個角色）
   action: string;
   resourceType: string;
   resourceId: string | null;

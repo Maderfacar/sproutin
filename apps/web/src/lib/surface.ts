@@ -60,6 +60,21 @@ function withFromAdmin(href: string): string {
   return `${path}${path.includes('?') ? '&' : '?'}from=admin${hash}`;
 }
 
+// toSurfaceHref 的反向：桌面版網址 → 手機版網址。
+// 用途是「一個功能只要寫一次」—— 例如分頁標題的對照表只以手機版網址為鍵，
+// 桌面版先翻回來再查（見 lib/pageTitle）。沒有配對的網址原樣回傳。
+export function toMobileHref(href: string): string {
+  if (!href.startsWith('/admin')) {
+    return href;
+  }
+  for (const pair of PAIRS) {
+    if (isPathWithin(href, pair.desktop)) {
+      return pair.mobile + href.slice(pair.desktop.length);
+    }
+  }
+  return href;
+}
+
 export function toSurfaceHref(href: string, surface: Surface): string {
   if (surface !== 'admin' || !href.startsWith('/liff')) {
     return href;

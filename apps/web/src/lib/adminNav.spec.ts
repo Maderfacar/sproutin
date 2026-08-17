@@ -29,19 +29,6 @@ describe('adminNav', () => {
     expect(hrefs(owner)).toContain('/admin/audit');
   });
 
-  it('尚未搬到桌面版的項目一律標示為手機版，不做成點不下去的死角', () => {
-    for (const section of adminNav(owner)) {
-      for (const item of section.items) {
-        if (item.href.startsWith('/admin')) {
-          expect(item.onlyMobile).toBeUndefined();
-        } else {
-          expect(item.href.startsWith('/liff')).toBe(true);
-          expect(item.onlyMobile).toBe(true);
-        }
-      }
-    }
-  });
-
   // 功能對等補齊之後，導覽上不該再有任何一條指向手機版版型。
   // 這條會在有人加了「只有手機版」的頁面時失敗 —— 那正是 docs/04 §3b 禁止的事。
   it('導覽已經沒有手機版專屬的項目', () => {

@@ -51,10 +51,10 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
   }, [state.status, router]);
 
   if (state.status === 'error') {
-    return <StatusScreen status="error" message={state.message} />;
+    return <StatusScreen fullScreen status="error" message={state.message} />;
   }
   if (state.status !== 'authed' || !state.user) {
-    return <StatusScreen status="loading" message="確認身分中…" />;
+    return <StatusScreen fullScreen status="loading" message="確認身分中…" />;
   }
 
   // 家長沒有後台可用的東西。與其給一片空白，不如講清楚該去哪裡。
