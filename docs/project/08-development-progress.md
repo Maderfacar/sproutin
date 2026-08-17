@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**階段3：綁定碼 / 桌面後台骨架 / 人員權限設定 皆 IMPLEMENTED 待驗收**——LINE Login 網頁版 OAuth、`/admin/*` 桌面外框、桌面版綁定畫面、身分增減 + 權限總覽頁，另修好「從後台進手機版頁面後返回鍵跑掉」。）
+> Last updated: 2026-08-17（**階段3 ① 桌面後台骨架 + ②b 人員權限設定 ✅ ACCEPTED**——LINE Login 網頁版 OAuth、`/admin/*` 桌面外框、桌面版綁定畫面、身分增減 + 權限總覽頁，另修好返回鍵。綁定碼仍待線上驗收。下一步 ② 管理首頁。）
 
 ---
 
@@ -66,8 +66,9 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 ## Current Task
 
-**Phase 9 階段3 — 桌面後台骨架 + 人員權限設定 IMPLEMENTED（2026-08-17）。** 待 CI 綠 + Human Owner 線上驗收。
-本機四項全綠：lint / typecheck / **測試 279（api 234 + shared 12 + web 33）** / build。
+**Phase 9 階段3 ① 桌面後台骨架 + ②b 人員權限設定 — ✅ ACCEPTED（2026-08-17, Human Owner 線上驗證完畢）。**
+CI 綠（run 32006276290）；四項全綠：lint / typecheck / **測試 279（api 234 + shared 12 + web 33）** / build。
+**下一步：② 管理首頁。**
 
 ### 骨架定案（Human Owner 拍板 2026-08-17）
 
@@ -281,17 +282,15 @@ NOW
   ⑤ 順便看首頁：封面圖現在是首頁的大圖（園名與問候疊在上面），其他頁面不再有橫帶。
 - **決定是否加 QR**（需一個新套件，§D；不加也能用連結 `?code=` 免打字）。
 
-NOW（桌面後台骨架，2026-08-17）
-- 前置（**已完成**）：LINE Developers 的 Login channel 已加 Callback URL `/admin/callback`；
-  Vercel 已設 `LINE_LOGIN_CHANNEL_SECRET`。
-- **尚缺一個環境變數**：Vercel 還需要 `LINE_LOGIN_CHANNEL_ID`（非機密，就是 Login channel 的 Channel ID）。
-  沒有它，登入頁會顯示「系統還沒完成 LINE 登入設定」。
-- 線上驗收（用電腦瀏覽器，不是手機）：
-  ① 開 `/admin` → 應自動跳到登入頁 → 按「用 LINE 登入」→ LINE 授權頁（可掃碼）→ 回到後台總覽。
-  ② 左側導覽點「人員與綁定」→ 應看到與手機版一模一樣的人員清單與發碼功能。
-  ③ 用**未綁定的 LINE 帳號**在電腦登入 → 應出現桌面版綁定畫面 → 輸入碼 → 直接進後台。
-  ④ 用**家長帳號**登入 → 應出現「這裡是給園所人員用的」引導頁，不是空白或錯誤。
-  ⑤ 左下角「登出」→ 應回到登入頁，重新整理不會自動登入。
+DONE（桌面後台，2026-08-17）
+- ✅ LINE Developers 已加 Callback URL `/admin/callback`；Vercel 已設
+  `LINE_LOGIN_CHANNEL_SECRET` 與 `LINE_LOGIN_CHANNEL_ID`（兩者皆為 web 伺服器端）。
+- ✅ **階段3 ① 骨架 + ②b 權限設定 線上驗收通過 — ACCEPTED（2026-08-17）。**
+  未逐項回報的兩條分支（桌面版綁定畫面、家長登入後台的引導頁）已實作並有自動測試，
+  若日後實際使用時有異狀再修。
+
+NOW
+- **決定 ② 管理首頁要放哪些數字**（Claude 會先出畫面提案 → 確認 → 實作）。
 
 （已完成，保留紀錄）驗收刀 4 的步驟 —— 部署完成後（Render 會自動套用 migration 0005）：
   ① 老師帳號 → 底部「聯絡簿」→ 選班級 → 按幾位學生的「到校」→ 回出缺勤頁確認同一批人已變成「已到校」
@@ -325,9 +324,9 @@ LATER（正式上線前）
 ```text
 **Phase 9 階段3（Human Owner 2026-08-17 拍板的執行順序）：**
 
-  ① 專屬後台骨架        → IMPLEMENTED（2026-08-17），待線上驗收
-  ②b 人員權限設定頁      → IMPLEMENTED（2026-08-17），待線上驗收。§D 已提案並由 Human Owner
-                          三題定案（三題全採建議）。提前於 ② 完成，因為 CSV 匯入必須排在它之後。
+  ① 專屬後台骨架        → ✅ ACCEPTED（2026-08-17）
+  ②b 人員權限設定頁      → ✅ ACCEPTED（2026-08-17）。§D 提案 + Human Owner 三題定案（全採建議）。
+                          提前於 ② 完成，因為 CSV 匯入必須排在它之後（匯入錯了要有救）。
   ② 管理首頁            → 概況數字 + 所有管理入口聚成一頁（**下一步**）
   ③ CSV 批次匯入        → 帳號/學生/班級 + 批次發綁定碼（範本 8 分頁）
   ④ 圖文選單設計器      → 模板式（換底圖 + 選連結 + 填字），依角色顯示不同選單；
@@ -430,14 +429,14 @@ Backend（Render 部署 2026-08-14，已驗證）
 ## Latest CI
 
 ```text
-Commit:  cffe942（feat: LINE 帳號綁定碼 + 首頁 hero + 收尾,階段3 起手）
-Run:     32000075959
+Commit:  5ec811b（feat(api,web): 人員權限設定（身分可增減）+ 修返回鍵）
+Run:     32006276290
 Status:  ✅ SUCCESS（build + db + docker-build 全綠）
 Date:    2026-08-17
-Note:    db job 已於拋棄式 Postgres 套用 migration 0005 + 0006、seed 連跑兩次（idempotent）、
-         drift check 通過 —— 手寫的 migration 與 schema.prisma 一致，可安全套用到線上。
+Note:    測試 279（api 234 + shared 12 + web 33）。本次無 migration（UserRole 模型本就支援多角色）。
 
-（前一次）a317fd9 / run 31976370995 — 每日聯絡簿（階段2 刀4）✅ SUCCESS。
+（前一次）cb4c7cc / run 32004830401 — 桌面版專屬後台骨架 ✅ SUCCESS。
+（更前）cffe942 / run 32000075959 — 綁定碼;db job 已驗 migration 0005+0006 + seed idempotent + drift check。
 ```
 
 ---
@@ -456,7 +455,13 @@ Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待�
 ## Latest Accepted Commit
 
 ```text
-Phase 9 階段2 刀 4 — 每日聯絡簿 — ✅ ACCEPTED（2026-08-17, Human Owner 線上驗證完畢）
+Phase 9 階段3 ① 桌面版專屬後台骨架 + ②b 人員權限設定 — ✅ ACCEPTED（2026-08-17, Human Owner）
+  commit cb4c7cc（骨架）+ 5ec811b（權限設定 + 返回鍵）;CI run 32004830401 / 32006276290 全綠。
+  線上驗收涵蓋：電腦版 LINE 登入 → 後台、權限總覽與身分增減（含附帶關聯的連帶解除、
+  行政看不到園長選項、最後一個身分不可移除）、以及「從後台進手機版頁面後返回鍵回後台」。
+Next: ② 管理首頁（概況數字 + 管理入口聚成一頁）。
+
+（前一項）Phase 9 階段2 刀 4 — 每日聯絡簿 — ✅ ACCEPTED（2026-08-17, Human Owner 線上驗證完畢）
   commit a317fd9（+ 540d3ed CI 紀錄）;CI run 31976370995 全綠（build + db + docker-build）。
   db job 已驗 migration 0005 套用 + seed idempotent + drift check 通過。
   → **Phase 9 階段2 五刀全數 ACCEPTED，階段2 完成。**
