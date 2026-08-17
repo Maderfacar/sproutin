@@ -40,13 +40,28 @@ describe('resolveCampaignRecipients', () => {
     expect(whereOf()).toMatchObject({ status: 'ACTIVE' });
   });
 
-  it('全校家長 → 以 PARENT / GUARDIAN 身分篩選', async () => {
+  // 只看身分欄位會出現反直覺的結果：有人收得到班級群發卻收不到全校群發
+  // （班級是靠 Guardianship 認定的）。聯集讓「某班家長 ⊆ 全校家長」必然成立。
+  it('全校家長 → 有家長身分 或 有在學學生的監護關聯（聯集）', async () => {
     const { tx, whereOf } = makeTx([]);
     await resolveCampaignRecipients(tx, 'ALL_PARENTS', null);
 
     expect(whereOf()).toMatchObject({
-      roles: { some: { role: { in: ['PARENT', 'GUARDIAN'] } } },
+      OR: [
+        { roles: { some: { role: { in: ['PARENT', 'GUARDIAN'] } } } },
+        { guardianOf: { some: { student: { status: 'ACTIVE' } } } },
+      ],
     });
+  });
+
+  // 後台補了監護關係卻忘了給「家長」身分 —— 這種人以前收不到全校群發。
+  it('只有監護關聯、沒有家長身分的人也算全校家長', async () => {
+    const { tx, whereOf } = makeTx([]);
+    await resolveCampaignRecipients(tx, 'ALL_PARENTS', null);
+
+    const or = (whereOf() as { OR: unknown[] }).OR;
+    expect(or).toHaveLength(2);
+    expect(JSON.stringify(or)).toContain('guardianOf');
   });
 
   it('教職員 → 園長／行政／老師／隨車老師', async () => {

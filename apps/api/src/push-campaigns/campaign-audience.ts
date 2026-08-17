@@ -8,6 +8,13 @@ import type { PushCampaignAudienceName } from './push-campaign.types';
 // 收件範圍（Human Owner 定案）：
 //   ALL_PARENTS 全校家長／監護人 ｜ CLASS 指定班級學生的家長 ｜ STAFF 教職員
 // 「指定班級」不含該班老師 —— 老師走 STAFF 那個選項，否則勾一個班會意外多發給老師。
+//
+// **「家長」以兩種來源的聯集認定：身分欄位（PARENT/GUARDIAN）或實際的監護關聯（Guardianship）。**
+// 起初只看身分欄位，會出現反直覺的結果：有人收得到班級群發卻收不到全校群發
+// （班級是靠 Guardianship 認定的）。園長理所當然會假設「某班家長 ⊆ 全校家長」，
+// 用兩套標準就破壞了這個包含關係。聯集讓它必然成立。
+// 兩種來源都該算：只有身分沒有關聯＝剛建好還沒綁小孩的家長帳號；
+// 只有關聯沒有身分＝後台補了監護關係卻忘了給身分。漏掉任一種，園所都會以為系統漏發。
 const PARENT_ROLES: Role[] = ['PARENT', 'GUARDIAN'];
 const STAFF_ROLES: Role[] = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER'];
 
@@ -46,8 +53,14 @@ function audienceFilter(
   }
   if (audience === 'CLASS') {
     // 班級不存在或已無在學學生 → 查不到任何人（0 則），不是錯誤。
-    // 家長身分由 Guardianship 認定（那是實際的親子關聯，比角色欄位精準）。
+    // 班級只能靠 Guardianship 認定 —— 身分欄位沒有班級資訊。
     return { guardianOf: { some: { student: { classId: classId ?? '', status: 'ACTIVE' } } } };
   }
-  return { roles: { some: { role: { in: PARENT_ROLES } } } };
+  // 全校家長＝有家長身分 **或** 有在學學生的監護關聯（見上方說明）。
+  return {
+    OR: [
+      { roles: { some: { role: { in: PARENT_ROLES } } } },
+      { guardianOf: { some: { student: { status: 'ACTIVE' } } } },
+    ],
+  };
 }
