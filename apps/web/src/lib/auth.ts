@@ -46,11 +46,12 @@ export async function lineLogin(idToken: string): Promise<AuthUser> {
 }
 
 // 綁定：輸入園所發的綁定碼 → 接上帳號並同時完成登入。
-export async function lineBind(idToken: string, code: string): Promise<AuthUser> {
+// idToken 為 null＝桌面後台的情形：token 在伺服器端的 httpOnly cookie 裡，前端不持有也不需要。
+export async function lineBind(idToken: string | null, code: string): Promise<AuthUser> {
   const res = await fetch('/api/auth/line/bind', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken, code }),
+    body: JSON.stringify(idToken ? { idToken, code } : { code }),
     credentials: 'same-origin',
   });
   if (!res.ok) {

@@ -220,6 +220,28 @@ DELETE /users/:id/line                           → 204（解除綁定，帳號
 - 稽核：`binding_code.issue` / `.revoke` / `.redeem` / `user.line_unbind`。
   **稽核不存碼本身（等同憑證明文），也不存 `lineUserId`（識別性資料）**（修正 C）。
 
+## 4h. 桌面後台的登入（Phase 9 階段3；**後端無新端點**）
+
+桌面版 `/admin/*` 用 **LINE Login 網頁版 OAuth** 取得身分，**不新增任何後端端點**：
+
+```text
+GET  /api/admin/oauth/start   （web）產生 state → httpOnly cookie → 導向 LINE 授權頁
+GET  /admin/callback          （web）驗 state → code 換 id_token（需 channel secret）
+                               → 呼叫既有 POST /auth/line/login → 設 sp_session cookie
+                               → 認不出來（user_not_provisioned）則導向 /admin/bind
+POST /api/auth/line/bind      （web）body 未帶 idToken 時改讀 httpOnly cookie，
+                               再呼叫既有 POST /auth/line/bind
+```
+
+**LIFF 與網頁版 OAuth 屬同一個 LINE Login channel**，兩者的 id_token `aud` 都等於
+`LINE_LOGIN_CHANNEL_ID`，因此 `LineVerifier`、`AuthService`、RBAC 全部沿用，**認出的是同一個
+`LineIdentity` → 同一個 `User`**。桌面後台不是第二套身分系統。
+
+- 新環境變數（web 伺服器端）：`LINE_LOGIN_CHANNEL_ID`、`LINE_LOGIN_CHANNEL_SECRET`；
+  選用 `WEB_PUBLIC_URL`（未設定時由 `x-forwarded-host` 推導 redirect_uri）。
+- `redirect_uri` 必須與 LINE 後台登記的 Callback URL 完全一致，不一致由 LINE 直接拒絕。
+- LINE 憑證（id_token）**全程不進前端**：只存在伺服器端與 httpOnly cookie。
+
 ## 5. 驗證與授權
 
 - **輸入驗證**：每個 body 用 Zod（`packages/shared/dto`），fail-fast。

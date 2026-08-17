@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**階段2 五刀全數 ACCEPTED；階段3 已啟動：LINE 帳號綁定碼 IMPLEMENTED**，另完成首頁 hero、清死碼、鋪厚 demo 資料。待 CI → 線上驗收。）
+> Last updated: 2026-08-17（**階段3：綁定碼 IMPLEMENTED 待驗收；桌面版專屬後台骨架 IMPLEMENTED**——LINE Login 網頁版 OAuth、`/admin/*` 桌面外框、桌面版綁定畫面。待 CI → 線上驗收。）
 
 ---
 
@@ -66,8 +66,24 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 ## Current Task
 
-**Phase 9 階段2 刀 4 — 每日聯絡簿 IMPLEMENTED（2026-08-17）。** 待 CI 綠 + Human Owner 線上驗收。
-本機四項全綠：lint / typecheck / **測試 228（api 200 + shared 12 + web 16）** / build。
+**Phase 9 階段3 — 桌面版專屬後台「骨架」IMPLEMENTED（2026-08-17）。** 待 CI 綠 + Human Owner 線上驗收。
+本機四項全綠：lint / typecheck / **測試 262（api 221 + shared 12 + web 29）** / build。
+
+### 骨架定案（Human Owner 拍板 2026-08-17）
+
+| 決策 | 定案 |
+|------|------|
+| 登入方式 | **LINE Login 網頁版 OAuth**（非 LIFF）。同一個 Login channel → id_token 的 aud 相同 → 後端 `LineVerifier` 零改動，認出的是同一個 LineIdentity/User/RBAC。**不是另一套認證系統。** |
+| channel secret 放哪 | **web（Vercel）** 端做 code→token 交換。後端不新增端點、既有測試不受影響。代價：LINE 憑證多一個存放位置（仍為伺服器端）。 |
+| 網址 | `/admin/*` 桌面版與 `/liff/*` 手機版共存。同一份程式碼、同一套權限、同一個 DB；**差別只有外框**。 |
+| 手機版後台 | **保留**（`/liff/admin/*`）。桌面版是多一條路，不是換一條路。 |
+| 誰能進 `/admin` | 園長 / 行政 / 老師可進，各自只看得到有權限的東西；家長導向「請從手機的 LINE 選單使用」的引導頁，不給空白。 |
+| 桌面版綁定畫面 | **必做**。後台新建的行政第一次在電腦登入走的就是這條路，少了它會卡在登入頁出不去。 |
+
+### 這一刀的範圍（刻意不做的事）
+
+管理首頁的完整數字、班級/學生/園所外觀搬到桌面版、人員權限設定頁 —— **都不在這一刀**。
+骨架先把「進得來、認得出是誰、到得了下一頁、綁得了定」做對；總覽目前只放一個真實數字（尚未綁定人數）。
 
 ### 刀 4 設計定案（Human Owner 逐項拍板，2026-08-17）
 
@@ -206,6 +222,19 @@ Required decision:
 8. ~~LINE 帳號綁定機制~~ → ✅ RESOLVED（階段3, 2026-08-17）：綁定碼（8 碼、一次性、可作廢、可解綁）。
    殘留：QR 圖需新套件（§D 待核准）;綁定端點的暴力嘗試防護目前**倚賴碼本身的熵**，
    rate limiting 上線後應一併涵蓋 `/auth/line/bind`（見第 5 項）。
+   新增：`/api/admin/oauth/start` 與 `/admin/callback` 也是未認證即可呼叫的入口，rate limiting 時一併涵蓋。
+
+9. ★ **建好的人員無法改變角色**（2026-08-17 發現，Human Owner 已指定要做）
+   - Priority: High（CSV 批次匯入之前必須有）
+   - 現況: `POST /users` 建帳號時指定一次角色;`PATCH /users/:id` 只能改 displayName / status
+     （`apps/api/src/users/users.controller.ts`）。**建錯角色改不回來，也無法為一人加第二個角色**
+     （例如老師本身也是家長）。可改的只有 Guardianship / TeacherAssignment 那一層。
+   - 為什麼擋在匯入之前: CSV 一次會建幾百人，角色若不能事後修正，匯入等於不能反悔的動作。
+   - 需求: 新後端端點（增/刪 UserRole）→ 屬 §D，屆時提案 + 定案後才實作。
+
+10. 桌面後台的 Vercel 預覽環境無法登入 —— LINE 只登記一組 Callback URL（正式網域），
+    預覽網域的 redirect_uri 不匹配會被 LINE 拒絕。demo 階段直接上 main，不影響;
+    未來若需要預覽登入，需在 LINE 後台補登記或改用固定的預覽網域。
 ```
 
 ---
@@ -255,7 +284,18 @@ NOW
   ④ 回後台把那個人「解除綁定」→ 對方重新開啟應又回到綁定畫面（救援出口可用）。
   ⑤ 順便看首頁：封面圖現在是首頁的大圖（園名與問候疊在上面），其他頁面不再有橫帶。
 - **決定是否加 QR**（需一個新套件，§D；不加也能用連結 `?code=` 免打字）。
-- **決定下一步**（選項見 Next Task）。
+
+NOW（桌面後台骨架，2026-08-17）
+- 前置（**已完成**）：LINE Developers 的 Login channel 已加 Callback URL `/admin/callback`；
+  Vercel 已設 `LINE_LOGIN_CHANNEL_SECRET`。
+- **尚缺一個環境變數**：Vercel 還需要 `LINE_LOGIN_CHANNEL_ID`（非機密，就是 Login channel 的 Channel ID）。
+  沒有它，登入頁會顯示「系統還沒完成 LINE 登入設定」。
+- 線上驗收（用電腦瀏覽器，不是手機）：
+  ① 開 `/admin` → 應自動跳到登入頁 → 按「用 LINE 登入」→ LINE 授權頁（可掃碼）→ 回到後台總覽。
+  ② 左側導覽點「人員與綁定」→ 應看到與手機版一模一樣的人員清單與發碼功能。
+  ③ 用**未綁定的 LINE 帳號**在電腦登入 → 應出現桌面版綁定畫面 → 輸入碼 → 直接進後台。
+  ④ 用**家長帳號**登入 → 應出現「這裡是給園所人員用的」引導頁，不是空白或錯誤。
+  ⑤ 左下角「登出」→ 應回到登入頁，重新整理不會自動登入。
 
 （已完成，保留紀錄）驗收刀 4 的步驟 —— 部署完成後（Render 會自動套用 migration 0005）：
   ① 老師帳號 → 底部「聯絡簿」→ 選班級 → 按幾位學生的「到校」→ 回出缺勤頁確認同一批人已變成「已到校」
@@ -287,9 +327,20 @@ LATER（正式上線前）
 ## Next Task
 
 ```text
-**Phase 9 階段2 五刀全數 ✅ ACCEPTED（2026-08-17）→ 階段2 完成。下一階段方向待 Human Owner 拍板。**
+**Phase 9 階段3（Human Owner 2026-08-17 拍板的執行順序）：**
 
-候選方向（Claude 建議順序 A → B → C；C 為開賣前必要但 demo 展示不需要）：
+  ① 專屬後台骨架        → IMPLEMENTED（2026-08-17），待線上驗收
+  ② 管理首頁            → 概況數字 + 所有管理入口聚成一頁
+  ②b 人員權限設定頁      → **新插入**（Technical Debt #9）。理由：CSV 一次建幾百人，
+                          角色若不能事後修正，匯入就是不能反悔的動作 → 必須排在匯入之前。
+                          需新後端端點 → §D 提案後才動工。
+  ③ CSV 批次匯入        → 帳號/學生/班級 + 批次發綁定碼（範本 8 分頁）
+  ④ 圖文選單設計器      → 模板式（換底圖 + 選連結 + 填字），依角色顯示不同選單；
+                          需新 model + LINE Messaging API。**實作前先查清 LINE 的選單數量與
+                          API 呼叫限制，不憑印象編數字。** 每園需自己的 OA，故先做介面與設定儲存。
+  ⑤ 打磨（走查全站細節）→ **一定放最後**，否則新做的頁面又要再打磨一次。
+
+（歷史候選方向，保留紀錄）
 
   A. **Demo 打磨到可以直接拿去賣**（建議先做，成本最低、對「賣」最直接）
      - 封面圖呈現方式定案（目前全站 128px 橫帶;選項 A 只首頁／B 首頁 hero 大圖／C 維持）
@@ -429,6 +480,56 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — 🖥 階段3 ①：**桌面版專屬後台骨架（IMPLEMENTED，待線上驗收）**
+
+**先更正一個說法**：先前曾說「電腦後台等於另做一套認證」——**不對**。LIFF 與網頁版 OAuth 屬於
+**同一個 LINE Login channel**，兩邊拿到的 id_token 其 `aud` 都等於 `LINE_LOGIN_CHANNEL_ID`，
+所以後端 `LineVerifier` 一個字都不用改，認出來的是同一個 `LineIdentity` → 同一個 `User` → 同一套 RBAC。
+差別只在「怎麼拿到 id_token」：LIFF 由 SDK 直接給；網頁版要用一次性 code 去換，而**換的那一步需要
+channel secret**（LINE 官方文件：token 端點的 `client_secret` 為必填）。這就是唯一的新東西。
+
+**為什麼 secret 放 web 而不是 api**（Human Owner 拍板）
+放 web 表示 code→token 交換在 Next 的 route handler 完成，換到 id_token 後直接呼叫**既有的**
+`/auth/line/login` —— 後端零改動、不新增端點、既有 221 個 api 測試完全不受影響。
+放 api 則要新增一個端點，而 web 該做的事（state cookie、回呼、redirect_uri）一件也沒少。
+
+**安全設計**
+```text
+state：隨機 16 bytes → httpOnly cookie（10 分鐘）→ 回呼時比對，不符即拒。防「別人誘導你的
+       瀏覽器完成一次他發起的授權」。用完立刻清除。
+id_token 全程不進前端：桌面版「登入成功但還沒綁定」時，token 存 httpOnly cookie（10 分鐘）
+       供 /admin/bind 使用；綁定成功即清除。前端從頭到尾拿不到任何 LINE 憑證。
+未採 PKCE：交換在伺服器端且必帶 client_secret（confidential client），code 已綁 redirect_uri
+       且為一次性，PKCE 在此不增加實質保護；CSRF 由 state 擋。
+redirect_uri 不匹配時 LINE 直接拒絕 —— 不會有靜默失敗。
+```
+
+**「同一份功能、兩種外框」怎麼落實的**
+把手機版人員管理頁的內容整段抽成 `features/people/PeopleManager.tsx`，手機版與桌面版兩個 page
+都只是薄薄的外框 + 標題。這不是巧合式的重用，而是這條路線的驗證：**功能與授權不分岔，只有密度不同。**
+
+**做了什麼（檔案）**
+```text
+web/server  lib/server/line-oauth.ts（授權網址、code→id_token、state/bind cookie、publicOrigin）
+            app/api/admin/oauth/start/route.ts（產 state → 導向 LINE）
+            app/admin/callback/route.ts（驗 state → 換 token → 走既有 /auth/line/login → 設 session）
+            app/api/auth/line/bind/route.ts 改為 body 沒帶 idToken 時改讀 cookie（手機/電腦共用同一端點）
+web/client  components/AdminShell.tsx（左側常駐導覽;窄畫面自動改為上方橫向捲動，不做第二套版型）
+            lib/adminSession.tsx（只看 cookie，不碰 LIFF;家長→引導頁不給空白）
+            lib/adminNav.ts（依角色顯示;尚未搬到桌面的項目標「手機版」連到 /liff/*，不做死角）
+            app/admin/layout.tsx（品牌）+ (app)/layout.tsx（身分 + 外框）
+            app/admin/login|bind|(app)/page.tsx|(app)/people/page.tsx
+            lib/session.tsx 抽出 AuthedSession（手機與電腦共用同一個 SessionContext）
+            features/people/PeopleManager.tsx（自 /liff/admin/people 抽出，兩邊共用）
+測試        lib/server/line-oauth.spec.ts（8）+ lib/adminNav.spec.ts（5）→ web 16 → 29
+env         **新增 `LINE_LOGIN_CHANNEL_SECRET` 與 `LINE_LOGIN_CHANNEL_ID`（web/Vercel，伺服器端）**
+            選用 `WEB_PUBLIC_URL`（未設定時由 x-forwarded-host 推導）
+```
+
+**過程中發現的缺口（已寫入 Technical Debt #9）**：`PATCH /users/:id` 只能改姓名與啟用狀態，
+**建好的人員無法改變角色、也無法加第二個角色**。Human Owner 已指定要做一頁權限設定；
+排在 CSV 匯入之前，因為匯入一次建幾百人，角色不能事後修正的話，匯入就是不能反悔的動作。
 
 ### 2026-08-17 — 🔗 階段3 起手：**LINE 帳號綁定碼（IMPLEMENTED，待線上驗收）** + 首頁 hero + 收尾
 

@@ -6,7 +6,8 @@ import { AuthError, lineBind } from '../../lib/auth';
 import { useBranding } from '../../lib/branding';
 
 interface BindScreenProps {
-  idToken: string;
+  // 手機（LIFF）帶 token 進來；電腦（網頁版 OAuth）為 null，token 在伺服器端 cookie 裡。
+  idToken: string | null;
   onBound: (user: AuthUser) => void;
 }
 
@@ -25,6 +26,9 @@ function bindErrorMessage(error: unknown): string {
       return '這個帳號目前已停用，請聯絡園所。';
     case 'invalid_input':
       return '綁定碼格式不正確，請再確認一次。';
+    case 'bind_session_expired':
+      // 桌面版：暫存的 LINE 憑證過期（隔太久才輸入碼）→ 重新登入即可，不是碼的問題。
+      return '這個頁面停留太久了，請重新用 LINE 登入一次再輸入綁定碼。';
     default:
       return '綁定失敗，請稍後再試。若持續發生請聯絡園所。';
   }

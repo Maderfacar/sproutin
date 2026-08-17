@@ -17,6 +17,12 @@ interface Session {
 
 const SessionContext = createContext<Session | null>(null);
 
+// 已取得身分後把 user 掛進 context。手機（LIFF）與電腦（網頁版 OAuth）取得身分的方式不同，
+// 但之後的功能元件一律用 useSession() —— 共用同一個 context，功能頁面不必分兩套。
+export function AuthedSession({ user, children }: { user: AuthUser; children: ReactNode }) {
+  return <SessionContext.Provider value={{ user }}>{children}</SessionContext.Provider>;
+}
+
 export function useSession(): Session {
   const value = useContext(SessionContext);
   if (!value) {
@@ -111,5 +117,5 @@ export function SessionProvider({
     );
   }
 
-  return <SessionContext.Provider value={{ user: state.user }}>{children}</SessionContext.Provider>;
+  return <AuthedSession user={state.user}>{children}</AuthedSession>;
 }
