@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { Icon } from '../../components/Icon';
+import { SurfaceLink } from '../../components/SurfaceLink';
 import { apiErrorMessage } from '../../lib/api';
 import { busErrorMessage, useBusAssignments, useBusRoutes, useBusSettingsMutations } from './hooks';
 
@@ -49,9 +49,9 @@ export function StudentBusSection({ studentId }: { studentId: string }) {
     return (
       <p className="border-t border-line py-4 text-sm leading-relaxed text-ink-soft">
         園所還沒有建立娃娃車路線。請先到{' '}
-        <Link href="/liff/admin/bus" className="underline">
+        <SurfaceLink href="/liff/admin/bus" className="underline">
           娃娃車設定
-        </Link>{' '}
+        </SurfaceLink>{' '}
         建立路線與接送點。
       </p>
     );

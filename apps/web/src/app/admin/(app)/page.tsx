@@ -143,7 +143,7 @@ export default function AdminHomePage() {
 
       <p className="border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
         今日到校人數與各班一覽會在之後加上（需要一支專門統計的後端端點）。
-        班級、學生、園所外觀等頁面目前是手機版版型，之後會陸續搬到這個桌面版後台。
+        左側標「手機版」的項目還是手機版版型，之後會陸續搬到這個桌面版後台。
       </p>
     </div>
   );

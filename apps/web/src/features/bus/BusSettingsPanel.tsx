@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Icon } from '../../components/Icon';
 import { StatusScreen } from '../../components/StatusScreen';
+import { SurfaceLink } from '../../components/SurfaceLink';
 import { apiErrorMessage } from '../../lib/api';
 import type { BusDirection } from '../../lib/types';
 import { usePeople } from '../people/hooks';
@@ -169,9 +169,9 @@ export function BusSettingsPanel() {
       <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-soft">
         <Icon name="shield" className="mt-0.5 h-4 w-4 shrink-0" />
         這一頁只管路線與接送點。每個孩子搭哪一班、在哪裡上下車，請到{' '}
-        <Link href="/liff/admin/students?from=admin" className="underline">
+        <SurfaceLink href="/liff/admin/students" className="underline">
           學生管理
-        </Link>{' '}
+        </SurfaceLink>{' '}
         設定。園所本身不是接送點——上午的終點、下午的起點固定是園所。
       </p>
     </div>

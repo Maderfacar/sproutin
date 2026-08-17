@@ -42,6 +42,19 @@ describe('adminNav', () => {
     }
   });
 
+  // 班級與學生已經搬到桌面版（同一份元件手機版也有）→ 導覽必須指向 /admin/*，
+  // 否則園長在後台按下去會被丟進手機版版型，娃娃車的「指派接送點」那一段也就走不完。
+  it('班級與學生指向桌面版，不再標手機版', () => {
+    const items = adminNav(owner).flatMap((s) => s.items);
+    for (const href of ['/admin/classes', '/admin/students']) {
+      const item = items.find((i) => i.href === href);
+      expect(item, href).toBeDefined();
+      expect(item?.onlyMobile).toBeUndefined();
+    }
+    expect(hrefs(owner)).not.toContain('/liff/admin/classes');
+    expect(hrefs(owner)).not.toContain('/liff/admin/students');
+  });
+
   // 娃娃車設定在桌面版有真的頁面（同一份元件手機版也有），所以不標 onlyMobile。
   it('園長看得到娃娃車設定；老師看不到', () => {
     expect(hrefs(owner)).toContain('/admin/bus');

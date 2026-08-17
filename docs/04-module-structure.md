@@ -77,6 +77,29 @@ apps/web/src/
 娃娃車（⑦ 刀1）是第一個照這條原則落地的功能：`features/bus/BusSettingsPanel.tsx`
 同時被 `/admin/bus` 與 `/liff/admin/bus` 使用。
 
+### 明文例外（Human Owner 2026-08-18 定案）
+
+```text
+家長不進電腦版      家長端入口只有 LINE（/admin 對非校方身分顯示引導頁）。
+                    因此桌面版的聯絡簿／請假／出缺勤／公告是做給老師與行政用的。
+首頁與「我的」      /liff（家長的今日卡片牆）與 /admin（園務數字與待辦）性質不同，
+                    /liff/me 同理。這三頁是入口不是功能，不受對等原則約束
+                    —— 硬做成一樣，其中一邊一定變難用。
+登入與綁定          /admin/login、/admin/bind 是桌面版專屬（手機走 LIFF 自動登入）。
+```
+
+除上述之外，**所有功能一律兩邊都要有**。
+
+### 共用元件裡的連結（`lib/surface.ts`）
+
+功能抽成共用元件之後，元件內的連結不能寫死其中一種網址：寫 `/liff/...` 會把桌面使用者
+丟進手機版版型，寫 `/admin/...` 會把家長丟到後台登入牆。
+
+作法：共用元件裡的連結一律用 `components/SurfaceLink`，`href` 寫**手機版網址**，
+由 `toSurfaceHref()` 依目前所在外框翻譯。還沒搬到桌面的功能會留在手機版，
+但自動補上 `?from=admin`（返回鍵才回得了後台，見 `lib/backTarget`）。
+功能搬到桌面版時，只要在 `PAIRS` 加一行，全站指向該功能的連結一起跟著改。
+
 ## 4. Card-based Dashboard (§25，config-driven)
 
 **不寫死任何角色首頁**。每張 Card 宣告顯示條件，**後端** `GET /me/dashboard` 回傳已過濾的 `cards[]`，前端只 render（Rule 5/6）：

@@ -24,10 +24,10 @@ export function adminEntries(flags: RoleFlags): AdminEntry[] {
       },
       { href: '/admin/roles', icon: 'shield', label: '權限設定', hint: '一頁看完誰有什麼身分' },
       {
-        href: '/liff/admin/students?from=admin',
+        href: '/admin/students',
         icon: 'heart',
         label: '學生管理',
-        hint: '新增學生、調整班級',
+        hint: '新增學生、調整班級、指派娃娃車接送點',
       },
       {
         href: '/admin/messages',

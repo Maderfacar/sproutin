@@ -2,7 +2,12 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**⑦ 娃娃車刀1 IMPLEMENTED，待線上驗收**——migration 0009、`/bus/*` 與 `/me/bus`
+> Last updated: 2026-08-18（**功能對等 批1 IMPLEMENTED，待線上驗收**——學生整合視圖／學生管理／班級管理
+> 三頁抽成共用元件並補上桌面外框，**桌面的娃娃車設定流程接回來了**；新增 `lib/surface.ts` 讓共用元件裡的
+> 連結依外框自動翻譯。Human Owner 定案：家長維持只能用手機；首頁與「我的」列為對等原則的例外（docs/04 §3b）。
+> 四項全綠、測試 412 → **420**。下一批：權限設定 / 發送訊息 / 稽核紀錄。）
+>
+> （前次）2026-08-18（**⑦ 娃娃車刀1 IMPLEMENTED，待線上驗收**——migration 0009、`/bus/*` 與 `/me/bus`
 > 端點、後台設定頁（**電腦＋手機兩邊都有**）、隨車老師點名、家長今日狀態、請假自動移出名單。
 > Human Owner 更正「站點」→**接送點**（door-to-door）。**新增永久原則：電腦版與手機版功能必須相通**（docs/04 §3b）。
 > 順帶修好 CI 自 cc9f04f 起的紅燈（根路徑 `useBranding` 在沒有 provider 之下丟例外，`next build` 失敗）。
@@ -81,6 +86,12 @@ Human Owner 更正：door-to-door →「站點」改稱**接送點**（`BusPoint
 
 **下一步（Human Owner 2026-08-18 指定）：① 補齊電腦版與手機版的功能對等 → ② 打磨。**
 新原則見 docs/04 §3b；待補清單見下方 Recent Work Log。
+
+**功能對等 批1（學生整合視圖 + 學生管理 + 班級管理）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 420（api 338 + shared 12 + web 70）** / build。**無 migration、無新後端端點。**
+桌面的娃娃車設定流程（排路線 → 指派每個孩子的接送點）已接回來。
+Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」列為對等原則的明文例外。
+批2 = 權限設定 + 發送訊息 + 稽核紀錄；批3 = 聯絡簿／出缺勤／請假／公告／娃娃車點名／通知。
 
 **Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
 四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
@@ -544,6 +555,57 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-18 — 🖥️📱 **功能對等 批1：學生整合視圖 + 學生 + 班級（IMPLEMENTED，待線上驗收）**
+
+**先把娃娃車刀1 留下的債還掉。** 刀1 把「這個孩子在哪裡上下車」放在學生整合視圖
+（那是學生的屬性，Human Owner 定案），而那一頁只有手機版 —— 所以桌面的娃娃車設定流程是斷的：
+設定頁的指路連去手機版，園長在電腦上排完路線之後就走不下去了。這一批把那條路接回來。
+
+**Human Owner 兩題定案（2026-08-18）**
+```text
+① 家長維持只能用手機 —— 桌面版的聯絡簿／請假／出缺勤／公告是做給老師與行政用的。
+② 手機首頁（/liff）、電腦總覽（/admin）、「我的」（/liff/me）明文列為例外，不硬做成一樣。
+   理由：這三頁是入口不是功能，兩邊服務的人不同，做成一樣一定有一邊變難用。
+兩者都已寫進 docs/04 §3b。
+```
+
+**抽元件之外多做的一件事：`lib/surface.ts` + `components/SurfaceLink`**
+
+「純搬移 + 參數化」到一半發現搬不動：共用元件裡的連結只能寫死一種網址。
+`BusSettingsPanel` 寫的是 `/liff/admin/students?from=admin`、`StudentBusSection` 寫
+`/liff/admin/bus` —— 桌面使用者按下去就掉進手機版版型，等於中途換了一個 App。
+
+作法：元件裡的連結一律寫**手機版網址**（既有網址不動），由 `toSurfaceHref()` 依目前外框翻譯。
+還沒搬到桌面的功能留在手機版，但**自動補上 `?from=admin`** —— 這件事原本要靠每個連結自己記得寫，
+現在變成寫不錯。功能搬到桌面版時只要在 `PAIRS` 加一行，全站指過去的連結一起改。
+
+順帶修好一個既有的小錯：`BusSettingsPanel` 那條連結把 `?from=admin` 寫死了，
+真的用手機的園長從娃娃車設定點進學生管理，返回鍵會把他丟到桌面後台。現在由外框決定。
+
+**做了什麼（檔案）**
+```text
+web  lib/surface.ts（+ spec 7 條）、components/SurfaceLink.tsx
+     features/students/{StudentsManager,StudentDetail}.tsx、features/classes/ClassesManager.tsx
+       ← 三頁的業務邏輯原封不動搬進來（權限判斷一併搬進元件，見下）
+     新增桌面外框 app/admin/(app)/{students,students/[id],classes}/page.tsx
+     手機外框瘦身 app/liff/{admin/students,admin/classes,student/[id]}/page.tsx（246/196/171 → 各約 15 行）
+     lib/adminNav.ts：班級與學生改指 /admin/*，拿掉 onlyMobile（spec 加一條釘住）
+     lib/adminEntries.ts：學生管理入口改指 /admin/students
+     bus/{BusSettingsPanel,StudentBusSection}：跨外框的連結改用 SurfaceLink
+docs 04 §3b（兩條例外 + surface 機制）、本檔
+測試 412 → 420（api 338 + shared 12 + web 70）
+```
+
+**權限判斷放在共用元件裡，不放在兩個外框裡**（與娃娃車刀1 的寫法不同，刻意的）：
+放在外框就有兩份 `canManageSchool` 判斷，遲早會有一邊漏改，而那正是這一輪要消滅的東西。
+前端這一層仍然只決定顯示，真正的授權一律在後端 Guard。
+
+**剩下的不對等**（下一批）
+```text
+批2  權限設定（/admin/roles，邏輯還在頁面裡）、發送訊息（缺手機外框）、稽核紀錄（/liff/audit）
+批3  聯絡簿（兩頁）、出缺勤、請假、公告、娃娃車點名、通知 —— 元件都已抽出，只缺桌面外框
+```
 
 ### 2026-08-18 — 🚌 **娃娃車 / 接送 刀1（IMPLEMENTED，待線上驗收）**
 

@@ -33,8 +33,8 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
       items: [
         { href: '/admin/appearance', label: '園所外觀設計', icon: 'image' },
         { href: '/admin/bus', label: '娃娃車', icon: 'bus' },
-        { href: '/liff/admin/classes', label: '班級', icon: 'doc', onlyMobile: true },
-        { href: '/liff/admin/students', label: '學生', icon: 'heart', onlyMobile: true },
+        { href: '/admin/classes', label: '班級', icon: 'doc' },
+        { href: '/admin/students', label: '學生', icon: 'heart' },
       ],
     });
   }
