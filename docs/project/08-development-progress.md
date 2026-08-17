@@ -2,11 +2,12 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**功能對等 批1 ✅ ACCEPTED；批2 IMPLEMENTED，待線上驗收**——
-> 批1＝學生整合視圖／學生管理／班級管理補上桌面版，**桌面的娃娃車設定流程接回來了**，
+> Last updated: 2026-08-18（**電腦版／手機版功能對等全數補齊**——批1 ✅ ACCEPTED，批2＋批3 待線上驗收。
+> 批1＝學生整合視圖／學生管理／班級管理補桌面版，**桌面的娃娃車設定流程接回來了**，
 > 並新增 `lib/surface.ts` 讓共用元件裡的連結依外框自動翻譯。
 > 批2＝權限設定與發送訊息補手機版、稽核紀錄補桌面版，`/liff/me` 補上入口。
-> 四項全綠、測試 412 → **421**。下一批（最後一批）：聯絡簿／出缺勤／請假／公告／娃娃車點名／通知。）
+> 批3＝聯絡簿／出缺勤／請假／公告／娃娃車點名／通知補桌面版，導覽的「手機版」標籤全數消失。
+> 四項全綠、測試 412 → **425**。三類明文例外見 docs/04 §3b。**下一步：打磨。**）
 >
 > （前次）2026-08-18（**⑦ 娃娃車刀1 IMPLEMENTED，待線上驗收**——migration 0009、`/bus/*` 與 `/me/bus`
 > 端點、後台設定頁（**電腦＋手機兩邊都有**）、隨車老師點名、家長今日狀態、請假自動移出名單。
@@ -93,8 +94,11 @@ Human Owner 更正：door-to-door →「站點」改稱**接送點**（`BusPoint
 Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」列為對等原則的明文例外（docs/04 §3b）。
 
 **功能對等 批2（權限設定 + 發送訊息 + 稽核紀錄）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
-四項全綠：lint / typecheck / **測試 421（api 338 + shared 12 + web 71）** / build。**無 migration、無新後端端點。**
-批3（聯絡簿／出缺勤／請假／公告／娃娃車點名／通知）緊接著做。
+**功能對等 批3（聯絡簿／出缺勤／請假／公告／娃娃車點名／通知）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 425（api 338 + shared 12 + web 75）** / build。**無 migration、無新後端端點。**
+
+✅ **電腦版與手機版功能對等已全數補齊**（三類明文例外見 docs/04 §3b 的對照表）。
+**下一步：② 打磨**（Human Owner 早已定案的順序：功能對等 → 打磨）。
 
 **Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
 四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
@@ -558,6 +562,44 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-18 — 🖥️📱 **功能對等 批3：聯絡簿 / 出缺勤 / 請假 / 公告 / 娃娃車點名 / 通知（IMPLEMENTED，待線上驗收）**
+
+最後一批。**至此電腦版與手機版功能全數對等**，只剩三類明文例外（首頁、「我的」、桌面登入／綁定）。
+
+**做了什麼（檔案）**
+```text
+web  features/{attendance/AttendanceView,leave/LeaveView,announcement/AnnouncementView,
+     bus/BusView,communication-book/CommunicationBookView}.tsx
+       ← 六個聯集視圖的組裝從 page.tsx 搬進 features（各頁本來就用抽好的元件，
+         但「哪些面板照什麼順序出現」還寫在頁面裡，那也是功能的一部分）
+     CommunicationBookView 另導出 StudentBookScreen（單一學生聯絡簿）
+     features/students/useSelectedStudent：加 useStudentName（兩邊外框組標題用）
+     新增桌面外框 app/admin/(app)/{attendance,leave,announcement,notification,
+       bus-roster,communication-book,communication-book/[studentId]}
+     手機外框全部瘦身為十行上下
+     lib/adminNav.ts：每一條都指向 /admin/*，「手機版」標籤全數消失；新增「通知」
+     lib/adminEntries.ts + 管理首頁待辦：連結改指桌面版
+     lib/surface.ts：PAIRS 補齊六條；startsWithSegment 改為導出的 isPathWithin
+     components/AdminShell：目前頁面的判斷改用 isPathWithin
+     features/communication-book/TeacherBookPanel：學生連結改用 SurfaceLink
+docs 04 §3b（補齊宣告 + 兩邊網址對照表）、本檔
+測試 421 → 425（api 338 + shared 12 + web 75）
+```
+
+**娃娃車點名的桌面網址是 `/admin/bus-roster`，不是 `/admin/bus/roster`。**
+放在 `/admin/bus` 之下的話，左側導覽會同時亮「娃娃車」與「娃娃車點名」兩條。
+順帶把導覽的「目前在哪一頁」從 `startsWith` 改成邊界比對（`isPathWithin`）——
+否則 `/admin/bus-roster` 一樣會把 `/admin/bus` 點亮，那是同一個 bug 的另一半。
+
+**`adminNav.spec.ts` 多一條測試釘住「導覽上不該再出現 `/liff/*`」**。
+這條會在有人加了只有手機版的頁面時失敗 —— 那正是 docs/04 §3b 禁止的事。
+規範寫在文件裡會被忘記，寫成測試不會。
+
+**刻意沒有做成對等的三個網址**（已寫進 docs/04 §3b 對照表）：
+`/liff/soon/[feature]`（功能預告卡，只從手機首頁的卡片進得去）、
+`/liff/message`（舊網址轉址到聯絡簿，服務的是舊書籤與舊通知連結）、
+以及首頁／「我的」／桌面登入綁定這三類本來就定為例外的。
 
 ### 2026-08-18 — 🖥️📱 **功能對等 批2：權限設定 + 發送訊息 + 稽核紀錄（IMPLEMENTED，待線上驗收）**
 

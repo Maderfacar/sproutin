@@ -6,6 +6,8 @@ export interface AdminNavItem {
   label: string;
   icon: IconName;
   // 這條在桌面後台還沒做 → 連到現有的手機版頁面，不做成點不下去的死角。
+  // 目前是空的（功能對等已補齊）；docs/04 §3b 規定新頁面兩個外框一起做，
+  // 這個欄位留著是為了「萬一又出現不對等，至少不是死角」的退路，不是常態。
   onlyMobile?: boolean;
 }
 
@@ -14,7 +16,7 @@ export interface AdminNavSection {
   items: AdminNavItem[];
 }
 
-// 桌面後台的導覽。**只列真的到得了的頁面**——尚未搬到桌面版的功能標「手機版」並連到 /liff/admin/*。
+// 桌面後台的導覽。**只列真的到得了的頁面**——尚未搬到桌面版的功能標「手機版」並連到 /liff/*。
 // 顯示與否依角色（僅影響畫面；真正授權一律在後端 Guard）。
 export function adminNav(flags: RoleFlags): AdminNavSection[] {
   const schoolItems: AdminNavItem[] = [{ href: '/admin', label: '總覽', icon: 'home' }];
@@ -40,20 +42,21 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
   }
 
   const dailyItems: AdminNavItem[] = [
-    { href: '/liff/communication-book', label: '聯絡簿', icon: 'book', onlyMobile: true },
+    { href: '/admin/communication-book', label: '聯絡簿', icon: 'book' },
   ];
   // 點名本身是車上的事（手機），但園所要看得到今天誰上了車。
   if (flags.canMarkBusRide) {
-    dailyItems.push({ href: '/liff/bus', label: '娃娃車點名', icon: 'bus', onlyMobile: true });
+    dailyItems.push({ href: '/admin/bus-roster', label: '娃娃車點名', icon: 'bus' });
   }
 
   sections.push({
     title: '每日',
     items: [
       ...dailyItems,
-      { href: '/liff/attendance', label: '出缺勤', icon: 'check', onlyMobile: true },
-      { href: '/liff/leave', label: '請假', icon: 'cal', onlyMobile: true },
-      { href: '/liff/announcement', label: '公告', icon: 'mega', onlyMobile: true },
+      { href: '/admin/attendance', label: '出缺勤', icon: 'check' },
+      { href: '/admin/leave', label: '請假', icon: 'cal' },
+      { href: '/admin/announcement', label: '公告', icon: 'mega' },
+      { href: '/admin/notification', label: '通知', icon: 'bell' },
     ],
   });
 

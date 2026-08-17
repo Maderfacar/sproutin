@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { SurfaceLink } from '../../components/SurfaceLink';
 import { ClassSelect } from '../../components/ClassSelect';
 import { Icon } from '../../components/Icon';
 import { useSelectedClass } from '../classes/hooks';
@@ -223,13 +223,13 @@ export function TeacherBookPanel() {
                 <li key={s.id} className="border-b border-line py-2.5">
                   <div className="flex items-center gap-2">
                     <span className="flex-1 truncate text-sm text-ink">{s.name}</span>
-                    <Link
+                    <SurfaceLink
                       href={`/liff/communication-book/${s.id}`}
                       aria-label={`開啟 ${s.name} 的聯絡簿`}
                       className="text-ink-soft"
                     >
                       <Icon name="chev" className="h-4 w-4" />
-                    </Link>
+                    </SurfaceLink>
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {activeColumn.options.map((opt) => (

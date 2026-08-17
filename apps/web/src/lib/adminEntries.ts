@@ -52,13 +52,13 @@ export function adminEntries(flags: RoleFlags): AdminEntry[] {
 
   entries.push(
     {
-      href: '/liff/announcement?from=admin',
+      href: '/admin/announcement',
       icon: 'mega',
       label: '公告',
       hint: '發布給全校或單一班級',
     },
     {
-      href: '/liff/communication-book?from=admin',
+      href: '/admin/communication-book',
       icon: 'book',
       label: '聯絡簿',
       hint: '填寫與送出當日聯絡簿',

@@ -42,21 +42,22 @@ describe('adminNav', () => {
     }
   });
 
-  // 班級與學生已經搬到桌面版（同一份元件手機版也有）→ 導覽必須指向 /admin/*，
-  // 否則園長在後台按下去會被丟進手機版版型，娃娃車的「指派接送點」那一段也就走不完。
-  it('已經搬到桌面版的項目指向 /admin/*，不再標手機版', () => {
-    const items = adminNav(owner).flatMap((s) => s.items);
-    for (const href of ['/admin/classes', '/admin/students', '/admin/audit']) {
-      const item = items.find((i) => i.href === href);
-      expect(item, href).toBeDefined();
-      expect(item?.onlyMobile).toBeUndefined();
+  // 功能對等補齊之後，導覽上不該再有任何一條指向手機版版型。
+  // 這條會在有人加了「只有手機版」的頁面時失敗 —— 那正是 docs/04 §3b 禁止的事。
+  it('導覽已經沒有手機版專屬的項目', () => {
+    for (const flags of [owner, teacher]) {
+      for (const href of hrefs(flags)) {
+        expect(href.startsWith('/admin'), href).toBe(true);
+      }
     }
-    expect(hrefs(owner)).not.toContain('/liff/admin/classes');
-    expect(hrefs(owner)).not.toContain('/liff/admin/students');
-    expect(hrefs(owner)).not.toContain('/liff/audit');
   });
 
-  // 娃娃車設定在桌面版有真的頁面（同一份元件手機版也有），所以不標 onlyMobile。
+  it('娃娃車設定與娃娃車點名是兩條不同的路徑', () => {
+    expect(hrefs(owner)).toContain('/admin/bus');
+    expect(hrefs(owner)).toContain('/admin/bus-roster');
+  });
+
+  // 娃娃車設定只有園長／行政；老師看不到。
   it('園長看得到娃娃車設定；老師看不到', () => {
     expect(hrefs(owner)).toContain('/admin/bus');
     expect(hrefs(teacher)).not.toContain('/admin/bus');
@@ -64,8 +65,8 @@ describe('adminNav', () => {
 
   it('點名入口只給看得到娃娃車點名的人', () => {
     const busTeacher = roleFlags([{ role: 'BUS_TEACHER', scopeType: 'SCHOOL', scopeId: null }]);
-    expect(hrefs(busTeacher)).toContain('/liff/bus');
-    expect(hrefs(teacher)).not.toContain('/liff/bus');
+    expect(hrefs(busTeacher)).toContain('/admin/bus-roster');
+    expect(hrefs(teacher)).not.toContain('/admin/bus-roster');
   });
 
   it('沒有重複的連結', () => {

@@ -26,18 +26,27 @@ const PAIRS: RoutePair[] = [
   { mobile: '/liff/admin/bus', desktop: '/admin/bus' },
   { mobile: '/liff/student', desktop: '/admin/students' },
   { mobile: '/liff/audit', desktop: '/admin/audit' },
+  { mobile: '/liff/communication-book', desktop: '/admin/communication-book' },
+  { mobile: '/liff/attendance', desktop: '/admin/attendance' },
+  { mobile: '/liff/announcement', desktop: '/admin/announcement' },
+  { mobile: '/liff/notification', desktop: '/admin/notification' },
+  { mobile: '/liff/leave', desktop: '/admin/leave' },
+  // 點名（/liff/bus）與設定（/liff/admin/bus）是兩頁，桌面版刻意不放在 /admin/bus 之下，
+  // 否則左側導覽會同時亮兩條。
+  { mobile: '/liff/bus', desktop: '/admin/bus-roster' },
 ];
 
 export function surfaceOf(pathname: string): Surface {
   return pathname.startsWith('/admin') ? 'admin' : 'mobile';
 }
 
-// 前綴必須停在路徑邊界，`/liff/bus`（點名）才不會被 `/liff/bus...` 以外的規則誤中。
-function startsWithSegment(href: string, prefix: string): boolean {
-  if (!href.startsWith(prefix)) {
+// 前綴必須停在路徑邊界。純字串 startsWith 會讓 `/admin/bus-roster`（點名）
+// 被 `/admin/bus`（設定）誤中 —— 網址翻譯與導覽的「目前在哪一頁」都靠這個判斷。
+export function isPathWithin(href: string, base: string): boolean {
+  if (!href.startsWith(base)) {
     return false;
   }
-  const next = href.charAt(prefix.length);
+  const next = href.charAt(base.length);
   return next === '' || next === '/' || next === '?' || next === '#';
 }
 
@@ -56,7 +65,7 @@ export function toSurfaceHref(href: string, surface: Surface): string {
     return href;
   }
   for (const pair of PAIRS) {
-    if (startsWithSegment(href, pair.mobile)) {
+    if (isPathWithin(href, pair.mobile)) {
       return pair.desktop + href.slice(pair.mobile.length);
     }
   }

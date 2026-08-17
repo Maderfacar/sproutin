@@ -72,10 +72,13 @@ apps/web/src/
 ```
 
 新頁面**兩個外框一起做**（成本是多一個十行的 page.tsx）。
-既有的不對等視為**技術債**，見 docs/project/08 的清單 —— 補齊之前不新增不對等的頁面。
 
 娃娃車（⑦ 刀1）是第一個照這條原則落地的功能：`features/bus/BusSettingsPanel.tsx`
 同時被 `/admin/bus` 與 `/liff/admin/bus` 使用。
+
+**既有的不對等已於 2026-08-18 全數補齊**（批1–批3，見 docs/project/08）。
+`lib/adminNav.spec.ts` 有一條測試釘住「導覽上不該再出現指向 `/liff/*` 的項目」——
+有人加了只有手機版的頁面時它會失敗。
 
 ### 明文例外（Human Owner 2026-08-18 定案）
 
@@ -99,6 +102,34 @@ apps/web/src/
 由 `toSurfaceHref()` 依目前所在外框翻譯。還沒搬到桌面的功能會留在手機版，
 但自動補上 `?from=admin`（返回鍵才回得了後台，見 `lib/backTarget`）。
 功能搬到桌面版時，只要在 `PAIRS` 加一行，全站指向該功能的連結一起跟著改。
+
+同一個檔案的 `isPathWithin()` 也是左側導覽判斷「目前在哪一頁」用的 ——
+純 `startsWith` 會讓 `/admin/bus-roster`（點名）把 `/admin/bus`（設定）一起點亮。
+
+### 兩邊的網址對照
+
+```text
+/admin                         /liff                     ← 例外：入口，性質不同
+/admin/people                  /liff/admin/people
+/admin/roles                   /liff/admin/roles
+/admin/messages                /liff/admin/messages
+/admin/appearance              /liff/admin/appearance
+/admin/bus                     /liff/admin/bus           娃娃車設定
+/admin/bus-roster              /liff/bus                 娃娃車點名
+/admin/classes                 /liff/admin/classes
+/admin/students                /liff/admin/students
+/admin/students/[id]           /liff/student/[id]        學生整合視圖
+/admin/communication-book      /liff/communication-book  （含 /[studentId]）
+/admin/attendance              /liff/attendance
+/admin/leave                   /liff/leave
+/admin/announcement            /liff/announcement
+/admin/notification            /liff/notification
+/admin/audit                   /liff/audit
+/admin/login、/admin/bind      （無）                     ← 例外：手機走 LIFF 自動登入
+（無）                         /liff/me                  ← 例外：入口
+（無）                         /liff/soon/[feature]      功能預告頁，只從手機首頁的卡片進
+（無）                         /liff/message             舊網址轉址到聯絡簿
+```
 
 ## 4. Card-based Dashboard (§25，config-driven)
 

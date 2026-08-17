@@ -26,3 +26,10 @@ export function useSelectedStudent(): SelectedStudent {
 
   return { students, studentId, setStudentId, isLoading, isError };
 }
+
+// 單一學生的名字（用來組頁面標題）。名單還沒回來時回 undefined —— 由呼叫端決定先顯示什麼，
+// 不要在這裡塞一個假名字。
+export function useStudentName(studentId: string): string | undefined {
+  const { data: students } = useMyStudents();
+  return students?.find((s) => s.id === studentId)?.name;
+}

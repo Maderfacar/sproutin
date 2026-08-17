@@ -63,7 +63,7 @@ function SchoolOverview() {
 
   const todos: { href: string; icon: IconName; text: string }[] = [];
   if (pending) {
-    todos.push({ href: '/liff/leave?from=admin', icon: 'cal', text: `${pending} 筆請假等待審核` });
+    todos.push({ href: '/admin/leave', icon: 'cal', text: `${pending} 筆請假等待審核` });
   }
   if (unbound) {
     todos.push({
@@ -143,7 +143,7 @@ export default function AdminHomePage() {
 
       <p className="border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
         今日到校人數與各班一覽會在之後加上（需要一支專門統計的後端端點）。
-        左側標「手機版」的項目還是手機版版型，之後會陸續搬到這個桌面版後台。
+        左側每一條在手機上都有對應的頁面 —— 同一套系統、同一份資料，差別只有操作介面。
       </p>
     </div>
   );

@@ -7,6 +7,7 @@ import { useBranding } from '../lib/branding';
 import { useSession } from '../lib/session';
 import { roleFlags } from '../lib/roles';
 import { adminNav } from '../lib/adminNav';
+import { isPathWithin } from '../lib/surface';
 import { ROLE_LABEL } from '../lib/roleLabels';
 import { logout } from '../lib/auth';
 import { Icon } from './Icon';
@@ -64,9 +65,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <p className="eyebrow hidden md:block md:px-2 md:pb-1.5">{section.title}</p>
               <ul className="flex gap-2 md:block md:space-y-0.5">
                 {section.items.map((item) => {
+                  // 邊界比對（不是純 startsWith）：否則在「娃娃車點名」時
+                  // 「娃娃車」設定那一條也會一起亮。
                   const active = item.href === '/admin'
                     ? pathname === '/admin'
-                    : pathname.startsWith(item.href);
+                    : isPathWithin(pathname, item.href);
                   return (
                     <li key={item.href}>
                       <Link
