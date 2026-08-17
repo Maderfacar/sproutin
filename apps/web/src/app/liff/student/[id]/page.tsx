@@ -12,6 +12,9 @@ import { useAttendance } from '../../../../features/attendance/hooks';
 import { useLeaves } from '../../../../features/leave/hooks';
 import { ATTENDANCE_STATUS_LABEL } from '../../../../features/attendance/labels';
 import { LEAVE_STATUS_LABEL } from '../../../../features/leave/labels';
+import { StudentBusSection } from '../../../../features/bus/StudentBusSection';
+import { useSession } from '../../../../lib/session';
+import { roleFlags } from '../../../../lib/roles';
 
 function monthKey(): string {
   return new Date().toISOString().slice(0, 7);
@@ -27,6 +30,8 @@ function formatDate(iso: string): string {
 export default function StudentDetailPage() {
   const params = useParams<{ id: string }>();
   const studentId = params.id;
+  const { user } = useSession();
+  const flags = roleFlags(user.roles);
   const { data: student, isLoading, isError, error } = useStudentDetail(studentId);
   const { data: attendance } = useAttendance(studentId);
   const { data: leaves } = useLeaves(studentId);
@@ -125,7 +130,16 @@ export default function StudentDetailPage() {
         )}
       </section>
 
-      <section className="rise-in" style={{ animationDelay: '0.15s' }}>
+      {/* 娃娃車是學生的屬性（搭哪一班、在哪裡上下車），所以掛在這一頁而不另開一頁。
+          只有園長／行政改得動；老師與家長不會看到這一段。 */}
+      {flags.canManageSchool && (
+        <section className="rise-in" style={{ animationDelay: '0.15s' }}>
+          <p className="eyebrow mb-2">娃娃車</p>
+          <StudentBusSection studentId={studentId} />
+        </section>
+      )}
+
+      <section className="rise-in" style={{ animationDelay: '0.2s' }}>
         <div className="mb-2 flex items-center justify-between">
           <p className="eyebrow">最近請假</p>
           <Link href="/liff/leave" className="text-xs font-bold text-brand-primary">

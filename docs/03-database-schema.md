@@ -22,6 +22,9 @@
 | BindingCode | **SoT** | 園所簽發的一次性憑證，把「園所帳號」接上「本人的 LINE」（見 docs/07 §4g） |
 | RichMenuConfig | **SoT** | 園所的 LINE 圖文選單設計（一個對象一份）;已套用的 LINE 選單 ID 另存（見 docs/07 §4i） |
 | PushCampaign | **SoT** | 一次 LINE 群發的內容、對象與結果。**因為送出後無法收回，必須留帳**（見 docs/07 §4j） |
+| BusRoute / BusPoint | **SoT** | 娃娃車路線與**接送點**。door-to-door，一個接送點通常是一戶人家（見 docs/07 §4k） |
+| BusAssignment | **SoT** | 固定名單：一個學生一列（搭哪一班、上下午各在哪個接送點） |
+| BusRide | **SoT** | 每生每日每方向一列的上下車紀錄。`source` 同 Attendance，供請假事件精準還原 |
 | Notification | **Derived** | 由事件產生 |
 | AuditLog | **SoT (append-only)** | 只增不改不刪 |
 | OutboxEvent | 基礎設施 | 事件可靠交付 |
@@ -348,11 +351,44 @@ enum ToiletState      { NORMAL LOOSE HARD NONE }
 enum Mood             { HAPPY CALM SLEEPY LOW }
 enum HealthSymptom    { COUGH RUNNY_NOSE SORE_THROAT DIARRHEA VOMITING POOR_APPETITE LOW_ENERGY RASH }
 enum PickupMethod     { FAMILY SCHOOL_BUS }
+
+// 娃娃車 / 接送（⑦ 刀1，migration 0009）。完整定義見 packages/db/prisma/schema.prisma。
+// **door-to-door**：BusPoint 是「一戶人家的門口」，不是站牌。
+model BusRoute {
+  id  name  morningDepart?  afternoonDepart?  isActive
+  busTeacherId?          // 指派的隨車老師（BUS_TEACHER 的 scope 依據）
+  afternoonCustomOrder   // 園長排過下午順序後轉 true，之後不再自動倒序
+}
+model BusPoint {
+  id  routeId  name  address?  orderAm  orderPm  etaAm?  etaPm?
+}
+model BusAssignment {
+  studentId @unique  routeId  morningPointId?  afternoonPointId?  ridesMorning  ridesAfternoon
+}
+model BusRide {
+  date  studentId  routeId  direction  pointId?
+  status            // SCHEDULED / BOARDED / ALIGHTED / ABSENT
+  boardedAt?  alightedAt?
+  boardLat?  boardLng?  alightLat?  alightLng?   // 點下的當下抓一次；抓不到就是 null
+  source  sourceRef?  recordedBy?                // MANUAL / LEAVE_EVENT（同 Attendance 的 override 語意）
+  @@unique([studentId, date, direction])
+}
+enum BusDirection     { MORNING AFTERNOON }
+enum BusRideStatus    { SCHEDULED BOARDED ALIGHTED ABSENT }
+enum BusRideSource    { MANUAL LEAVE_EVENT }
 ```
+
+> **`BusRide` 為什麼要 `source`／`sourceRef`**：請假核准時由事件寫入 `ABSENT/LEAVE_EVENT`，
+> 請假取消時只刪除這些列 —— 老師手動點過的（`MANUAL`）不觸碰。孩子早上明明已經上了車、
+> 家長才補請假，把紀錄蓋掉就是抹去事實；爭議時要拿出來的正是老師點的那一筆。
+> 這是 ADR-002 那套 override 語意的第二次套用，不是新發明。
+>
+> **緯經度不參與任何計算**（Human Owner 定案）：不做即時 GPS 追蹤，這四個欄位純粹是爭議時的客觀依據。
+> 抓不到就留 null，後台顯示「這筆沒有位置」——**不假裝有**。
 
 ## 移除的 model（修正 B）
 
-先前的 `HealthRecord` / `BusAssignment` **空殼 model 已移除**——它們只有 `studentId`、無實際用途，違反 YAGNI。未來 Health / Bus 實作時，再以獨立 migration 建立完整 schema。擴充能力由 **Feature Flag + Event 訂閱點 + 文件化 Domain Boundary** 保留（見 [08-mvp-scope](./08-mvp-scope.md)）。
+先前的 `HealthRecord` / `BusAssignment` **空殼 model 已移除**——它們只有 `studentId`、無實際用途，違反 YAGNI。未來 Health 實作時，再以獨立 migration 建立完整 schema。**Bus 已於 2026-08-18 以 migration 0009 兌現這條路徑**——完整 schema（四張表 + 三個 enum）一次建齊，而不是先擺一個只有 `studentId` 的空殼。擴充能力由 **Feature Flag + Event 訂閱點 + 文件化 Domain Boundary** 保留（見 [08-mvp-scope](./08-mvp-scope.md)）。
 
 ## Audit 安全與可靠性（修正 C；ADR-005）
 

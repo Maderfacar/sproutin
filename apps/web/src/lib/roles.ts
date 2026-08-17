@@ -12,6 +12,7 @@ export interface RoleFlags {
   canViewSchoolLeaves: boolean; // OWNER/ADMIN → 全校待審請假總覽（GET /leaves 無 classId）
   canViewAudit: boolean; // OWNER/ADMIN → 稽核查詢（GET /audit-logs）
   canManageSchool: boolean; // OWNER/ADMIN → 園所設定（GET/PATCH /school/config;docs/05 矩陣 2026-08-17 放寬 ADMIN）
+  canMarkBusRide: boolean; // OWNER/ADMIN/BUS_TEACHER → 娃娃車點名（POST /bus/rides/*）
   isStaff: boolean; // 任一校方角色（需要班級清單/班名）
 }
 
@@ -32,6 +33,8 @@ export function roleFlags(roles: AuthUser['roles']): RoleFlags {
     canViewSchoolLeaves: isOwnerOrAdmin,
     canViewAudit: isOwnerOrAdmin,
     canManageSchool: isOwnerOrAdmin,
+    // 隨車老師只在自己被指派的路線上點得動 —— 那一層由後端判斷，這裡只決定要不要顯示面板。
+    canMarkBusRide: isOwnerOrAdmin || names.has('BUS_TEACHER'),
     isStaff: isOwner || isAdmin || isTeacher || names.has('BUS_TEACHER'),
   };
 }

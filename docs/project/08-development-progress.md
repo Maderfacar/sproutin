@@ -2,7 +2,13 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**Flex Message 群發 IMPLEMENTED，待線上驗收**——`/admin/messages` 版型填空 + 收件範圍 + 送出前顯示則數 + 兩段式送出 + 送出紀錄；公告推播同步升級為卡片；migration 0008。§D 三題已定案：核准、按鈕可連外部網址、繳費提醒版型保留。下一步 ⑤ 打磨。）
+> Last updated: 2026-08-18（**⑦ 娃娃車刀1 IMPLEMENTED，待線上驗收**——migration 0009、`/bus/*` 與 `/me/bus`
+> 端點、後台設定頁（**電腦＋手機兩邊都有**）、隨車老師點名、家長今日狀態、請假自動移出名單。
+> Human Owner 更正「站點」→**接送點**（door-to-door）。**新增永久原則：電腦版與手機版功能必須相通**（docs/04 §3b）。
+> 順帶修好 CI 自 cc9f04f 起的紅燈（根路徑 `useBranding` 在沒有 provider 之下丟例外，`next build` 失敗）。
+> 下一步：補齊電腦／手機不對等的頁面 → 再打磨。）
+>
+> （前次）2026-08-17（**Flex Message 群發 IMPLEMENTED，待線上驗收**——`/admin/messages` 版型填空 + 收件範圍 + 送出前顯示則數 + 兩段式送出 + 送出紀錄；公告推播同步升級為卡片；migration 0008。§D 三題已定案：核准、按鈕可連外部網址、繳費提醒版型保留。下一步 ⑤ 打磨。）
 
 ---
 
@@ -68,6 +74,13 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 **Phase 9 階段3 ① 骨架 + ②b 權限設定 + ② 管理首頁 + ④ 園所外觀設計（含 LINE 圖文選單套用）— 全數 ✅ ACCEPTED（2026-08-17）。**
 **③ CSV 批次匯入由 Human Owner 暫停**（欄位需等功能完善才明確）。
+
+**⑦ 娃娃車 / 接送 刀1 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 412（api 338 + shared 12 + web 62）** / build。migration **0009_bus**（expand-only）。
+Human Owner 更正：door-to-door →「站點」改稱**接送點**（`BusPoint`）。
+
+**下一步（Human Owner 2026-08-18 指定）：① 補齊電腦版與手機版的功能對等 → ② 打磨。**
+新原則見 docs/04 §3b；待補清單見下方 Recent Work Log。
 
 **Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
 四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
@@ -363,7 +376,14 @@ LATER（正式上線前）
                           （全校家長／指定班級／教職員）、手機卡片預覽、**送出前顯示會送出幾則 +
                           明講不可收回**、送出紀錄。公告推播同步升級為 Flex 卡片。
                           只有 OWNER/ADMIN（老師不得群發：花錢且不可收回）。
-  ⑤ 打磨（走查全站細節）→ **一定放最後**，否則新做的頁面又要再打磨一次。**下一步就是這個。**
+  ⑦ 娃娃車 / 接送 刀1   → ✅ IMPLEMENTED（2026-08-18，待線上驗收）。
+                          路線與**接送點**設定（電腦＋手機）、隨車老師點名、家長今日狀態、
+                          請假自動移出名單（訂閱既有事件，**leaves/ 一行未改**）。
+                          刀2（預計抵達時間 + 家長「明天不搭車」+ 上車推播）尚未動工。
+  ⑧ 電腦／手機功能對等   → **下一步（Human Owner 2026-08-18 指定）**。原則已寫進 docs/04 §3b。
+                          只有電腦版：發送訊息、權限設定
+                          只有手機版：班級、學生、聯絡簿、出缺勤、請假、公告、稽核紀錄
+  ⑤ 打磨（走查全站細節）→ **一定放最後**，否則新做的頁面又要再打磨一次。⑧ 做完才輪到它。
 
 （歷史候選方向，保留紀錄）
 
@@ -524,6 +544,122 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-18 — 🚌 **娃娃車 / 接送 刀1（IMPLEMENTED，待線上驗收）**
+
+**Human Owner 的更正改掉了一個資料欄位的意義**：這類娃娃車服務是 **door-to-door** ——
+車開到每個孩子的**家門口**，不是開到一個大家去等的站牌。原本的「站點」隱含「一個站牌、很多人在那等」，
+與事實不符。用詞改為 **「接送點」**（上下車都適用；「停靠點」太公車、「上車站」下午講不通），
+表名一併從提案時的 `BusStop` 改為 `BusPoint` —— 表還沒建，當下改是零成本。
+
+**兩層結構仍然保留**，而且 door-to-door 反而更需要它：兄弟姊妹同一戶共用一個接送點；
+「早上從自己家上車、下午送到阿嬤家」也很常見（一個孩子上下午可以是不同接送點）。
+折衷是把「這一點要載誰」直接顯示在後台那一列，園長不必為了確認而跳去學生頁。
+
+**Human Owner 逐項拍板**
+```text
+① 到校後的下車 → 一顆「全部下車」，個別有狀況（半路被家長接走）再單獨處理。
+② 隨車老師只看得到自己那台車 → BusRoute.busTeacherId 指名（選項 A）。
+   娃娃車跨班，既有的「老師 ↔ 班級」對應解不了「他負責哪一車」；
+   沒有這一層，兩台車同時在跑時點錯車不會有任何阻擋。
+③ 設定頁做電腦版 —— 並藉此定下全站原則：**電腦與手機功能必須相通**（見下）。
+④ 不種假資料 —— 他要直接在後台建。因此改為把「空的時候」做對：
+   沒有路線、路線沒有接送點、名單沒有人，各自給一句話說明下一步，不是空白畫面。
+⑤ 下午順序預設為上午的倒序，但可以自己再拖（afternoonCustomOrder）。
+```
+
+**電腦版與手機版功能對等 —— 升格為永久原則**（Human Owner 明確要求補上）
+
+這條原本只寫在階段3 骨架那一刀的定案裡，沒被拉出來當全站原則，結果後來新做的頁面各做各的。
+現已明文寫進 `docs/04 §3b`：功能寫成共用元件，`/admin/*` 與 `/liff/*` 各自只放一層外框，
+新頁面兩個外框一起做。娃娃車是第一個照這條做的（`BusSettingsPanel` 兩邊共用）。
+
+**既有的不對等（技術債，下一步就是補這個）**
+```text
+只有電腦版、手機進不去：發送訊息（/admin/messages）、權限設定（/admin/roles）
+只有手機版、電腦進不去：班級、學生、聯絡簿、出缺勤、請假、公告、稽核紀錄
+```
+
+**做了什麼（檔案）**
+```text
+DB    BusRoute / BusPoint / BusAssignment / BusRide + 3 個 enum + migration 0009（expand-only）
+      DDL 由 prisma migrate diff --from-empty 產生後逐段取出，確保與 schema.prisma 一致（沿用 0008）
+api   bus/{bus.types,bus-settings.service,bus-rides.service,bus.controller,me-bus.controller,bus.module}
+      events/bus-event.handler（訂閱 LeaveApproved/Rejected/Cancelled；**leaves/ 一行都沒動**）
+      event-handlers.service：Leave 的三個結束態各多一個訂閱者
+web   features/bus/{hooks,RouteEditor,BusSettingsPanel,BusBoardingPanel,BusTodayCard,StudentBusSection}
+      app/admin/(app)/bus + app/liff/admin/bus（同一個 Panel，兩個外框）
+      app/liff/bus（老師點名 + 家長今日狀態的聯集視圖）
+      學生整合視圖多一段「娃娃車」；12 條 proxy route
+      cards.ts：transportation 轉為已上線（連 /liff/bus）；roadmap 移除該預告條目
+docs  03（四張表 + source/sourceRef 的理由）05（矩陣 + BUS_TEACHER scope 落地）
+      06（§7 Transportation 訂閱怎麼落地的）07（§4k）04（§3b 功能對等原則）+ 本檔
+測試  367 → 412（api 338 + shared 12 + web 62）
+```
+
+**幾個刻意的決定**
+
+`/bus/rides/undo` 是原提案沒有的第四個動作。車在動的時候誤觸是必然會發生的事，
+沒有它老師只能留著一筆錯的紀錄；它會把時間與位置一併清掉 ——
+留一筆「沒上車卻有上車時間」的紀錄比沒有紀錄更糟。
+
+**請假的孩子不進名單，但要回一個數字**。只把人拿掉而不說，老師會以為系統漏人，
+然後跑去翻別的頁面確認 —— 那比多顯示一行字慢得多。判斷來源有兩個：請假事件寫下的
+`BusRide(ABSENT/LEAVE_EVENT)`，以及當日 `Attendance` 為 `LEAVE/ABSENT`（補網，
+涵蓋「先請假、之後才被排進娃娃車」——事件發生當下還沒有名單可寫）。
+
+**`BusRide` 沿用 Attendance 的 override 語意**（ADR-002 的第二次套用，不是新發明）：
+孩子早上明明已經上了車、家長才補請假，事件把紀錄蓋成「今日未搭」就是抹去事實。
+因此 `source=MANUAL` 的列事件不覆寫，請假取消時也只刪自己寫的那些。
+
+**位置抓不到就是抓不到**：`lat`/`lng` 選填、前端 8 秒逾時、只在按下的當下抓一次，
+只進紀錄不參與計算。抓不到照樣點得下去，紀錄標明沒有位置 —— 不假裝有。
+
+**刪除有保護**：已有乘車紀錄的路線不給刪（請改停用，否則爭議時查不到）；
+還有孩子掛著的接送點不給刪（否則名單上會出現孤兒）。兩者都回一句看得懂的話，不是 400 了事。
+
+### 2026-08-18 — 🔴 **順手修好 main 的 CI 紅燈（非本刀範圍）**
+
+`pnpm build` 在我這邊失敗，查證後確認**不是我改壞的**：`gh run list` 顯示 CI 自
+**cc9f04f**（`fix(web): 根路徑不再把整包 runtime config 印給不特定人看`）起就是紅的。
+根因：那一版把根路徑 `app/page.tsx` 改成呼叫 `useBranding()`，但 `BrandingProvider`
+掛在 `AppShell` / `AdminShell` 裡，**根路徑不在任何一個之下** → 沒有 provider 就丟例外
+→ `next build` 預先產生這一頁時失敗（線上該頁也會白畫面）。
+
+修法：這一頁自己載入 public config，**載不到就用中性名稱**照樣畫得出來 ——
+公開頁面不該因為後端沒回應就整頁爆掉。補了一條測試釘住這個情況。
+
+
+### 2026-08-17 — 🚌 **娃娃車 / 接送：§D 已核准（尚未動工）**
+
+Human Owner 在打磨之前追加的功能。**架構早就留好位置**：`BUS_TEACHER`（隨車老師，scope=乘車名單）
+在 docs/05 矩陣裡本來就有、`featureFlags.bus` 開關在、docs/06 已把 Transportation 列為
+`LeaveApproved` / `LeaveCancelled` 的未來訂閱點 —— 請假自動從乘車名單移除是**接既有事件**，
+不改請假模組一行。範圍基準＝預告頁 `features/roadmap/roadmap.ts` 已對外承諾的六條。
+
+**逐項定案（Human Owner）**
+```text
+① 不做即時 GPS 追蹤 —— 要車上手機全程開定位，成本與維護都高，還有司機位置的隱私問題。
+② 預計抵達時間＝**站序 + 歷史平均**（主），園所自填的預計時間當第一週的底；
+   **緯經度只在老師點上/下車的當下抓一次，只進紀錄不參與計算**（爭議時的客觀依據）。
+   抓不到（拒絕定位權限／沒訊號）照樣運作，後台標明「這筆沒有位置」——不假裝有。
+③ 上車推播**預設關閉**，園所自行開啟（Human Owner 定案）。
+④ demo 先種假資料（兩條路線、各四站、把現有 demo 學生分配進去），否則進去是空的。
+```
+
+**資料表（migration 0009，expand-only）**：`BusRoute`（路線 + 上下午出發時間）、
+`BusStop`（站名 / 順序 / 上下午預計時間）、`BusAssignment`（學生 ↔ 路線 + 上車站 + 下車站，
+上下午可不同站）、`BusRide`（每生每日每方向一列：狀態 / 時間 / 選填緯經度 / 誰記錄的）。
+
+**端點**：`/bus/routes`、`/bus/stops`、`/bus/assignments`、`/bus/rides`（+ board/alight/absent）、
+`/me/bus`、`/bus/skip`。授權：設定類 OWNER/ADMIN；點名 OWNER/ADMIN/BUS_TEACHER；
+家長只能看自己小孩與「明天不搭車」。
+
+**站點在哪裡設定（Human Owner 提問）**：分兩層 —— 路線與站點清單在**後台的娃娃車設定頁**
+（全園共用的骨架）；**每個孩子的上車站／下車站在「學生」那一層**（`BusAssignment`），
+建議掛在既有的學生管理／學生整合視圖裡多一段「娃娃車」，不另開一頁 ——
+園所的實際作業是「這個孩子搭哪一班、在哪站上下」，那是學生的屬性。
+**家長不能自己改站點**（會讓路線亂掉），只能「明天不搭車」；換站點要找園所。
 
 ### 2026-08-17 — 📣 **Flex Message 群發（IMPLEMENTED，待線上驗收）**
 

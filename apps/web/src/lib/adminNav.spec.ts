@@ -42,6 +42,18 @@ describe('adminNav', () => {
     }
   });
 
+  // 娃娃車設定在桌面版有真的頁面（同一份元件手機版也有），所以不標 onlyMobile。
+  it('園長看得到娃娃車設定；老師看不到', () => {
+    expect(hrefs(owner)).toContain('/admin/bus');
+    expect(hrefs(teacher)).not.toContain('/admin/bus');
+  });
+
+  it('點名入口只給看得到娃娃車點名的人', () => {
+    const busTeacher = roleFlags([{ role: 'BUS_TEACHER', scopeType: 'SCHOOL', scopeId: null }]);
+    expect(hrefs(busTeacher)).toContain('/liff/bus');
+    expect(hrefs(teacher)).not.toContain('/liff/bus');
+  });
+
   it('沒有重複的連結', () => {
     const all = hrefs(owner);
     expect(new Set(all).size).toBe(all.length);

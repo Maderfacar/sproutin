@@ -58,6 +58,25 @@ apps/web/src/
 └── styles/               design tokens
 ```
 
+## 3b. 電腦版與手機版的功能對等（永久原則，Human Owner 2026-08-18）
+
+> **無論從電腦或手機進來，功能都必須是相通的；差別只在操作介面，不在做得到什麼。**
+
+這條原本只寫在階段3 骨架那一刀的定案裡（「同一份程式碼、同一套權限、同一個 DB，差別只有外框」），
+沒有被拉出來當成全站原則，結果後來新做的頁面各做各的。現在明文化：
+
+```text
+功能寫成共用元件      features/<domain>/<Panel>.tsx        ← 真正的內容與行為
+桌面外框              app/admin/(app)/<x>/page.tsx         ← 標題 + 版面，不含業務邏輯
+手機外框              app/liff/<x>/page.tsx（或 /liff/admin/<x>）
+```
+
+新頁面**兩個外框一起做**（成本是多一個十行的 page.tsx）。
+既有的不對等視為**技術債**，見 docs/project/08 的清單 —— 補齊之前不新增不對等的頁面。
+
+娃娃車（⑦ 刀1）是第一個照這條原則落地的功能：`features/bus/BusSettingsPanel.tsx`
+同時被 `/admin/bus` 與 `/liff/admin/bus` 使用。
+
 ## 4. Card-based Dashboard (§25，config-driven)
 
 **不寫死任何角色首頁**。每張 Card 宣告顯示條件，**後端** `GET /me/dashboard` 回傳已過濾的 `cards[]`，前端只 render（Rule 5/6）：

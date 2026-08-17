@@ -24,15 +24,17 @@ export const CARD_META: Record<string, DashboardCardMeta> = {
     href: '/liff/communication-book',
     enabled: true,
   },
-  audit: { title: '稽核', description: '查詢操作紀錄', icon: 'shield', href: '/liff/audit', enabled: true },
-  // --- 規劃中（連到預告頁）---
+  // 娃娃車刀1（路線與接送點設定 + 隨車老師點名 + 家長今日狀態）已上線。
+  // 刀2（預計抵達時間、明天不搭車、上車推播）尚未完工。
   transportation: {
     title: '娃娃車',
-    description: '乘車與接送',
+    description: '今日乘車狀態',
     icon: 'bus',
-    href: '/liff/soon/transportation',
-    enabled: false,
+    href: '/liff/bus',
+    enabled: true,
   },
+  audit: { title: '稽核', description: '查詢操作紀錄', icon: 'shield', href: '/liff/audit', enabled: true },
+  // --- 規劃中（連到預告頁）---
   payment: { title: '收費繳費', description: '帳單與繳費紀錄', icon: 'wallet', href: '/liff/soon/payment', enabled: false },
   portfolio: {
     title: '成長紀錄',

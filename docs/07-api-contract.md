@@ -386,6 +386,63 @@ POST /push-campaigns
 （`【全校公告】標題`），通知列上看到的內容不因改版而變差。`liffId` 未設定 → 不放按鈕
 （點了會開到錯地方比沒有按鈕更糟）。卡片產生器（`events/flex-message.ts`）與群發共用同一支。
 
+## 4k. 娃娃車 / 接送（Phase 9 ⑦ 刀1）
+
+**door-to-door**（Human Owner 更正 2026-08-18）：車開到每個孩子的**家門口**，不是開到站牌。
+因此資源叫 `BusPoint`（接送點）而非 `BusStop` —— 一個接送點通常就是一戶人家，兄弟姊妹共用一個。
+
+```text
+設定（OWNER/ADMIN）
+GET    /bus/routes                       → RouteView[]（含 points；BUS_TEACHER 只拿到自己那條、且啟用中）
+POST   /bus/routes                       { name, morningDepart?, afternoonDepart?, isActive?, busTeacherId? }
+PATCH  /bus/routes/:id                   （同上，全部選填）
+DELETE /bus/routes/:id                   → 已有乘車紀錄則 400 route_has_rides（請改停用）
+POST   /bus/points                       { routeId, name, address?, etaAm?, etaPm? }
+PATCH  /bus/points/:id                   { name?, address?, etaAm?, etaPm? }
+DELETE /bus/points/:id                   → 還有孩子掛著則 400 point_in_use
+POST   /bus/points/reorder               { routeId, direction, pointIds[] }
+GET    /bus/assignments?routeId=         → AssignmentView[]
+PUT    /bus/assignments                  { studentId, routeId, morningPointId?, afternoonPointId?,
+                                           ridesMorning?, ridesAfternoon? }（以 studentId upsert）
+DELETE /bus/assignments/:studentId
+
+點名（OWNER/ADMIN/BUS_TEACHER，且路線須指到本人）
+GET    /bus/rides?routeId=&date=&direction=   → RosterView{ points, entries, onLeaveCount }
+POST   /bus/rides/board | /alight | /absent | /undo
+       { routeId, date, direction, studentIds[], lat?, lng? }   → BusRideView[]
+
+家長（自己小孩；只有讀）
+GET    /me/bus?studentId=[&date=]         → MyBusView
+
+稽核：bus.route.* / bus.point.* / bus.assignment.* / bus.ride.*
+      （metadata 只記 id、方向、筆數、有沒有位置 —— **不記學生姓名**）
+```
+
+**一次給完整包**（`GET /bus/rides` 回名單 + 接送點 + 當日紀錄）：老師在車上為了湊資料連發三個請求
+是不能接受的，尤其行動網路本來就不穩。
+
+**請假的孩子不進名單**，另回 `onLeaveCount`。**只給名單而不說有人被移走，老師會以為系統漏人**，
+然後跑去翻別的頁面確認 —— 那比多顯示一行字慢得多。
+
+**`studentIds[]` 而非單一 studentId**：上午到校時一顆「全部下車」就是同一個動作套用到全車。
+後端逐人 upsert（每生每日每方向一列，`@@unique`），重複點不會多出一列。
+
+**名單不信任前端**：`studentIds` 內只要有人不在該路線的 `BusAssignment` 上，整批 400 `student_not_on_route`
+—— 否則點錯車就會在別條線的孩子身上留下紀錄。
+
+**`/undo` 是刻意加的第四個動作**（原提案只有 board/alight/absent）：車在動的時候誤觸是必然會發生的事，
+沒有它老師只能留著一筆錯的紀錄。它把狀態退回「待上車」並**清掉時間與位置** ——
+留著一筆「沒上車卻有上車時間」的紀錄比沒有紀錄更糟。
+
+**位置**：`lat`/`lng` 選填，只在老師按下的當下抓一次（前端 8 秒逾時），**只進紀錄、不參與任何計算**。
+拒絕定位權限或沒訊號 → 不送，功能照常運作，後台顯示「這筆沒有位置」——**不假裝有**（Human Owner 定案）。
+
+**下午順序**：預設是上午的倒序（車子原路開回去）。園長一旦用 `direction=AFTERNOON` 排過，
+`BusRoute.afternoonCustomOrder` 轉 `true`，之後新增接送點不再自動重排 —— 否則他排好的例外會被默默沖掉。
+
+**這一刀不含**（刀2）：預計抵達時間（站序 + 歷史平均）、家長「明天不搭車」（`/bus/skip`）、
+上車推播（預設關閉，園所自行開啟）。
+
 ## 5. 驗證與授權
 
 - **輸入驗證**：每個 body 用 Zod（`packages/shared/dto`），fail-fast。

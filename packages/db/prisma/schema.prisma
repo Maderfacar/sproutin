@@ -66,6 +66,8 @@ model Student {
   leaves        Leave[]
   messages      Message[]
   bookEntries   CommunicationBookEntry[]
+  busAssignment BusAssignment?
+  busRides      BusRide[]
   createdAt     DateTime                 @default(now())
 }
 
@@ -330,6 +332,139 @@ model CommunicationBookEntry {
   @@index([date])
 }
 
+// ---------- 娃娃車 / 接送（SoT；Phase 9 ⑦ 刀1）----------
+// **這是 door-to-door 的接送，不是公車**（Human Owner 更正 2026-08-18）：車子開到每個孩子的
+// 家門口，不是開到一個大家去等的站牌。因此 model 叫 BusPoint（接送點）而非 BusStop —— 一個
+// 接送點通常就是一戶人家，兄弟姊妹共用一個點。
+//
+// 路線與接送點是「全園共用的骨架」（本檔 BusRoute / BusPoint）；
+// 「這個孩子搭哪一班、在哪裡上下車」是學生的屬性（BusAssignment），兩層刻意分開：
+// 上午在自己家上車、下午送到阿嬤家，是很常見的狀況。
+model BusRoute {
+  id              String  @id @default(cuid())
+  name            String
+  morningDepart   String? // "HH:mm" 上午發車時間（園所當地牆上時間）
+  afternoonDepart String? // "HH:mm" 下午發車時間
+  isActive        Boolean @default(true) // 停用不刪除（沿用全站慣例）
+
+  // 指派的隨車老師（User.id）。BUS_TEACHER 的 scope＝「他負責的車次」（docs/05）——
+  // 娃娃車跨班，既有的「老師 ↔ 班級」對應解不了這件事，故由路線指名。
+  // 不做 relation：User 被停用時路線設定不該連帶失效，且此處只是指派而非擁有關係。
+  busTeacherId String?
+
+  // 下午順序預設為上午的倒序（車子原路開回去）。園長一旦手動調整過下午順序，
+  // 此旗標轉 true，之後新增接送點不再自動重排 —— 否則會默默沖掉他排好的例外。
+  afternoonCustomOrder Boolean @default(false)
+
+  points      BusPoint[]
+  assignments BusAssignment[]
+  rides       BusRide[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+// 接送點＝一戶人家的門口。address 為選填（園所可能只寫「陳家」自己認得）。
+// orderAm / orderPm 皆為實存值：不存的話每次查詢都要重算倒序，且無法表達例外順序。
+model BusPoint {
+  id      String   @id @default(cuid())
+  routeId String
+  route   BusRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  name    String
+  address String?
+  orderAm Int
+  orderPm Int
+  etaAm   String? // "HH:mm" 園所自填的預計時間；刀2 的歷史平均以此為第一週的底
+  etaPm   String?
+
+  morningOf   BusAssignment[] @relation("BusAssignmentMorningPoint")
+  afternoonOf BusAssignment[] @relation("BusAssignmentAfternoonPoint")
+
+  @@index([routeId])
+}
+
+// 固定名單：一個學生一列（一個孩子不會同時屬於兩條路線）。
+// 上下午分開：只搭上學車、只搭放學車都很常見，且上下車可以是不同的接送點。
+model BusAssignment {
+  id        String  @id @default(cuid())
+  studentId String  @unique
+  student   Student @relation(fields: [studentId], references: [id])
+  routeId   String
+  route     BusRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  morningPointId   String?
+  morningPoint     BusPoint? @relation("BusAssignmentMorningPoint", fields: [morningPointId], references: [id])
+  afternoonPointId String?
+  afternoonPoint   BusPoint? @relation("BusAssignmentAfternoonPoint", fields: [afternoonPointId], references: [id])
+
+  ridesMorning   Boolean @default(true)
+  ridesAfternoon Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([routeId])
+}
+
+// 每生每日每方向一列（@@unique，沿用 Attendance / CommunicationBookEntry 的慣例）。
+// 沒有列 = 當日尚無紀錄（不是錯誤）。
+//
+// source 的用途與 Attendance 相同（ADR-002 的同一套 override 語意）：
+//   請假核准 → 由事件建立 status=ABSENT, source=LEAVE_EVENT 的列，孩子自動從當日名單消失；
+//   請假取消 → 只刪除仍為 LEAVE_EVENT 的列，老師手動改過的（source=MANUAL）不觸碰。
+// 沒有這組欄位的話，「請假回來」只能靠猜，會把老師手動記的紀錄一起洗掉。
+//
+// 緯經度只在老師點上/下車的當下抓一次，**只進紀錄、不參與任何計算**（Human Owner 定案）：
+// 爭議時的客觀依據。抓不到（拒絕定位權限／沒訊號）功能照常運作，後台顯示「這筆沒有位置」
+// —— 不假裝有。
+model BusRide {
+  id        String       @id @default(cuid())
+  date      DateTime // 當日零點（UTC），與 Attendance 同慣例
+  studentId String
+  student   Student      @relation(fields: [studentId], references: [id])
+  routeId   String
+  route     BusRoute     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  direction BusDirection
+
+  // 當下實際上/下車的接送點。刻意不做 relation：這是歷史紀錄，
+  // 日後園所改動或移除接送點時，已發生的事實不該跟著變。
+  pointId String?
+
+  status     BusRideStatus @default(SCHEDULED)
+  boardedAt  DateTime?
+  alightedAt DateTime?
+  boardLat   Float?
+  boardLng   Float?
+  alightLat  Float?
+  alightLng  Float?
+
+  source     BusRideSource @default(MANUAL)
+  sourceRef  String? // source=LEAVE_EVENT 時的來源 Leave.id
+  recordedBy String? // 最後記錄者 userId（system 事件為 null）
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, date, direction])
+  @@index([routeId, date])
+}
+
+enum BusDirection {
+  MORNING // 上學：各家門口 → 園所
+  AFTERNOON // 放學：園所 → 各家門口
+}
+
+enum BusRideStatus {
+  SCHEDULED // 預定搭乘（尚未點名）
+  BOARDED // 已上車
+  ALIGHTED // 已下車
+  ABSENT // 今日未搭
+}
+
+enum BusRideSource {
+  MANUAL // 隨車老師/園所記錄
+  LEAVE_EVENT // 由請假核准事件產生
+}
+
 // ---------- Notification（Derived）----------
 model Notification {
   id        String    @id @default(cuid())
@@ -368,7 +503,8 @@ model OutboxEvent {
   dispatchedAt DateTime?
 }
 
-// 註：Health/Bus 等未來 model 不預建（修正 B），需要時再以 migration 加入。
+// 註：未來 model 不預建（修正 B），需要時再以 migration 加入。
+// Bus 已於 Phase 9 ⑦ 刀1 以 migration 0009 加入（見上方 BusRoute/BusPoint/BusAssignment/BusRide）。
 
 // ---------- Enums ----------
 enum StudentStatus {

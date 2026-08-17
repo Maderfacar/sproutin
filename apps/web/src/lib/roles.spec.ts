@@ -44,6 +44,20 @@ describe('roleFlags', () => {
     expect(f.isGuardian).toBe(true); // 家長
   });
 
+  it('隨車老師：可點名娃娃車，但不可審核請假或點名出缺勤', () => {
+    const f = roleFlags(r('BUS_TEACHER'));
+    expect(f.canMarkBusRide).toBe(true);
+    expect(f.canReviewLeave).toBe(false);
+    expect(f.canMarkAttendance).toBe(false);
+    expect(f.canManageSchool).toBe(false);
+  });
+
+  it('一般老師沒有娃娃車點名面板（沒被指派車次，後端也會擋）', () => {
+    expect(roleFlags(r('TEACHER')).canMarkBusRide).toBe(false);
+    expect(roleFlags(r('PARENT')).canMarkBusRide).toBe(false);
+    expect(roleFlags(r('OWNER')).canMarkBusRide).toBe(true);
+  });
+
   it('無角色 → 全部 false', () => {
     const f = roleFlags([]);
     expect(f.isGuardian).toBe(false);

@@ -32,16 +32,25 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
       title: '設定',
       items: [
         { href: '/admin/appearance', label: '園所外觀設計', icon: 'image' },
+        { href: '/admin/bus', label: '娃娃車', icon: 'bus' },
         { href: '/liff/admin/classes', label: '班級', icon: 'doc', onlyMobile: true },
         { href: '/liff/admin/students', label: '學生', icon: 'heart', onlyMobile: true },
       ],
     });
   }
 
+  const dailyItems: AdminNavItem[] = [
+    { href: '/liff/communication-book', label: '聯絡簿', icon: 'book', onlyMobile: true },
+  ];
+  // 點名本身是車上的事（手機），但園所要看得到今天誰上了車。
+  if (flags.canMarkBusRide) {
+    dailyItems.push({ href: '/liff/bus', label: '娃娃車點名', icon: 'bus', onlyMobile: true });
+  }
+
   sections.push({
     title: '每日',
     items: [
-      { href: '/liff/communication-book', label: '聯絡簿', icon: 'book', onlyMobile: true },
+      ...dailyItems,
       { href: '/liff/attendance', label: '出缺勤', icon: 'check', onlyMobile: true },
       { href: '/liff/leave', label: '請假', icon: 'cal', onlyMobile: true },
       { href: '/liff/announcement', label: '公告', icon: 'mega', onlyMobile: true },

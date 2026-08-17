@@ -55,9 +55,9 @@ Parent → POST /leaves
 | Event | 發出者 | 訂閱者 (MVP) | 未來訂閱點（修正 B，不建空 module） |
 |-------|--------|-------------|-----------------|
 | `LeaveSubmitted` | Leave | Notification | — |
-| `LeaveApproved` | Leave | Attendance, Notification | Transportation |
-| `LeaveRejected` | Leave | Attendance(回滾), Notification | — |
-| `LeaveCancelled` | Leave | Attendance(回滾), Notification | Transportation |
+| `LeaveApproved` | Leave | Attendance, Notification, **Transportation（乘車名單移除）**（⑦ 刀1） | — |
+| `LeaveRejected` | Leave | Attendance(回滾), Notification, **Transportation(還原)**（⑦ 刀1） | — |
+| `LeaveCancelled` | Leave | Attendance(回滾), Notification, **Transportation(還原)**（⑦ 刀1） | — |
 | `MessageSent` | Message | Notification | AI(draft/summary) |
 | `AnnouncementPublished` | Announcement | Notification, **LINE Push**（階段2 刀5） | — |
 | `AttendanceMarked` | Attendance | Notification(選配) | Report |
@@ -94,3 +94,28 @@ Audit 分兩條路徑，皆非 best-effort：
 ## 6. 擴充原則 (§6, §32)
 
 新模組加入時：**訂閱既有事件** 或 **發出新事件**，不修改既有模組 business logic。未來模組（Health/Bus/AI/Report/Payment）在需要時才建立，透過上表「未來訂閱點」與 Feature Flag 接入——**MVP 不預先產生空 module**。
+
+## 7. Transportation 訂閱（⑦ 娃娃車刀1，2026-08-18）
+
+「請假自動從乘車名單移除」是本專案第一個把**未來訂閱點兌現**的案例，值得記下它怎麼落地的：
+
+```text
+leaves/ 底下一行都沒有動。
+新增 events/bus-event.handler.ts 訂閱既有的 LeaveApproved / LeaveRejected / LeaveCancelled，
+在 event-handlers.service.ts 的同一個 case 內多呼叫一個 handler 而已。
+娃娃車要不要接、什麼時候接、接了做什麼，完全是娃娃車自己的事（§6 擴充原則）。
+```
+
+**語意刻意與 Attendance 的投影（ADR-002）一致**，因為問題是同一個：
+
+| 事件 | 娃娃車的動作 | override 感知 |
+|------|-------------|--------------|
+| `LeaveApproved` | 逐日 × 逐方向 upsert `BusRide(status=ABSENT, source=LEAVE_EVENT, sourceRef=leaveId)` | 該筆已是 `source=MANUAL`（老師點過）→ **不覆寫**，計入 `skipped` |
+| `LeaveRejected` / `LeaveCancelled` | 只刪除 `source=LEAVE_EVENT AND sourceRef=thisLeave` 的列 | 老師手動記過的不觸碰 |
+
+孩子早上明明已經上了車、家長才補請假 —— 這時把紀錄蓋成「今日未搭」就是把事實抹掉。
+爭議發生時要拿出來的正是那筆老師手動點的紀錄。
+
+隨車老師的名單另有一道**補網**：點名畫面除了認 `BusRide(ABSENT/LEAVE_EVENT)`，
+也認當日 `Attendance` 為 `LEAVE/ABSENT`（沿用聯絡簿老師端的同一條規則）。
+涵蓋「先請假、之後才被排進娃娃車」——事件發生當下還沒有名單可寫。

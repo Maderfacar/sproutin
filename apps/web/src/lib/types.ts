@@ -257,3 +257,125 @@ export interface AnnouncementView {
   createdBy: string;
   createdAt: string; // ISO
 }
+
+// ---------- 娃娃車 / 接送（Phase 9 ⑦ 刀1）----------
+// door-to-door：車開到每個孩子的家門口，所以是「接送點」不是「站牌」。
+
+export type BusDirection = 'MORNING' | 'AFTERNOON';
+export type BusRideStatus = 'SCHEDULED' | 'BOARDED' | 'ALIGHTED' | 'ABSENT';
+export type BusRideSource = 'MANUAL' | 'LEAVE_EVENT';
+
+export interface BusPointView {
+  id: string;
+  routeId: string;
+  name: string;
+  address: string | null;
+  orderAm: number;
+  orderPm: number;
+  etaAm: string | null; // "HH:mm"
+  etaPm: string | null;
+}
+
+export interface BusRouteView {
+  id: string;
+  name: string;
+  morningDepart: string | null;
+  afternoonDepart: string | null;
+  isActive: boolean;
+  busTeacherId: string | null;
+  afternoonCustomOrder: boolean;
+  points: BusPointView[];
+}
+
+export interface BusAssignmentView {
+  studentId: string;
+  routeId: string;
+  morningPointId: string | null;
+  afternoonPointId: string | null;
+  ridesMorning: boolean;
+  ridesAfternoon: boolean;
+}
+
+export interface BusRideView {
+  id: string;
+  date: string; // ISO
+  studentId: string;
+  routeId: string;
+  direction: BusDirection;
+  pointId: string | null;
+  status: BusRideStatus;
+  boardedAt: string | null;
+  alightedAt: string | null;
+  boardLat: number | null;
+  boardLng: number | null;
+  alightLat: number | null;
+  alightLng: number | null;
+  source: BusRideSource;
+  recordedBy: string | null;
+}
+
+export interface BusRosterEntry {
+  studentId: string;
+  studentName: string;
+  classId: string;
+  pointId: string | null;
+  ride: BusRideView | null;
+}
+
+export interface BusRosterView {
+  routeId: string;
+  date: string;
+  direction: BusDirection;
+  points: BusPointView[];
+  entries: BusRosterEntry[];
+  onLeaveCount: number;
+}
+
+export interface MyBusView {
+  studentId: string;
+  date: string;
+  routeName: string | null;
+  morningDepart: string | null;
+  afternoonDepart: string | null;
+  ridesMorning: boolean;
+  ridesAfternoon: boolean;
+  morningPointName: string | null;
+  afternoonPointName: string | null;
+  morning: BusRideView | null;
+  afternoon: BusRideView | null;
+}
+
+export interface SaveBusRouteBody {
+  name: string;
+  morningDepart?: string | null;
+  afternoonDepart?: string | null;
+  isActive?: boolean;
+  busTeacherId?: string | null;
+}
+
+export interface SaveBusPointBody {
+  routeId: string;
+  name: string;
+  address?: string | null;
+  etaAm?: string | null;
+  etaPm?: string | null;
+}
+
+export interface SaveBusAssignmentBody {
+  studentId: string;
+  routeId: string;
+  morningPointId?: string | null;
+  afternoonPointId?: string | null;
+  ridesMorning?: boolean;
+  ridesAfternoon?: boolean;
+}
+
+// 緯經度為選填：拒絕定位或沒訊號時就是不送，功能照常運作。
+export interface BusMarkBody {
+  routeId: string;
+  date: string;
+  direction: BusDirection;
+  studentIds: string[];
+  lat?: number;
+  lng?: number;
+}

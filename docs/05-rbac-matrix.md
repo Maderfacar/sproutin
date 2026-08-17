@@ -36,6 +36,8 @@
 | **UserRole**（增減身分） | **CRUD** | **CRUD**（不含 OWNER 身分） | – | – | – |
 | **RichMenuConfig**（圖文選單設計 / 套用） | **CRUD** | **CRUD** | – | – | – |
 | **PushCampaign**（LINE 群發） | **CR** | **CR** | – | – | – |
+| **BusRoute / BusPoint / BusAssignment**（娃娃車設定） | **CRUD** | **CRUD** | – | **R(自車)** | – |
+| **BusRide**（上下車點名） | **CRUD** | **CRUD** | – | **CRUD(自車)** | **R(自己小孩)** |
 
 > 修正 A：Leave 的「審核」權限僅在 `leaveRequiresApproval=true` 時有意義；為 false 時申請即自動 APPROVED，無審核步驟。
 >
@@ -51,6 +53,13 @@
 >
 > **新增（2026-08-17, 階段3）**：`PushCampaign`（LINE 群發）限 `OWNER/ADMIN` —— **老師不得群發**（Human Owner 拍板）。理由不是層級而是後果：群發會產生 LINE 推播費用，且**送出後無法收回**（LINE 未提供撤回已送出推播的方法）。只有建立與查詢（`CR`），**沒有修改與刪除**：已經送到家長手機上的訊息，改掉紀錄只會讓帳不實。詳見 docs/07 §4j。
 >
+> **新增（2026-08-18, ⑦ 娃娃車刀1）**：設定類（路線 / 接送點 / 固定名單）限 `OWNER/ADMIN`；點名（`BusRide`）加開 `BUS_TEACHER`。
+> **`BUS_TEACHER` 的 scope 落地為「`BusRoute.busTeacherId` 指到他的那條路線」** —— 娃娃車跨班，既有的
+> 「老師 ↔ 班級」（`TeacherAssignment`）對應解不了「他負責哪一車」，故由路線指名隨車老師（Human Owner 選項 A）。
+> 沒有這一層的話，兩台車同時在跑時老師點錯車不會有任何阻擋。家長端**只有讀**（`GET /me/bus`）：
+> **家長不能自己改接送點**（會讓路線亂掉，Human Owner 定案），換點要找園所；「明天不搭車」屬刀2。
+> door-to-door 之故，資源名稱是「接送點」（`BusPoint`）而非站牌。詳見 docs/07 §4k。
+>
 > 入口變更：**「訊息」卡片已併入「聯絡簿」**（Human Owner 決策 A）。Message 的權限與 API 不變，只是不再是獨立入口；聯絡簿卡片因此納入 `ADMIN`，行政人員才不會失去訊息的閱讀入口。
 
 ## 3. Scope 限縮（資料列級）
@@ -58,7 +67,7 @@
 | Role | 限縮依據 | Guard 檢查 |
 |------|----------|-----------|
 | TEACHER | `UserRole.scopeId = classId` | 目標資源的 class 是否 = 老師的班 |
-| BUS_TEACHER | 乘車名單 | 目標學生是否在其負責車次 |
+| BUS_TEACHER | 乘車名單 | 目標路線的 `busTeacherId` 是否為本人；學生是否在該路線的 `BusAssignment` 上 |
 | PARENT/GUARDIAN | `Guardianship` | 目標學生是否為其監護對象 |
 
 ## 4. Guard + Audit 實作原則

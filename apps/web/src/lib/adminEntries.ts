@@ -41,6 +41,12 @@ export function adminEntries(flags: RoleFlags): AdminEntry[] {
         label: '園所外觀設計',
         hint: 'LINE 選單、園名、顏色、園徽、封面圖',
       },
+      {
+        href: '/admin/bus',
+        icon: 'bus',
+        label: '娃娃車',
+        hint: '路線、接送點順序、指派隨車老師',
+      },
     );
   }
 
