@@ -63,8 +63,11 @@ services:
         value: "2011106146"
       - key: LINE_MESSAGING_CHANNEL_SECRET
         sync: false # Human Owner 於 Render 後台填（Phase 7）
+      # ⚠ **api 與 worker 各自要填一次**（sync:false 不會跨服務共用）。
+      # 推播跑在 worker、圖文選單套用跑在 api —— 只填 worker 會出現「推播正常，但套用
+      # 圖文選單說沒設定權杖」的狀況（2026-08-17 實際踩到）。開通新園所時兩邊都要填。
       - key: LINE_MESSAGING_CHANNEL_ACCESS_TOKEN
-        sync: false # Human Owner 於 Render 後台填（Phase 7）
+        sync: false # Human Owner 於 Render 後台填（Phase 7 推播 + 階段3 圖文選單）
       # LIFF_ID 改由 SchoolConfig → /config/public 提供（ADR-001），不再走 env。
 
   # ---------- 背景 Worker（BullMQ，background worker）----------
@@ -92,6 +95,7 @@ services:
           property: connectionString
       # --- LINE Messaging API（Step 5 推播）---
       # Worker 呼叫 LINE push API 需要 access token。未設定 → 自動略過推播（不影響站內通知）。
+      # 與 sproutin-api 是**同一組值，但要各自填一次**（見上方 api 服務的說明）。
       - key: LINE_MESSAGING_CHANNEL_ACCESS_TOKEN
         sync: false # Human Owner 於 Render 後台填（Phase 7 Step 5）
 
