@@ -3,8 +3,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { AuthUser } from '@sproutin/shared';
 import { ensureLiffLogin } from './liff';
-import { lineLogin, fetchMe } from './auth';
+import { AuthError, lineLogin, fetchMe } from './auth';
 import { StatusScreen, type StatusKind } from '../components/StatusScreen';
+import { BindScreen } from '../features/binding/BindScreen';
 
 // 登入 session（httpOnly cookie 持久化）：
 //   1) 先試 /me（帶 cookie）——有有效 session → 直接登入,**完全不碰 LINE**（不再三不五時跳登入）。
@@ -25,10 +26,12 @@ export function useSession(): Session {
 }
 
 interface SessionState {
-  status: StatusKind | 'authed';
+  // 'needs-binding' = LINE 登入成功，但這個 LINE 帳號還沒接上任何園所帳號 → 導向綁定畫面。
+  status: StatusKind | 'authed' | 'needs-binding';
   user?: AuthUser;
   message?: string;
   sub?: string | null;
+  idToken?: string;
 }
 
 function errorMessage(e: unknown): string {
@@ -65,8 +68,17 @@ export function SessionProvider({
           if (!cancelled) setState({ status: 'redirecting' });
           return; // 導向 LINE 登入中，返回後本頁會重跑
         }
-        const user = await lineLogin(login.idToken);
-        if (!cancelled) setState({ status: 'authed', user, sub: login.sub });
+        try {
+          const user = await lineLogin(login.idToken);
+          if (!cancelled) setState({ status: 'authed', user, sub: login.sub });
+        } catch (e: unknown) {
+          // 這個 LINE 還沒接上任何園所帳號 → 不是錯誤，是還沒綁定，導向綁定畫面。
+          if (e instanceof AuthError && e.code === 'user_not_provisioned') {
+            if (!cancelled) setState({ status: 'needs-binding', idToken: login.idToken });
+            return;
+          }
+          throw e;
+        }
       } catch (e: unknown) {
         if (!cancelled) setState({ status: 'error', message: errorMessage(e) });
       }
@@ -78,10 +90,21 @@ export function SessionProvider({
     };
   }, [liffId]);
 
+  if (state.status === 'needs-binding' && state.idToken) {
+    return (
+      <BindScreen
+        idToken={state.idToken}
+        onBound={(user) => setState({ status: 'authed', user })}
+      />
+    );
+  }
+
   if (state.status !== 'authed' || !state.user) {
     return (
       <StatusScreen
-        status={state.status === 'authed' ? 'loading' : state.status}
+        // 'authed'（缺 user）與 'needs-binding'（缺 idToken）都是不該發生的中間態，
+        // 一律退回 loading 而不是讓畫面崩掉。
+        status={state.status === 'authed' || state.status === 'needs-binding' ? 'loading' : state.status}
         message={state.message}
         sub={state.sub}
       />

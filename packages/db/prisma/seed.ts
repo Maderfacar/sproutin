@@ -300,6 +300,21 @@ async function main(): Promise<void> {
     },
   });
 
+  // (d) 待審請假（讓老師端「待審核」不是空的 —— demo 要有東西可以按）
+  await prisma.leave.upsert({
+    where: { id: 'leave-pending' },
+    update: { dateFrom: daysAgo(-1), dateTo: daysAgo(-1) },
+    create: {
+      id: 'leave-pending',
+      studentId: 'stu-sun-3',
+      dateFrom: daysAgo(-1),
+      dateTo: daysAgo(-1),
+      reason: '家中有事，明天請假一天',
+      status: 'PENDING',
+      createdBy: 'user-parent',
+    },
+  });
+
   // -------- 10. Demo 業務資料：Announcement --------
   await prisma.announcement.upsert({
     where: { id: 'ann-school' },
@@ -312,6 +327,32 @@ async function main(): Promise<void> {
       title: '歡迎使用 Sproutin Demo',
       body: '這是一則全校公告（synthetic demo 資料）。',
       createdBy: 'user-owner',
+    },
+  });
+  await prisma.announcement.upsert({
+    where: { id: 'ann-school-flu' },
+    update: {},
+    create: {
+      id: 'ann-school-flu',
+      schoolId: 'demo-school',
+      classId: null,
+      scope: 'SCHOOL',
+      title: '近期腸病毒提醒',
+      body: '近期腸病毒進入流行期，請家長協助留意孩子的體溫與精神狀況，並加強洗手。若有發燒或口腔潰瘍，請先在家休息並告知園所。',
+      createdBy: 'user-owner',
+    },
+  });
+  await prisma.announcement.upsert({
+    where: { id: 'ann-school-photo' },
+    update: {},
+    create: {
+      id: 'ann-school-photo',
+      schoolId: 'demo-school',
+      classId: null,
+      scope: 'SCHOOL',
+      title: '畢業團體照拍攝時間調整',
+      body: '原訂本週四的團體照，因攝影師檔期調整為下週二上午九點。請當天讓孩子穿著園服到校。',
+      createdBy: 'user-admin',
     },
   });
   await prisma.announcement.upsert({
@@ -439,6 +480,59 @@ async function main(): Promise<void> {
     });
   }
 
+  // 再往前補幾天「日常順利」的紀錄，讓家長端的日期橫條往前翻都翻得到東西
+  // （demo 最怕的是點兩下就一片空白）。第 3–6 天前，三位向日葵班學生各一筆。
+  const ROUTINE_STUDENTS = ['stu-sun-1', 'stu-sun-2', 'stu-sun-3'] as const;
+  const ROUTINE_ARRIVALS = ['08:05', '08:18', '08:26'] as const;
+  for (let d = 3; d <= 6; d += 1) {
+    for (let i = 0; i < ROUTINE_STUDENTS.length; i += 1) {
+      const studentId = ROUTINE_STUDENTS[i]!;
+      const data = {
+        studentId,
+        date: daysAgo(d),
+        arrivalTime: ROUTINE_ARRIVALS[i]!,
+        lunch: (d % 2 === 0 ? 'ALL' : 'MOST') as 'ALL' | 'MOST',
+        snack: 'ALL' as const,
+        nap: (i === 1 ? 'SHORT' : 'WELL') as 'SHORT' | 'WELL',
+        toilet: 'NORMAL' as const,
+        mood: (d % 3 === 0 ? 'CALM' : 'HAPPY') as 'CALM' | 'HAPPY',
+        symptoms: [],
+        temperature: null,
+        pickup: (i === 1 ? 'SCHOOL_BUS' : 'FAMILY') as 'SCHOOL_BUS' | 'FAMILY',
+        teacherNote: null,
+        filledBy: 'user-teacher-sun',
+        publishedAt: NOW,
+      };
+      await prisma.communicationBookEntry.upsert({
+        where: { id: `cb-routine-${i + 1}-d${d}` },
+        update: data,
+        create: { id: `cb-routine-${i + 1}-d${d}`, ...data },
+      });
+    }
+  }
+
+  // -------- 12. Demo 業務資料：親師對話（聯絡簿下半部不能是空的）--------
+  const messages: Array<{ id: string; senderId: string; body: string }> = [
+    { id: 'msg-1', senderId: 'user-teacher-sun', body: '媽媽好，小星今天在角落區玩積木玩得很專注，午睡也睡得不錯。' },
+    { id: 'msg-2', senderId: 'user-parent', body: '謝謝老師！他昨天回家一直說要蓋城堡，看來玩得很開心。' },
+    { id: 'msg-3', senderId: 'user-teacher-sun', body: '下週三校外教學要帶水壺和帽子，聯絡簿裡也會再提醒一次。' },
+    { id: 'msg-4', senderId: 'user-parent', body: '收到，會準備好。另外這週五可能會由阿嬤來接，再麻煩老師留意。' },
+  ];
+  for (const m of messages) {
+    await prisma.message.upsert({
+      where: { id: m.id },
+      update: {},
+      create: {
+        id: m.id,
+        studentId: 'stu-sun-1',
+        classId: 'class-sunflower',
+        senderId: m.senderId,
+        category: 'GENERAL',
+        body: m.body,
+      },
+    });
+  }
+
   // -------- 摘要（供 CI / Render job log 作為驗證證據）--------
   const counts = {
     school: await prisma.school.count(),
@@ -454,6 +548,7 @@ async function main(): Promise<void> {
     attendance: await prisma.attendance.count(),
     announcement: await prisma.announcement.count(),
     communicationBookEntry: await prisma.communicationBookEntry.count(),
+    message: await prisma.message.count(),
   };
   console.log('[seed] OK — Demo School 已就緒（idempotent）。counts=', counts);
 }

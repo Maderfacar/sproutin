@@ -10,6 +10,7 @@ import { useAnnouncements } from '../../features/announcement/hooks';
 import { useStudentBook } from '../../features/communication-book/hooks';
 import { MOOD_LABEL } from '../../features/communication-book/labels';
 import { cardMeta } from '../../features/dashboard/cards';
+import { HomeHero } from '../../features/home/HomeHero';
 import { Icon } from '../../components/Icon';
 
 function greeting(): string {
@@ -63,14 +64,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-7">
-      {/* 問候 */}
+      {/* 園所門面 + 問候（只在首頁） */}
+      <HomeHero greeting={greeting()} displayName={user.displayName} dateLabel={todayLabel()} />
+
       <section className="rise-in">
-        <p className="eyebrow">{todayLabel()}</p>
-        <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-ink">
-          {greeting()}，{user.displayName}
-        </h1>
         {students && students.length > 0 && (
-          <div className="mt-4 flex items-center gap-3 border-y border-line py-3">
+          <div className="flex items-center gap-3 border-b border-line py-3">
             <span
               className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white"
               style={{ background: 'var(--brand-primary)' }}

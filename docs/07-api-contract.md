@@ -28,6 +28,10 @@ POST /auth/line/login
 |--------|------|------|-------|:---:|
 | GET | `/config/public` | **公開** runtime config（liffId/branding/apiBaseUrl/public flags）；**無機密**（ADR-001） | – | – |
 | POST | `/auth/line/login` | LINE 登入換 JWT | – | ✔(login) |
+| **POST** | **`/auth/line/bind`** | 綁定碼 → 接上帳號並同時登入 | – | ✔ |
+| **GET/POST** | **`/binding-codes`** | 綁定碼：列出有效 / 簽發 | OWNER/ADMIN | ✔ |
+| **DELETE** | **`/binding-codes/:id`** | 作廢綁定碼 | OWNER/ADMIN | ✔ |
+| **DELETE** | **`/users/:id/line`** | 解除 LINE 綁定（帳號不刪除） | OWNER/ADMIN | ✔ |
 | GET | `/me` | 目前使用者 + 角色 | auth | – |
 | GET | `/me/dashboard` | 動態 card 清單（後端過濾） | auth | – |
 | GET | `/students?classId=` | 學生清單（scope 過濾；classId 只縮小不放寬） | Roles | – |
@@ -185,6 +189,36 @@ POST /communication-book/publish
 - 稽核：`communication_book.save` / `.check_in` / `.publish`，與業務變更同一 transaction。
   **metadata 只記欄位名與 studentId，不記留言內容、症狀與姓名**（修正 C）。
 - 入口：「訊息」卡片已併入「聯絡簿」（見 docs/05）；`/messages` 端點與權限不變。
+
+## 4g. LINE 帳號綁定（Phase 9 階段3）
+
+```text
+POST   /auth/line/bind    { idToken, code }      → { accessToken, user }（未認證即可呼叫）
+
+GET    /binding-codes?userId=                    → BindingCodeView[]（OWNER/ADMIN；只回有效的碼）
+POST   /binding-codes     { userId, ttlDays? }   → BindingCodeView（OWNER/ADMIN）
+DELETE /binding-codes/:id                        → 204（作廢，保留紀錄）
+DELETE /users/:id/line                           → 204（解除綁定，帳號不刪除）
+```
+
+**為什麼需要**：園所後台建立的帳號（「張媽媽」）與 LINE 登入取得的匿名 `userId`（`U1a2b3c…`）之間
+沒有任何可自動對應的線索 —— LINE 暱稱不可信，也不保證與真名有關。綁定碼是園所簽發、由本人輸入
+一次的憑證，把兩者接起來。綁的是**人**不是小孩，因此一次綁定，其所有小孩與角色一起生效。
+
+- **碼格式**：8 碼、顯示為 `XXXX-XXXX`。字母表排除 `0/O/1/I/L` 等易混淆字元（32 字母表 → 約
+  1.1×10^12 組合）。**刻意不用 6 位數字**：6 位數只有 100 萬組，在尚未上線 rate limiting 的情況下
+  可被暴力嘗試。輸入時容忍大小寫、空白與連字號，但**不自動竄改看似看錯的字元**（沒有安全的猜法）。
+- **失效規則**：有期限（預設 30 天）、用過即失效、可主動作廢；重新簽發時同一帳號既有未使用的碼
+  一併作廢（條子不見了就重發，舊碼不留著被撿去用）。
+- **錯誤不區分原因**：查無 / 已用 / 已作廢 / 已過期一律回 `binding_code_invalid`，否則等於提供一個
+  可探測有效碼的介面。前端訊息一併列出可能原因，讓使用者知道下一步找誰。
+- **一個 LINE 一個人**：`LineIdentity.lineUserId` 已 `@unique`；兌換前另檢查該 LINE 是否已綁他人
+  （`line_already_bound`）。兌換以條件式 `updateMany` 樂觀鎖，同碼並行只有一個成功。
+- **綁定即登入**：`/auth/line/bind` 一次完成「驗證 idToken + 兌換碼 + 簽發 JWT」。拆成兩步會需要一個
+  「已驗證 LINE 但尚無身分」的臨時 token，那是沒有必要的攻擊面。
+- **解綁**是換手機 / 綁錯人 / 家長換 LINE 帳號的救援出口；解綁後帳號回到未綁定，可重新發碼。
+- 稽核：`binding_code.issue` / `.revoke` / `.redeem` / `user.line_unbind`。
+  **稽核不存碼本身（等同憑證明文），也不存 `lineUserId`（識別性資料）**（修正 C）。
 
 ## 5. 驗證與授權
 

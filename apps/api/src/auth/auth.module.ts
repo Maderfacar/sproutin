@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { BindingCodeController } from './binding-code.controller';
+import { BindingCodeService } from './binding-code.service';
 import { LineVerifier } from './line-verifier.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
@@ -23,11 +25,28 @@ const jwtSecret = process.env.JWT_SECRET ?? 'dev-only-insecure-secret';
     // guards（RolesGuard / ScopeGuard）的 DENIED out-of-band audit 需 AuditEnqueuer。
     AuditModule,
   ],
-  controllers: [AuthController],
-  providers: [AuthService, LineVerifier, JwtAuthGuard, RolesGuard, ScopeGuard, ScopeResolver],
+  controllers: [AuthController, BindingCodeController],
+  providers: [
+    AuthService,
+    BindingCodeService,
+    LineVerifier,
+    JwtAuthGuard,
+    RolesGuard,
+    ScopeGuard,
+    ScopeResolver,
+  ],
   // 匯出 guards/resolver 供 domain 模組（如 StudentsModule）掛用（Step 3 RBAC）。
   // 同時 re-export JwtModule + AuditModule：guards 在 consumer 模組 context 實例化時，
   // 需 JwtService（JwtAuthGuard）與 AuditEnqueuer（RolesGuard/ScopeGuard 的 DENIED audit）。
-  exports: [JwtModule, AuditModule, JwtAuthGuard, RolesGuard, ScopeGuard, ScopeResolver],
+  // BindingCodeService 另供 UsersModule 的「解除 LINE 綁定」使用。
+  exports: [
+    JwtModule,
+    AuditModule,
+    JwtAuthGuard,
+    RolesGuard,
+    ScopeGuard,
+    ScopeResolver,
+    BindingCodeService,
+  ],
 })
 export class AuthModule {}

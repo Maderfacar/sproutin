@@ -2,7 +2,9 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -15,6 +17,7 @@ import type { Role } from '@sproutin/db';
 import { JwtAuthGuard, AuthedRequest } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { BindingCodeService } from '../auth/binding-code.service';
 import { UsersService, UserView } from './users.service';
 
 const ROLE_VALUES = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'] as const;
@@ -38,7 +41,10 @@ const updateUserSchema = z
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(
+    private readonly users: UsersService,
+    private readonly bindingCodes: BindingCodeService,
+  ) {}
 
   @Get()
   @Roles('OWNER', 'ADMIN')
@@ -69,5 +75,14 @@ export class UsersController {
       throw new BadRequestException('invalid_input');
     }
     return this.users.update(req.user!, id, parsed.data);
+  }
+
+  // DELETE /users/:id/line — 解除 LINE 綁定（換手機、綁錯人、家長換 LINE 帳號的救援出口）。
+  // 解綁後該帳號回到「未綁定」，園所可重新發碼；**帳號本身不刪除**。
+  @Delete(':id/line')
+  @Roles('OWNER', 'ADMIN')
+  @HttpCode(204)
+  async unbindLine(@Req() req: AuthedRequest, @Param('id') id: string): Promise<void> {
+    return this.bindingCodes.unbind(req.user!, id);
   }
 }

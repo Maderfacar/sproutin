@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { usePublicConfig } from '../../lib/queries';
 import { BrandingProvider } from '../../lib/branding';
 import { SessionProvider } from '../../lib/session';
-import { PreviewProvider } from '../../lib/preview';
 import { AppShell } from '../../components/AppShell';
 import { StatusScreen } from '../../components/StatusScreen';
 
@@ -20,12 +19,10 @@ export default function LiffLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <PreviewProvider>
-      <BrandingProvider config={config}>
-        <SessionProvider liffId={config.liffId}>
-          <AppShell>{children}</AppShell>
-        </SessionProvider>
-      </BrandingProvider>
-    </PreviewProvider>
+    <BrandingProvider config={config}>
+      <SessionProvider liffId={config.liffId}>
+        <AppShell>{children}</AppShell>
+      </SessionProvider>
+    </BrandingProvider>
   );
 }

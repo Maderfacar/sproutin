@@ -53,16 +53,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </div>
 
-        {branding.bannerUrl && (
-          <div className="mx-auto max-w-2xl px-5 pb-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={branding.bannerUrl}
-              alt=""
-              className="h-32 w-full rounded-card object-cover shadow-soft"
-            />
-          </div>
-        )}
+        {/* 封面圖不在此處 —— 只出現在首頁，且是完整的 hero（見 features/home/HomeHero）。
+            Human Owner 決策 2026-08-17：每頁都掛一條橫帶會稀釋它，園所的門面應該只講一次、講得夠大。 */}
       </header>
 
       <main className="mx-auto max-w-2xl px-5 pb-28 pt-7">{children}</main>

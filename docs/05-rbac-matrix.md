@@ -32,6 +32,7 @@
 | Announcement | CRUD | CRUD | Create(班級) | – | R |
 | Notification | R(自己) | R(自己) | R(自己) | R(自己) | R(自己) |
 | **AuditLog** | **R** | R(受限) | – | – | – |
+| **BindingCode**（發碼/作廢/解綁） | **CRUD** | **CRUD** | – | – | – |
 
 > 修正 A：Leave 的「審核」權限僅在 `leaveRequiresApproval=true` 時有意義；為 false 時申請即自動 APPROVED，無審核步驟。
 >
@@ -40,6 +41,8 @@
 > **新增（2026-08-17, 階段2 刀4）**：`CommunicationBook`（每日聯絡簿）比照 `Attendance` —— 老師填自班、行政全校、園長唯讀、家長只讀自己小孩。兩點差異：
 > ① **家長只看得到已送出的紀錄**（`publishedAt` 非 null），否則會看到老師填到一半的半成品；
 > ② **老師只能填寫/修改近 7 天**（`book_edit_window_expired`），避免事後改寫已交付家長的紀錄；家長端可回溯查閱全部歷史。
+>
+> **新增（2026-08-17, 階段3）**：`BindingCode` 限 `OWNER/ADMIN` —— 發碼等同「把人放進系統」的開門權，不下放給老師。兌換端 `POST /auth/line/bind` 無需認證（本來就還沒有身分），安全性由碼本身的熵、期限與一次性保證。
 >
 > 入口變更：**「訊息」卡片已併入「聯絡簿」**（Human Owner 決策 A）。Message 的權限與 API 不變，只是不再是獨立入口；聯絡簿卡片因此納入 `ADMIN`，行政人員才不會失去訊息的閱讀入口。
 

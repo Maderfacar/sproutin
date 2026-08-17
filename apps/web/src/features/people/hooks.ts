@@ -67,6 +67,58 @@ export function useRemoveTeacherAssignment() {
   );
 }
 
+// --- LINE 綁定碼（階段3）---
+// 後台建立的帳號本人無法登入，直到綁定碼把「園所帳號」與「本人的 LINE」接起來。
+
+export interface BindingCodeView {
+  id: string;
+  code: string; // 已格式化為 XXXX-XXXX
+  userId: string;
+  userDisplayName: string;
+  expiresAt: string;
+  usedAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+}
+
+export function useBindingCodes(): UseQueryResult<BindingCodeView[]> {
+  return useQuery({
+    queryKey: ['bindingCodes'],
+    queryFn: () => apiGet<BindingCodeView[]>('/api/binding-codes'),
+  });
+}
+
+// 發碼 / 作廢 / 解綁後：碼清單與人員清單都要重取
+// （人員清單帶著「是否已綁 LINE」，解綁後那個標記必須跟著變）。
+function useBindingMutation<TVariables>(mutationFn: (vars: TVariables) => Promise<unknown>) {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, Error, TVariables>({
+    mutationFn,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['bindingCodes'] });
+      void queryClient.invalidateQueries({ queryKey: ['people'] });
+    },
+  });
+}
+
+export function useIssueBindingCode() {
+  return useBindingMutation<{ userId: string }>((body) =>
+    apiSend<BindingCodeView>('/api/binding-codes', 'POST', body),
+  );
+}
+
+export function useRevokeBindingCode() {
+  return useBindingMutation<{ id: string }>(({ id }) =>
+    apiSend<void>(`/api/binding-codes/${id}`, 'DELETE'),
+  );
+}
+
+export function useUnbindLine() {
+  return useBindingMutation<{ userId: string }>(({ userId }) =>
+    apiSend<void>(`/api/users/${userId}/line`, 'DELETE'),
+  );
+}
+
 export const RELATION_LABEL: Record<GuardianRelation, string> = {
   FATHER: '父親',
   MOTHER: '母親',
@@ -90,6 +142,14 @@ export function peopleErrorMessage(error: unknown, fallback: string): string {
       return '找不到這個班級。';
     case 'user_not_found':
       return '找不到這個帳號。';
+    case 'user_already_bound':
+      return '這個帳號已經綁定過 LINE 了。若要換人或換手機，請先解除綁定。';
+    case 'user_inactive':
+      return '這個帳號已停用，請先啟用後再發綁定碼。';
+    case 'line_identity_not_found':
+      return '這個帳號目前沒有綁定 LINE，不需要解除。';
+    case 'binding_code_not_found':
+      return '找不到這組綁定碼，可能已經被作廢了。';
     default:
       return fallback;
   }

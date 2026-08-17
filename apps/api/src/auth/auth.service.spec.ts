@@ -9,7 +9,11 @@ type PrismaMock = {
   user: { findUnique: jest.Mock };
 };
 
-function makeService(prisma: PrismaMock, verifyResult: LineIdTokenPayload | Error) {
+function makeService(
+  prisma: PrismaMock,
+  verifyResult: LineIdTokenPayload | Error,
+  redeem: jest.Mock = jest.fn(),
+) {
   const jwt = new JwtService({ secret: 'test-secret', signOptions: { expiresIn: '1h' } });
   const verifier: Pick<LineVerifier, 'verify'> = {
     verify: jest.fn(async () => {
@@ -17,9 +21,16 @@ function makeService(prisma: PrismaMock, verifyResult: LineIdTokenPayload | Erro
       return verifyResult;
     }),
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = new AuthService(prisma as any, jwt, verifier as LineVerifier);
-  return { service, jwt };
+  const bindingCodes = { redeem };
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const service = new AuthService(
+    prisma as any,
+    jwt,
+    verifier as LineVerifier,
+    bindingCodes as any,
+  );
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  return { service, jwt, redeem };
 }
 
 const seededIdentity = {
@@ -81,6 +92,47 @@ describe('AuthService', () => {
 
     await expect(service.loginWithLine('bad')).rejects.toBeInstanceOf(UnauthorizedException);
     expect(prisma.lineIdentity.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('綁定：驗證 LINE token → 兌換綁定碼 → 直接簽發 JWT（不需先登入）', async () => {
+    const prisma: PrismaMock = {
+      lineIdentity: { findUnique: jest.fn() },
+      user: {
+        findUnique: jest.fn(async () => ({
+          id: 'user-parent',
+          displayName: '張媽媽',
+          roles: [{ role: 'PARENT', scopeType: 'SCHOOL', scopeId: null }],
+        })),
+      },
+    };
+    const redeem = jest.fn(async () => 'user-parent');
+    const { service, jwt } = makeService(
+      prisma,
+      { sub: 'Unew_line_user', aud: '2011106015', exp: 9999999999 },
+      redeem,
+    );
+
+    const result = await service.bindWithLine('fake-id-token', 'ABCD-2345');
+
+    // 兌換時帶的是「經 LINE 驗證過的」sub，不是前端自稱的值。
+    expect(redeem).toHaveBeenCalledWith('ABCD-2345', 'Unew_line_user');
+    expect(result.user.id).toBe('user-parent');
+    const decoded = await jwt.verifyAsync(result.accessToken);
+    expect(decoded.sub).toBe('user-parent');
+  });
+
+  it('綁定：LINE token 無效 → 不會去兌換碼', async () => {
+    const prisma: PrismaMock = {
+      lineIdentity: { findUnique: jest.fn() },
+      user: { findUnique: jest.fn() },
+    };
+    const redeem = jest.fn();
+    const { service } = makeService(prisma, new UnauthorizedException('line_token_invalid'), redeem);
+
+    await expect(service.bindWithLine('bad', 'ABCD-2345')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(redeem).not.toHaveBeenCalled();
   });
 
   it('me：以 userId 取回 user + roles', async () => {

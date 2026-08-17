@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { AdminStudentView, ClassView, GuardianRelation, UserView } from '../../lib/types';
 import { apiErrorMessage } from '../../lib/api';
 import { ROLE_LABEL } from '../../lib/roleLabels';
-import { Icon } from '../../components/Icon';
+import { BindingSection } from './BindingSection';
 import {
   RELATION_LABEL,
   peopleErrorMessage,
@@ -238,13 +238,9 @@ export function PersonEditor({ person, classes, students, onClose }: PersonEdito
         <p className="mt-1 text-sm text-ink">
           {person.roles.map((r) => ROLE_LABEL[r.role] ?? r.role).join(' · ') || '未指定'}
         </p>
-        {!person.hasLineLinked && (
-          <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-ink-soft">
-            <Icon name="shield" className="mt-0.5 h-4 w-4 shrink-0" />
-            尚未綁定 LINE：本人還無法登入使用。綁定機制規劃中，demo 階段以既有帳號示範。
-          </p>
-        )}
       </div>
+
+      <BindingSection person={person} />
 
       {error && (
         <p className="text-sm text-red-700">{peopleErrorMessage(error, apiErrorMessage(error))}</p>

@@ -19,6 +19,7 @@
 | Attendance | **混合** | `source=MANUAL`→SoT；`source=LEAVE_EVENT`→Derived。override 後所有權轉 MANUAL（ADR-002） |
 | Message, MessageRead, Announcement | **SoT** | |
 | CommunicationBookEntry | **SoT** | 老師記錄的當日觀察（每生每日一筆）。出缺勤/請假/親師對話**不複製**進本表 |
+| BindingCode | **SoT** | 園所簽發的一次性憑證，把「園所帳號」接上「本人的 LINE」（見 docs/07 §4g） |
 | Notification | **Derived** | 由事件產生 |
 | AuditLog | **SoT (append-only)** | 只增不改不刪 |
 | OutboxEvent | 基礎設施 | 事件可靠交付 |
@@ -252,6 +253,21 @@ model CommunicationBookEntry {
   updatedAt   DateTime        @updatedAt
   @@unique([studentId, date])
   @@index([date])
+}
+
+// ---------- LINE 綁定碼（SoT；Phase 9 階段3；規則見 docs/07 §4g）----------
+model BindingCode {
+  id               String    @id @default(cuid())
+  code             String    @unique  // 8 碼，顯示為 XXXX-XXXX；字母表排除易混淆字元
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  expiresAt        DateTime
+  usedAt           DateTime?           // 用過即失效
+  usedByLineUserId String?             // 稽核用：實際是哪個 LINE 帳號用掉的
+  revokedAt        DateTime?           // 園所主動作廢（保留紀錄，不刪除）
+  createdBy        String
+  createdAt        DateTime  @default(now())
+  @@index([userId])
 }
 
 // ---------- Transactional Outbox（事件可靠交付，§4）----------

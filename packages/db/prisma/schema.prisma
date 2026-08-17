@@ -80,7 +80,33 @@ model User {
   roles        UserRole[]
   guardianOf   Guardianship[]
   teaching     TeacherAssignment[]
+  bindingCodes BindingCode[]
   createdAt    DateTime            @default(now())
+}
+
+// ---------- LINE 綁定碼（SoT；Phase 9 階段3）----------
+// 為什麼需要：園所後台建立的帳號只是「園所世界」的一筆資料，LINE 登入拿到的只是一串匿名
+// userId，兩者之間沒有任何線索可自動對應（LINE 暱稱不可信、也不保證與真名有關）。
+// 綁定碼＝園所簽發、由本人輸入一次的憑證，把這兩邊接起來；一個人一輩子只需做一次。
+//
+// 安全設計：
+//   - code 為 8 碼（排除易混淆字元的 32 字母表 → 約 1.1×10^12 組合），單靠猜測不可行。
+//   - 有期限（expiresAt）且用過即失效（usedAt），外流的紙本不會永久有效。
+//   - 一組碼只綁一個 User；一個 LINE 帳號只能綁一個 User（LineIdentity.lineUserId 已 @unique）。
+//   - 作廢＝revokedAt（保留紀錄供稽核，不刪除）。
+model BindingCode {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  userId           String // 這組碼要綁給誰
+  user             User      @relation(fields: [userId], references: [id])
+  expiresAt        DateTime
+  usedAt           DateTime?
+  usedByLineUserId String? // 稽核用：實際是哪個 LINE 帳號用掉的
+  revokedAt        DateTime? // 園所主動作廢（例如碼發錯人）
+  createdBy        String
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model LineIdentity {
