@@ -29,6 +29,17 @@ export class LinePushClient {
   // 推一則純文字給某 LINE user（to = LINE userId）。
   // 失敗（非 2xx）→ 丟出，交由 BullMQ 重試（best-effort，Human Owner 決策）。
   async push(to: string, text: string): Promise<void> {
+    await this.send(to, { type: 'text', text });
+  }
+
+  // 推一則 Flex 卡片（群發與公告推播用）。
+  // altText 是通知列與不支援 Flex 的環境所顯示的文字，**必須自成完整訊息**。
+  // 一次 push 最多 5 個訊息物件（已查證），我們固定送 1 個。
+  async pushFlex(to: string, altText: string, contents: Record<string, unknown>): Promise<void> {
+    await this.send(to, { type: 'flex', altText, contents });
+  }
+
+  private async send(to: string, message: Record<string, unknown>): Promise<void> {
     if (!this.token) {
       this.logger.warn('LINE_MESSAGING_CHANNEL_ACCESS_TOKEN 未設定 → 略過 LINE 推播');
       return;
@@ -39,7 +50,7 @@ export class LinePushClient {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.token}`,
       },
-      body: JSON.stringify({ to, messages: [{ type: 'text', text }] }),
+      body: JSON.stringify({ to, messages: [message] }),
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');

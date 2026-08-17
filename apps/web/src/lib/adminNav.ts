@@ -21,6 +21,8 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
   if (flags.canManageSchool) {
     schoolItems.push({ href: '/admin/people', label: '人員與綁定', icon: 'user' });
     schoolItems.push({ href: '/admin/roles', label: '權限設定', icon: 'shield' });
+    // 群發只有園長／行政能用（花錢且不可收回，不下放給老師）。
+    schoolItems.push({ href: '/admin/messages', label: '發送訊息', icon: 'mega' });
   }
 
   const sections: AdminNavSection[] = [{ title: '園務', items: schoolItems }];

@@ -9,6 +9,15 @@ import type {
 import { PrismaService } from '../core/prisma/prisma.service';
 import { RecipientsService } from './recipients.service';
 import { LinePushClient, LinePushError } from './line-push.client';
+import { buildAnnouncementFlex } from './flex-message';
+
+// 一次送信的結果。transientError 非 null 代表「有收件人因暫時性原因沒送成功」——
+// 由呼叫端決定要不要丟出讓 BullMQ 重試（站內事件重試;群發不重試，見各呼叫處說明）。
+export interface DeliveryOutcome {
+  sent: number;
+  skipped: number;
+  transientError: unknown;
+}
 
 // LINE 推播（Step 5，best-effort + BullMQ 重試）。**只推重點事件**（Human Owner 決策）：
 //   LeaveApproved / LeaveRejected → 通知家長;MessageSent → 通知家長+老師（排除發訊者）;
@@ -56,7 +65,9 @@ export class PushNotificationService {
     await this.sendTo(userIds, text);
   }
 
-  // 公告推播：文字帶公告標題（家長不必開 App 就知道是什麼事）。
+  // 公告推播：**Flex 卡片**（園名 + 標題 + 「查看公告」按鈕；Human Owner 拍板 2026-08-17
+  // 由純文字升級）。內文刻意不放進卡片 —— 公告可能很長，塞進卡片會被截掉，
+  // 不如讓家長點按鈕進 App 看全文。altText 沿用升級前那句，通知列上看到的內容不變差。
   // 對象與站內通知一致——全校公告→全體;班級公告→該班老師 + 該班學生家長。
   // 公告已刪除（查無標題）→ 不推，避免推出空洞訊息。
   private async pushAnnouncement(payload: AnnouncementPublishedPayload): Promise<void> {
@@ -67,13 +78,27 @@ export class PushNotificationService {
     if (!announcement) {
       return;
     }
-    const scopeLabel = payload.classId ? '班級公告' : '全校公告';
-    const text = `【${scopeLabel}】${announcement.title}`;
+    const config = await this.prisma.schoolConfig.findFirst({
+      select: { brandName: true, liffId: true },
+    });
+    const flex = buildAnnouncementFlex({
+      scopeLabel: payload.classId ? '班級公告' : '全校公告',
+      title: announcement.title,
+      brandName: config?.brandName ?? '',
+      // liffId 沒設定 → 卡片就不放按鈕（點了會開到錯的地方比沒有按鈕更糟）。
+      url: config?.liffId ? `https://liff.line.me/${config.liffId}/announcement` : null,
+    });
 
     const userIds = payload.classId
       ? await this.recipients.forClass(this.prisma, payload.classId)
       : await this.recipients.allUsers(this.prisma);
-    await this.sendTo(userIds, text);
+    const lineUserIds = await this.lineIdsFor(userIds);
+    const outcome = await this.deliver(lineUserIds, (to) =>
+      this.client.pushFlex(to, flex.altText, flex.contents),
+    );
+    if (outcome.transientError) {
+      throw outcome.transientError;
+    }
   }
 
   // 每日聯絡簿送出：**只推老師明確勾選的學生**（pushStudentIds），其餘只留站內通知。
@@ -91,31 +116,53 @@ export class PushNotificationService {
     }
   }
 
+  // 群發用：直接對已知的 LINE userId 送 Flex 卡片，**回傳結果而不丟出**。
+  // 呼叫端（push-campaign-event.handler）自己決定要不要重試 —— 群發重試等於重複收費
+  // 且家長會收到兩則，因此那邊選擇「記下實際結果 + 標為失敗」而不是自動重送。
+  async sendFlexToLineIds(
+    lineUserIds: string[],
+    flex: { altText: string; contents: Record<string, unknown> },
+  ): Promise<DeliveryOutcome> {
+    return this.deliver(lineUserIds, (to) => this.client.pushFlex(to, flex.altText, flex.contents));
+  }
+
+  private async sendTo(userIds: string[], text: string): Promise<void> {
+    const lineUserIds = await this.lineIdsFor(userIds);
+    const outcome = await this.deliver(lineUserIds, (to) => this.client.push(to, text));
+    if (outcome.transientError) {
+      throw outcome.transientError;
+    }
+  }
+
   // 逐一推播，**單一收件人失敗不得拖垮其他人**（2026-08-17 線上教訓：
   // demo 種子帶假 LINE ID，LINE 回 400 'to' is invalid，原本的迴圈在第一個假 ID 就中斷，
   // 排在後面的真實收件人永遠收不到，且每次重試都卡在同一處）。
   //   4xx＝這個收件人永遠不會成功（無效 ID / 封鎖 OA）→ 記錄後跳過，不重試。
-  //   5xx / 網路＝暫時性 → 迴圈結束後丟出，交由 BullMQ 重試整個 job（at-least-once：
-  //   已成功者可能收到重複訊息，取捨上優於整批漏發）。
-  private async sendTo(userIds: string[], text: string): Promise<void> {
-    const lineUserIds = await this.lineIdsFor(userIds);
+  //   5xx / 網路＝暫時性 → 迴圈跑完才回報,由呼叫端決定是否重試。
+  // **唯一一份送信迴圈**：這個坑踩過兩次，不再散落多份實作。
+  private async deliver(
+    lineUserIds: string[],
+    send: (to: string) => Promise<void>,
+  ): Promise<DeliveryOutcome> {
+    let sent = 0;
+    let skipped = 0;
     let transientError: unknown = null;
 
     for (const to of lineUserIds) {
       try {
-        await this.client.push(to, text);
+        await send(to);
+        sent += 1;
       } catch (error: unknown) {
         if (error instanceof LinePushError && error.status >= 400 && error.status < 500) {
           this.logger.warn(`略過收件人（LINE 拒絕，HTTP ${error.status}）：${error.body}`);
+          skipped += 1;
           continue;
         }
         transientError = error;
       }
     }
 
-    if (transientError) {
-      throw transientError;
-    }
+    return { sent, skipped, transientError };
   }
 
   // 取學生姓名供推播文字使用;查無（極少數,如已刪除）→ 回退「學生」。

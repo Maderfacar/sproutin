@@ -30,6 +30,12 @@ export function adminEntries(flags: RoleFlags): AdminEntry[] {
         hint: '新增學生、調整班級',
       },
       {
+        href: '/admin/messages',
+        icon: 'mega',
+        label: '發送訊息',
+        hint: '做一張卡片送到家長的 LINE（送出後不可收回）',
+      },
+      {
         href: '/admin/appearance',
         icon: 'image',
         label: '園所外觀設計',

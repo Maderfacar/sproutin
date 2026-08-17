@@ -10,6 +10,7 @@ export const EventType = {
   AnnouncementPublished: 'AnnouncementPublished',
   AttendanceMarked: 'AttendanceMarked',
   CommunicationBookPublished: 'CommunicationBookPublished',
+  PushCampaignQueued: 'PushCampaignQueued',
 } as const;
 
 export type EventType = (typeof EventType)[keyof typeof EventType];
@@ -69,6 +70,13 @@ export interface CommunicationBookPublishedPayload {
   pushStudentIds: string[];
 }
 
+// 後台送出一次 LINE 群發（Phase 9 階段3）。payload **只帶 id**：內容已寫在 PushCampaign，
+// 塞進事件會變成同一份資料的第二個版本（改了一邊就不一致）。收件人也刻意不放進 payload
+// —— worker 送出時重新解析一次才是真相（建立與送出之間可能有人剛完成綁定）。
+export interface PushCampaignQueuedPayload {
+  campaignId: string;
+}
+
 export interface DomainEventMap {
   LeaveSubmitted: LeaveSubmittedPayload;
   LeaveApproved: LeaveApprovedPayload;
@@ -78,4 +86,5 @@ export interface DomainEventMap {
   AnnouncementPublished: AnnouncementPublishedPayload;
   AttendanceMarked: AttendanceMarkedPayload;
   CommunicationBookPublished: CommunicationBookPublishedPayload;
+  PushCampaignQueued: PushCampaignQueuedPayload;
 }

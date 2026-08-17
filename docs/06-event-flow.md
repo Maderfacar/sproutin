@@ -62,11 +62,22 @@ Parent → POST /leaves
 | `AnnouncementPublished` | Announcement | Notification, **LINE Push**（階段2 刀5） | — |
 | `AttendanceMarked` | Attendance | Notification(選配) | Report |
 | `CommunicationBookPublished` | CommunicationBook | Notification（全部送出者的家長）、**LINE Push（僅 `pushStudentIds`）**（階段2 刀4） | Health, Report |
+| `PushCampaignQueued` | PushCampaign | **LINE Push（Flex 卡片）**（階段3） | — |
 
 > `CommunicationBookPublished` 的推播刻意**不是全部收件人**：payload 帶 `studentIds`（本次送出）與
 > `pushStudentIds`（老師勾選要立即 LINE 通知者，通常是健康需注意的孩子）。日常記錄若全班推播，
 > 一班 25 人每天就是 25 則 LINE 訊息，費用與打擾都不成比例（Human Owner 決策 2026-08-17）。
 > 老師不必自行判斷「算不算緊急」——體溫偏高或有症狀者由系統於送出時自動挑出並詢問。
+
+> `PushCampaignQueued` 的 payload **只帶 campaignId**（內容已在 PushCampaign，複製進事件就有兩個版本），
+> 收件人也不放進 payload —— worker 送出時**重新解析一次**才是真相（建立與送出之間可能有人剛完成綁定）。
+>
+> **這個事件是唯一「handler 失敗不自動重試」的事件**（階段3，刻意）：其他事件重試最多讓一位家長
+> 收到重複訊息；群發一次是全校兩百則，自動重試等於再收一次費用、讓已收到的家長再收一次。
+> 因此 handler 把實際結果（送出／略過的則數 + 失敗原因）寫進 `PushCampaign` 並標 `FAILED`，
+> **不丟出**，由園長在後台看見「只送到 150 位」後自行決定是否重發。狀態、數字與原因都留下 →
+> 這不是沉默降級。同理，handler 看到 `status !== 'QUEUED'` 即視為重放並直接略過
+> （`resetStaleProcessing` 會在 worker 重啟時重放事件，而群發的 idempotency 比什麼都重要）。
 
 ## 5. Audit 可靠性（修正 C；ADR-005）
 

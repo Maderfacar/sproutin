@@ -144,6 +144,59 @@ enum RichMenuTemplate {
   TWO // 1×2 兩格
 }
 
+// ---------- LINE 群發（Flex Message；Phase 9 階段3）----------
+// **這張表存在的理由是「送出後無法收回」**：LINE 沒有提供撤回已送出推播的方法，因此每一次
+// 群發都必須留下「誰、在什麼時候、把什麼內容、發給了多少人」的帳。沒有帳的話出事時
+// 沒有人能回答家長「你們到底發了什麼給我」。
+//
+// 內容是**版型填空**（title/body/fields）而非自由 JSON —— 園所不寫 Flex JSON，
+// 設計骨架鎖在程式裡（同圖文選單的策略：填空題不是作文）。
+// status 刻意用自由字串（同 OutboxEvent）：日後增加狀態不需要 migration。
+model PushCampaign {
+  id       String               @id @default(cuid())
+  template PushCampaignTemplate
+  audience PushCampaignAudience
+  classId  String? // audience=CLASS 時的班級
+
+  title       String
+  body        String
+  imageUrl    String? // 選填一張圖（Vercel Blob；LINE 要求 https）
+  buttonLabel String? // 選填按鈕的文字
+  buttonUrl   String? // 按鈕連到哪（App 內頁的 LIFF 連結，或園所自填的 https 外部網址）
+  fields      Json    @default("{}") // 版型專屬的顯示用文字（活動的日期地點、繳費的金額期限）
+
+  // QUEUED（已排入，worker 尚未處理）→ SENDING → SENT / FAILED
+  status String @default("QUEUED")
+  // 失敗原因（給園長看得懂的一句話，例如「LINE 暫時無法連線」）。
+  // 沒有這欄的話後台只能顯示「失敗」，園長無從判斷要不要重發（同圖文選單的教訓：
+  // 把 LINE 的錯誤翻成看得懂的話，不要丟一個 INTERNAL_ERROR 出去）。
+  failureReason String?
+
+  // recipientCount = 建立當下算出的預估人數（給園長看的「會送出 N 則」）
+  // sentCount / skippedCount = worker 實際送出時的結果（重新解析一次收件人才是真相）
+  recipientCount Int @default(0)
+  sentCount      Int @default(0)
+  skippedCount   Int @default(0)
+
+  createdBy String
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  @@index([createdAt])
+}
+
+enum PushCampaignTemplate {
+  EVENT // 活動通知（日期地點 + 按鈕）
+  PAYMENT // 繳費提醒（金額期限；**僅提醒，系統不記帳**）
+  GENERAL // 一般通知
+}
+
+enum PushCampaignAudience {
+  ALL_PARENTS // 全校家長／監護人
+  CLASS // 指定班級的家長
+  STAFF // 教職員（園長／行政／老師／隨車老師）
+}
+
 model LineIdentity {
   id         String @id @default(cuid())
   lineUserId String @unique // 僅供認證；不得作為業務外鍵 (修正 D)

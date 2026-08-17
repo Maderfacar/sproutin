@@ -63,6 +63,8 @@ POST /auth/line/login
 | POST | `/announcements` | 發公告 → `AnnouncementPublished` | OWNER/ADMIN/TEACHER | ✔ |
 | GET | `/notifications` | 站內通知 | auth(自己) | – |
 | GET | `/audit-logs?resourceType=&resourceId=` | 稽核查詢（唯讀） | OWNER(/ADMIN 受限) | – |
+| **GET** | **`/push-campaigns/recipients`** | 送出前算「這次會送出幾則」 | OWNER/ADMIN | – |
+| **GET/POST** | **`/push-campaigns`** | LINE 群發：送出紀錄 / 排入一次群發 | OWNER/ADMIN | ✔(create) |
 | **GET** | **`/school/config`** | 園所設定（管理用完整值，可編輯欄位） | OWNER/ADMIN | – |
 | **PATCH** | **`/school/config`** | 更新園所外觀 / 功能卡片 / 請假是否審核（局部更新） | OWNER/ADMIN | ✔ |
 
@@ -312,6 +314,72 @@ POST   /rich-menus/:audience/apply    → { audience, linkedUsers, appliedAt }�
 - 每格連到帶路徑的 LIFF URL：`https://liff.line.me/{liffId}/{path}`
   （LIFF SDK 以 `liff.state` 轉址到 Endpoint URL + 該路徑）。
 - **前提**：每園需有自己的 OA 與 channel token。目前共用 demo OA（Human Owner 確認為內部測試用）。
+
+## 4j. 後台的 LINE 群發（Flex Message；Phase 9 階段3）
+
+```text
+GET  /push-campaigns/recipients?audience=&classId=   → { willReceive, unbound }
+GET  /push-campaigns                                 → CampaignView[]（近 50 筆，新到舊）
+POST /push-campaigns
+     { template, audience, classId?, title, body?, imageUrl?, fields?,
+       button?: { label, page? | url? } }             → CampaignView（status=QUEUED）
+稽核：push_campaign.create（metadata 只記版型／對象／人數，**不記標題與內文**）
+```
+
+全部 `OWNER/ADMIN` —— **老師不得群發**。理由不是層級而是後果：會產生費用，且送出後無法收回。
+
+**送出的路徑**：`POST` 只在同一交易寫 `PushCampaign` + `OutboxEvent(PushCampaignQueued)` + `AuditLog`，
+真正送到 LINE 由 **worker** 完成（同公告的路）。三個理由：① 全校兩百則不該卡住園長的畫面；
+② 失敗可控管而不是讓園長重按（重按＝重複收費 + 家長收到兩則）；③ 送信迴圈已在 worker 側，
+連帶繼承「**單一收件人失敗不拖垮整批**」那套處理（該坑踩過兩次，不再複製第三份實作）。
+
+**版型與欄位**（模板式填空，園所不寫 Flex JSON）：
+
+| 版型 | 專屬欄位 | 說明 |
+|---|---|---|
+| `EVENT` 活動通知 | `eventDate` / `eventPlace` | 排成卡片上的兩行 |
+| `PAYMENT` 繳費提醒 | `amount` / `dueDate` | 卡片標「繳費提醒」；**系統不記帳、不對帳、不自動追繳** |
+| `GENERAL` 一般通知 | — | 只有標題與內文 |
+
+- **欄位值一律是「顯示用文字」**（Human Owner 定案）：`eventDate` 不是 DateTime、`amount` 不是數字。
+  園所寫「9/20（六）09:30」或「約 8,500 元（含餐費）」都應原樣顯示 —— 硬要結構化只會逼出假資料。
+  換版型時後端**只留該版型認得的欄位**，殘留的舊欄位不會跟著送出。
+- **收件範圍**：`ALL_PARENTS`（全校家長／監護人）｜`CLASS`（該班在學學生的家長，**不含該班老師**——
+  老師走 `STAFF`，否則勾一個班會意外多發給老師）｜`STAFF`（園長／行政／老師／隨車老師）。
+  一律排除**停用**的帳號。解析寫成不依賴 DI 的純函式（`push-campaigns/campaign-audience.ts`），
+  api 與 worker 各自呼叫 —— 避免 worker 的精簡 DI 圖去 import 業務模組（圖文選單踩過模組循環相依）。
+- **人數一定回兩個數字**：`willReceive`（已綁定 LINE、真的收得到）與 `unbound`（範圍內但收不到）。
+  只回一個會讓園長把「還沒綁定的人收不到」誤判成系統漏發。
+- **按鈕的目的地在建立當下解析成最終網址並存下**：App 內頁 → `https://liff.line.me/{liffId}/{path}`
+  （與圖文選單同一組目的地）；外部網址 → **限 `https://`**（Human Owner 定案「可外部」；
+  LINE 的 uri action 不吃 http，且 `javascript:` / `data:` 一旦放行就是把家長送到我們無法保證的地方）。
+  兩者只能給一個（同時給 → 400 `button_target_ambiguous`），不猜園長要哪一個。
+- **前端兩段式送出**：第一顆按鈕只是「準備送出」，把「會送出 N 則」與「無法收回」攤在眼前，
+  第二顆才真的送。比確認對話框好 —— 對話框會被習慣性按掉。改動內容會退回第一段。
+
+**LINE 的實際限制**（2026-08-17 查證）：
+
+| 項目 | 值 | 來源 |
+|---|---|---|
+| 一次 push 的訊息物件數 | **5**（我們用 1） | 官方文件（已查證） |
+| 定義一個 bubble 的 JSON | **≤10KB** | 官方文件（已查證） |
+| push / multicast 頻率 | 2,000 次/秒 | 官方文件（已查證） |
+| `altText` 字數上限 | **查不到** | → 自訂保守上限，一律截斷 |
+| Flex 內圖片的尺寸／容量規格 | **查不到** | → 只收 PNG/JPG、≤1MB |
+| multicast 一次幾人 / 部分無效的行為 | **查不到** | → **不用 multicast**，逐人 push |
+
+> 未查證到的數字**不寫進程式**：標題（60）／內文（500）／欄位值（60）／按鈕文字（20）／
+> altText（300）都是**我們自己訂的**保守上限，先截斷再送 —— 無論真上限是多少都不會超過，
+> 也讓 bubble 的 JSON 遠低於 10KB（有測試釘住）。multicast 的「部分無效時整批如何」查不到，
+> 而「單一收件人失敗不可拖垮整批」是硬規矩，因此不拿它賭。
+>
+> **沒有找到撤回已送出推播的方法** → 介面一律以「不可收回」為前提設計，且必須留帳。
+
+**公告推播同步升級為卡片**（Human Owner 拍板 2026-08-17）：`AnnouncementPublished` 的 LINE 推播
+由純文字改為 Flex（園名 + 標題 + 「查看公告」按鈕）。**內文不進卡片** —— 公告可能很長，
+塞進去會被截掉，不如讓家長點按鈕進 App 看全文。`altText` 沿用升級前那句
+（`【全校公告】標題`），通知列上看到的內容不因改版而變差。`liffId` 未設定 → 不放按鈕
+（點了會開到錯地方比沒有按鈕更糟）。卡片產生器（`events/flex-message.ts`）與群發共用同一支。
 
 ## 5. 驗證與授權
 

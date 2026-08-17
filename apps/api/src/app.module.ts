@@ -16,6 +16,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { RichMenuModule } from './rich-menu/rich-menu.module';
+import { PushCampaignsModule } from './push-campaigns/push-campaigns.module';
 import { AuditModule } from './core/audit/audit.module';
 import { AuditReadInterceptor } from './core/audit/audit-read.interceptor';
 import { AuditFailureInterceptor } from './core/audit/audit-failure.interceptor';
@@ -51,6 +52,7 @@ import { AllExceptionsFilter } from './core/http/all-exceptions.filter';
     NotificationsModule,
     AuditLogsModule,
     RichMenuModule,
+    PushCampaignsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

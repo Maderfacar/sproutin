@@ -25,13 +25,19 @@ const ALLOWED: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
 };
-const KINDS = new Set(['logo', 'banner', 'richmenu']);
+const KINDS = new Set(['logo', 'banner', 'richmenu', 'campaign']);
 
 // LINE 圖文選單底圖另有更嚴格的限制（查證自 LINE Messaging API reference）：
 // 只收 JPEG/PNG（不收 WebP）、檔案 ≤1MB、寬 800–2500、寬/高 ≥1.45。
 // 這裡先擋格式與大小 —— 尺寸要讀圖才知道，交給前端預檢與套用時的後端驗證。
 const RICH_MENU_MAX_BYTES = 1024 * 1024;
 const RICH_MENU_TYPES = new Set(['image/png', 'image/jpeg']);
+
+// 群發卡片的圖（Flex Message 的 hero）。LINE 對 Flex 內圖片的規格**未查證到官方數字**，
+// 因此故意訂得保守：只收 JPEG/PNG、≤1MB —— 無論真正的限制是多少都不會超過，
+// 而卡片上那張圖本來也不需要更大（放大只會讓家長多花流量）。
+const CAMPAIGN_MAX_BYTES = 1024 * 1024;
+const CAMPAIGN_TYPES = new Set(['image/png', 'image/jpeg']);
 
 function fail(status: number, code: string): NextResponse {
   return NextResponse.json({ success: false, error: { code, message: code } }, { status });
@@ -85,6 +91,14 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
     if (file.size > RICH_MENU_MAX_BYTES) {
       return fail(400, 'rich_menu_image_too_large');
+    }
+  }
+  if (kind === 'campaign') {
+    if (!CAMPAIGN_TYPES.has(file.type)) {
+      return fail(400, 'campaign_image_format');
+    }
+    if (file.size > CAMPAIGN_MAX_BYTES) {
+      return fail(400, 'campaign_image_too_large');
     }
   }
 

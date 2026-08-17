@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-17（**階段3 ① 桌面後台骨架 + ②b 人員權限設定 ✅ ACCEPTED**——LINE Login 網頁版 OAuth、`/admin/*` 桌面外框、桌面版綁定畫面、身分增減 + 權限總覽頁，另修好返回鍵。綁定碼仍待線上驗收。下一步 ② 管理首頁。）
+> Last updated: 2026-08-17（**Flex Message 群發 IMPLEMENTED，待線上驗收**——`/admin/messages` 版型填空 + 收件範圍 + 送出前顯示則數 + 兩段式送出 + 送出紀錄；公告推播同步升級為卡片；migration 0008。§D 三題已定案：核准、按鈕可連外部網址、繳費提醒版型保留。下一步 ⑤ 打磨。）
 
 ---
 
@@ -67,9 +67,12 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 ## Current Task
 
 **Phase 9 階段3 ① 骨架 + ②b 權限設定 + ② 管理首頁 + ④ 園所外觀設計（含 LINE 圖文選單套用）— 全數 ✅ ACCEPTED（2026-08-17）。**
-四項全綠：lint / typecheck / **測試 315（api 259 + shared 12 + web 43）** / build。
 **③ CSV 批次匯入由 Human Owner 暫停**（欄位需等功能完善才明確）。
-**新需求（2026-08-17）**：後台要有可以發送 **Flex Message** 的地方 → 先出設計提案。之後才做 ⑤ 打磨。
+
+**Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
+四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
+**§D 三題 Human Owner 定案**：① 提案核准（新 model + 三支端點）② 按鈕**可連外部網址**（我建議只給 App 內頁，他選外部 → 後端限 `https://`，前端明講風險由園所自負）③ **繳費提醒版型保留**（「不假裝自己是收費系統，就是提醒；欄位標籤寫清楚是顯示用文字」）。
+下一步 ⑤ 打磨（走查全站細節）。
 
 ### 骨架定案（Human Owner 拍板 2026-08-17）
 
@@ -296,9 +299,15 @@ NOW（阻塞中）
   → 按「套用到 LINE」會回報「系統還沒設定 LINE 的權杖」。填完 Render 自動重啟即可。
   render.yaml 已加註提醒，開通新園所時兩邊都要填。
 
-NOW
-- **線上驗收 ② 管理首頁**：用電腦開 `/admin`，確認四個數字與待辦清單正確、每個入口點得進去，
-  且從入口進到手機版頁面後按返回會回到後台。
+NOW（Flex Message 群發，部署完成後 —— Render 會自動套用 migration 0008）
+- ① 用電腦開 `/admin/messages` → 版型選「一般通知」→ 填標題與內文 → 右側卡片預覽應同步變化。
+- ② 收件範圍選「教職員」（人少、安全）→ 下方應顯示「N 位收得到」，若有未綁定的人會一起說。
+- ③ 按「準備送出」→ 應出現「這次會送出 N 則」與「送出後無法收回」，**這時還沒送**
+  → 按「確定送出 N 則」→ 你自己的 LINE 應收到一張卡片（園名 + 標題 + 內文）。
+- ④ 回頁面下方「送出紀錄」→ 應看到剛才那筆，寫著送出幾則（略過的會說明原因）。
+- ⑤ 試「連到外部網址」：貼一個 `http://` 開頭的網址 → 按鈕應該按不下去（限 https）。
+- ⑥ 順便驗公告升級：發一則全校公告 → 家長的 LINE 應收到**卡片**（不再是純文字），
+  點「查看公告」要能開到公告頁。
 - （仍掛著）**線上驗收 LINE 綁定碼**：需要兩個 LINE 帳號，步驟見上方。
 
 （已完成，保留紀錄）驗收刀 4 的步驟 —— 部署完成後（Render 會自動套用 migration 0005）：
@@ -349,7 +358,12 @@ LATER（正式上線前）
                           **Human Owner 定調：圖文選單併入園所外觀，一頁四段**（選單/品牌/卡片/請假）。
                           限制數字已逐項查證（見 docs/07 §4i）。**連「套用到 LINE」一起做**
                           —— Human Owner 說明目前 OA 只有內部人員測試，沒有真實使用者會被影響。
-  ⑤ 打磨（走查全站細節）→ **一定放最後**，否則新做的頁面又要再打磨一次。
+  ⑥ Flex Message 群發    → ✅ IMPLEMENTED（2026-08-17，待線上驗收）。§D 三題已定案。
+                          `/admin/messages`：三種版型填空（活動／繳費／一般）、收件範圍
+                          （全校家長／指定班級／教職員）、手機卡片預覽、**送出前顯示會送出幾則 +
+                          明講不可收回**、送出紀錄。公告推播同步升級為 Flex 卡片。
+                          只有 OWNER/ADMIN（老師不得群發：花錢且不可收回）。
+  ⑤ 打磨（走查全站細節）→ **一定放最後**，否則新做的頁面又要再打磨一次。**下一步就是這個。**
 
 （歷史候選方向，保留紀錄）
 
@@ -472,13 +486,18 @@ Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待�
 ## Latest Accepted Commit
 
 ```text
-Phase 9 階段3 ② 管理首頁 + ④ 園所外觀設計（含 LINE 圖文選單）— ✅ ACCEPTED（2026-08-17, Human Owner）
+Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）
+  `/admin/messages`（版型填空 + 收件範圍 + 兩段式送出 + 送出紀錄）、公告推播升級為卡片、
+  migration 0008_push_campaign。測試 364 全綠 + lint / typecheck / build 全綠。
+  §D 三題已定案（核准 / 可連外部網址 / 繳費提醒保留）。
+Next: ⑤ 打磨（走查全站細節）—— 功能做完才打磨，這是最後一步。
+
+（前一項）Phase 9 階段3 ② 管理首頁 + ④ 園所外觀設計（含 LINE 圖文選單）— ✅ ACCEPTED（2026-08-17, Human Owner）
   commit ccb80aa（管理首頁）、eca3da2（外觀設計 + 圖文選單）、0555506 / 157cfa6 / 5534051（三次修正）。
   線上實測：選單已套用到 LINE、點擊各格可直接開到對應頁面。
   過程修掉的三個問題：① 底圖尺寸必須等於選單尺寸（改為看圖說話）② 批次綁定遇假 ID 整批失敗
   （改為逐一補綁）③ public-config 沉默降級害錯誤訊息謊報成「liffId 未設定」+ liff.state 沒人處理
   導致選單每格只開到首頁。
-Next: 後台發送 Flex Message（新需求）→ 先設計提案;之後 ⑤ 打磨。
 
 （前一項）Phase 9 階段3 ① 桌面版專屬後台骨架 + ②b 人員權限設定 — ✅ ACCEPTED（2026-08-17, Human Owner）
   commit cb4c7cc（骨架）+ 5ec811b（權限設定 + 返回鍵）;CI run 32004830401 / 32006276290 全綠。
@@ -505,6 +524,83 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-17 — 📣 **Flex Message 群發（IMPLEMENTED，待線上驗收）**
+
+**這一頁在回答什麼**：園所想跟全校家長說一件事時，現在得自己在 LINE 打字（或發公告等家長點進來）。
+群發把它變成「選版型 → 填空 → 確認人數 → 送出」，而且送出去的是一張卡片而非一段文字。
+
+**設計的主軸只有一句：送出後無法收回。** 我在官方文件找不到撤回已送出推播的方法，
+因此整個設計都從這件事推導：
+
+```text
+① 兩段式送出——第一顆按鈕只是「準備送出」，把「這次會送出 12 則」與「無法收回」攤在眼前，
+   第二顆才真的送。刻意不用確認對話框：對話框會被習慣性按掉。改動內容會退回第一段
+   （避免看著舊的則數按下確定）。
+② 人數一定給兩個數字——「12 位收得到、另有 3 位還沒綁定 LINE（收不到）」。
+   只給一個數字，園長會把「沒綁定的人收不到」誤判成系統漏發。
+③ 留帳（PushCampaign 這張表存在的唯一理由）——誰、何時、發了什麼、給幾個人、結果如何。
+   沒有帳的話，家長問「你們到底發了什麼給我」時沒有人回答得出來。
+④ 失敗不自動重試——這是本專案第一個「handler 失敗不丟出」的事件（見下）。
+```
+
+**為什麼群發的失敗處理與其他事件相反**
+```text
+其他事件（請假核准、聯絡簿）重試最多讓一位家長收到重複訊息 → 重試划算。
+群發一次是全校兩百則：自動重試＝再收一次費用 + 已收到的家長再收一次。
+因此 handler 把實際結果（送出/略過則數 + 失敗原因）寫進 PushCampaign 並標 FAILED，**不丟出**，
+讓園長在後台看到「只送到 150 位」後自己決定要不要重發。狀態、數字、原因都寫下來且顯示
+→ 這不是沉默降級。同理，看到 status ≠ QUEUED 就當成重放直接略過（worker 重啟時
+resetStaleProcessing 會重放事件，而群發重放一次就是全校再收一則）。
+卡在 SENDING 的（上一輪送到一半進程掛掉）會在重放時改標 FAILED 並老實說「無法確認送出幾則」
+—— 永遠顯示「正在送出」比承認不知道更糟。
+```
+
+**先查證再動工（不憑印象編數字）**
+```text
+查到的：一次 push 最多 5 個訊息物件（我們用 1）｜定義一個 bubble 的 JSON ≤10KB｜頻率 2000 次/秒
+查不到的：altText 字數上限、Flex 內圖片的規格、multicast 一次幾人與部分無效時的行為
+→ 因此不依賴未知數：標題/內文/欄位/按鈕文字/altText 全部先用**我們自己訂的**保守上限截斷
+  （有測試釘住 bubble JSON < 10KB）；圖片只收 PNG/JPG ≤1MB；
+  **不用 multicast**——部分失敗行為查不到，而「單一收件人失敗不可拖垮整批」是踩過兩次的硬規矩。
+出處：LINE Messaging API 官方文件（2026-08-17 逐項查證）
+```
+
+**Human Owner 的兩個定案，與我的建議不同的地方**
+```text
+按鈕的目的地：我建議只給 App 內頁（家長點下去一定在我們系統裡）；他選「可外部」——
+  報名表單這類需求確實存在。落地：後端**限 https://**（LINE 的 uri action 不吃 http，
+  而 javascript:/data: 放行就是把家長送到我們無法保證的地方），前端明講「我們無法確認
+  那個頁面安全或還活著」，責任歸園所。
+繳費提醒：保留。他的原話是「不假裝自己是收費系統，就是提醒」——因此金額與期限都是
+  **顯示用文字**（不是數字/日期型別），欄位標籤直接寫「（顯示用文字）」，
+  版型說明寫明「系統不會記帳也不會自動追繳」。
+```
+
+**「顯示用文字」不是偷懶，是刻意**：`eventDate` 不做 DateTime、`amount` 不做數字，
+園所才寫得出「9/20（六）09:30」「約 8,500 元（含餐費）」。硬要結構化只會逼出假資料。
+
+**做了什麼（檔案）**
+```text
+DB    PushCampaign + enum PushCampaignTemplate/Audience + migration 0008（expand-only）
+api   push-campaigns/{push-campaign.types,campaign-audience,push-campaigns.service,
+      push-campaigns.controller,push-campaigns.module}
+      events/{flex-message,push-campaign-event.handler} + line-push.client 加 pushFlex
+      push-notification.service：送信迴圈抽成唯一一份 deliver()（回傳結果，呼叫端決定是否重試）
+      公告推播改送 Flex 卡片（buildAnnouncementFlex，與群發共用產生器）
+web   features/push-campaign/{types,hooks,CardPreview,MessageComposer,CampaignHistory}
+      app/admin/(app)/messages/page.tsx + 2 條 proxy route
+      uploads/image 加 campaign 類型（PNG/JPG ≤1MB）；adminNav / adminEntries 加入口
+docs  03（PushCampaign）05（矩陣：CR，老師不可）06（PushCampaignQueued + 不重試的理由）
+      07（§4j，含查到/查不到的限制表）+ 本檔
+測試  315 → 364（api 297 + shared 12 + web 55）
+```
+
+**收件人解析寫成純函式**（`campaign-audience.ts`，不進 DI）：api 要算預估人數、worker 要算實際
+送信對象，若做成 provider 就得讓 worker 的精簡 DI 圖去 import 業務模組 —— 圖文選單那邊已經
+踩過模組循環相依。另外 worker 送出時會**重新解析一次**：建立與送出之間可能有人剛完成綁定。
+
+**「指定班級」不含該班老師**：老師走「教職員」那個選項。勾一個班卻連老師一起發，園長不會預期。
 
 ### 2026-08-17 — 🎛 階段3 ④：**園所外觀設計＝品牌 + LINE 圖文選單（IMPLEMENTED，待線上驗收）**
 

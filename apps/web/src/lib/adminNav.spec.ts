@@ -18,6 +18,12 @@ describe('adminNav', () => {
     expect(hrefs(teacher)).not.toContain('/admin/people');
   });
 
+  // 群發會產生費用且送出後無法收回 → 只有園長／行政。後端也擋，這裡是不顯示會 403 的入口。
+  it('老師看不到發送訊息', () => {
+    expect(hrefs(owner)).toContain('/admin/messages');
+    expect(hrefs(teacher)).not.toContain('/admin/messages');
+  });
+
   it('老師看不到稽核紀錄', () => {
     expect(hrefs(teacher)).not.toContain('/liff/audit');
     expect(hrefs(owner)).toContain('/liff/audit');

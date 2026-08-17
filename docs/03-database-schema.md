@@ -21,6 +21,7 @@
 | CommunicationBookEntry | **SoT** | 老師記錄的當日觀察（每生每日一筆）。出缺勤/請假/親師對話**不複製**進本表 |
 | BindingCode | **SoT** | 園所簽發的一次性憑證，把「園所帳號」接上「本人的 LINE」（見 docs/07 §4g） |
 | RichMenuConfig | **SoT** | 園所的 LINE 圖文選單設計（一個對象一份）;已套用的 LINE 選單 ID 另存（見 docs/07 §4i） |
+| PushCampaign | **SoT** | 一次 LINE 群發的內容、對象與結果。**因為送出後無法收回，必須留帳**（見 docs/07 §4j） |
 | Notification | **Derived** | 由事件產生 |
 | AuditLog | **SoT (append-only)** | 只增不改不刪 |
 | OutboxEvent | 基礎設施 | 事件可靠交付 |
@@ -286,6 +287,34 @@ model RichMenuConfig {
   appliedAt      DateTime?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+}
+
+// ---------- LINE 群發（SoT；Phase 9 階段3；規則見 docs/07 §4j）----------
+// **這張表存在的理由是「送出後無法收回」**：LINE 沒有撤回已送出推播的方法，因此每一次群發都要
+// 留下「誰、何時、把什麼內容、發給了多少人」的帳。內容是版型填空（title/body/fields）而非
+// 自由 JSON —— 園所不寫 Flex JSON，設計骨架鎖在程式裡（同圖文選單的策略）。
+// status 用自由字串（同 OutboxEvent）：日後增加狀態不需要 migration。
+model PushCampaign {
+  id             String               @id @default(cuid())
+  template       PushCampaignTemplate                    // EVENT / PAYMENT / GENERAL
+  audience       PushCampaignAudience                     // ALL_PARENTS / CLASS / STAFF
+  classId        String?                                  // audience=CLASS 時的班級
+  title          String
+  body           String
+  imageUrl       String?                                  // 選填（Vercel Blob；LINE 要求 https）
+  buttonLabel    String?
+  buttonUrl      String?                                  // App 內頁的 LIFF 連結，或園所自填的外部 https 網址
+  fields         Json                 @default("{}")      // 版型專屬的**顯示用文字**（日期地點 / 金額期限）
+  status         String               @default("QUEUED")  // QUEUED → SENDING → SENT / FAILED
+  failureReason  String?                                  // 給園長看得懂的一句話
+  recipientCount Int                  @default(0)         // 建立當下的預估（給園長看的「會送出 N 則」）
+  sentCount      Int                  @default(0)         // worker 實際送出
+  skippedCount   Int                  @default(0)         // LINE 不認得而略過
+  createdBy      String
+  createdAt      DateTime             @default(now())
+  sentAt         DateTime?
+
+  @@index([createdAt])
 }
 
 // ---------- Transactional Outbox（事件可靠交付，§4）----------
