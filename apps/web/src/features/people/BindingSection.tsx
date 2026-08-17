@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Icon } from '../../components/Icon';
 import { apiErrorMessage } from '../../lib/api';
-import { usePublicConfig } from '../../lib/queries';
 import type { UserView } from '../../lib/types';
 import {
   peopleErrorMessage,
@@ -16,12 +15,6 @@ import {
 function expiryLabel(iso: string): string {
   const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
   return days <= 0 ? '已過期' : `${days} 天後到期`;
-}
-
-// 帶碼的 LIFF 連結：園所貼到 LINE 訊息或通知單上，家長點開就自動帶入，不必手打八碼。
-// 手打那條路一定通，這只是省事的捷徑（LINE 是否原樣傳遞 query 需實機確認）。
-function bindingLink(liffId: string, code: string): string {
-  return `https://liff.line.me/${liffId}?code=${encodeURIComponent(code)}`;
 }
 
 // clipboard API 在非 https 或舊瀏覽器可能不存在；失敗時回 false 讓 UI 誠實顯示「請手動複製」。
@@ -41,12 +34,11 @@ async function copyText(text: string): Promise<boolean> {
 //   未綁定且沒有碼 → 產生一組
 export function BindingSection({ person }: { person: UserView }) {
   const { data: codes } = useBindingCodes();
-  const { data: config } = usePublicConfig();
   const issue = useIssueBindingCode();
   const revoke = useRevokeBindingCode();
   const unbind = useUnbindLine();
   const [confirmUnbind, setConfirmUnbind] = useState(false);
-  const [copied, setCopied] = useState<'code' | 'link' | 'failed' | null>(null);
+  const [copied, setCopied] = useState<'code' | 'failed' | null>(null);
 
   const active = codes?.find((c) => c.userId === person.id);
   const error = issue.error ?? revoke.error ?? unbind.error;
@@ -107,36 +99,17 @@ export function BindingSection({ person }: { person: UserView }) {
           </p>
           <p className="mt-1 text-center text-xs text-ink-soft">{expiryLabel(active.expiresAt)}</p>
 
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                void copyText(active.code).then((ok) => setCopied(ok ? 'code' : 'failed'))
-              }
-              className="btn-secondary flex-1 text-xs"
-            >
-              複製碼
-            </button>
-            {config?.liffId && (
-              <button
-                type="button"
-                onClick={() =>
-                  void copyText(bindingLink(config.liffId!, active.code)).then((ok) =>
-                    setCopied(ok ? 'link' : 'failed'),
-                  )
-                }
-                className="btn-secondary flex-1 text-xs"
-              >
-                複製連結
-              </button>
-            )}
-          </div>
-          {copied === 'code' && <p className="mt-1.5 text-center text-xs text-brand-primary">已複製綁定碼</p>}
-          {copied === 'link' && (
-            <p className="mt-1.5 text-center text-xs text-brand-primary">
-              已複製連結，貼到 LINE 訊息或通知單，家長點開就免打字
-            </p>
-          )}
+          {/* 只提供「複製碼」：家長是從園所 OA 的選單進來的，本來就已經在頁面上，
+              缺的只有這組碼（Human Owner 2026-08-17）。帶碼連結屬於另一種發送方式，
+              在主要流程裡是多餘的選項，拿掉以免讓園所猶豫該按哪一顆。 */}
+          <button
+            type="button"
+            onClick={() => void copyText(active.code).then((ok) => setCopied(ok ? 'code' : 'failed'))}
+            className="btn-secondary mt-3 w-full text-xs"
+          >
+            複製綁定碼
+          </button>
+          {copied === 'code' && <p className="mt-1.5 text-center text-xs text-brand-primary">已複製</p>}
           {copied === 'failed' && (
             <p className="mt-1.5 text-center text-xs text-ink-soft">
               這台裝置無法自動複製，請長按上面的碼手動複製。
