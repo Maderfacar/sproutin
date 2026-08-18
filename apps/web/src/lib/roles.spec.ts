@@ -66,3 +66,30 @@ describe('roleFlags', () => {
     expect(f.canViewAudit).toBe(false);
   });
 });
+
+// 多重身分：只有「校方 + 家長」的人才需要在版面上被告知這一區是哪個身分在看。
+describe('hasDualIdentity', () => {
+  const r = (...names: string[]) =>
+    roleFlags(names.map((role) => ({ role }) as never));
+
+  it('老師兼家長 → true', () => {
+    expect(r('TEACHER', 'PARENT').hasDualIdentity).toBe(true);
+  });
+
+  it('園長兼家長 → true', () => {
+    expect(r('OWNER', 'GUARDIAN').hasDualIdentity).toBe(true);
+  });
+
+  it('隨車老師兼家長 → true', () => {
+    expect(r('BUS_TEACHER', 'PARENT').hasDualIdentity).toBe(true);
+  });
+
+  it('只是家長 → false（標身分對他是廢話）', () => {
+    expect(r('PARENT').hasDualIdentity).toBe(false);
+  });
+
+  it('只是老師 → false', () => {
+    expect(r('TEACHER').hasDualIdentity).toBe(false);
+    expect(r('OWNER', 'ADMIN').hasDualIdentity).toBe(false);
+  });
+});

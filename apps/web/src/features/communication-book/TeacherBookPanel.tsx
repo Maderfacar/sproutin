@@ -103,9 +103,8 @@ export function TeacherBookPanel() {
   const unfilled = active.filter((s) => !hasContent(byStudent.get(s.id)));
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <section className="card flex flex-col gap-3 p-5">
-        <h2 className="section-title">今日記錄（老師）</h2>
         <ClassSelect classes={classes} value={classId} onChange={setClassId} />
         <label className="field-label">
           <span>日期</span>

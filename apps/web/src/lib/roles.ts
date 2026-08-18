@@ -14,6 +14,10 @@ export interface RoleFlags {
   canManageSchool: boolean; // OWNER/ADMIN → 園所設定（GET/PATCH /school/config;docs/05 矩陣 2026-08-17 放寬 ADMIN）
   canMarkBusRide: boolean; // OWNER/ADMIN/BUS_TEACHER → 娃娃車點名（POST /bus/rides/*）
   isStaff: boolean; // 任一校方角色（需要班級清單/班名）
+  // 同時是校方又是家長。用來決定版面上要不要標「以老師身分／以家長身分」——
+  // 只有這種人會在同一頁上同時看到「我要做的事」與「我孩子的狀況」而分不出來;
+  // 純家長或純老師看到身分籤只是廢話（Human Owner 2026-08-18 定案）。
+  hasDualIdentity: boolean;
 }
 
 export function roleFlags(roles: AuthUser['roles']): RoleFlags {
@@ -36,5 +40,7 @@ export function roleFlags(roles: AuthUser['roles']): RoleFlags {
     // 隨車老師只在自己被指派的路線上點得動 —— 那一層由後端判斷，這裡只決定要不要顯示面板。
     canMarkBusRide: isOwnerOrAdmin || names.has('BUS_TEACHER'),
     isStaff: isOwner || isAdmin || isTeacher || names.has('BUS_TEACHER'),
+    hasDualIdentity:
+      (isOwner || isAdmin || isTeacher || names.has('BUS_TEACHER')) && isGuardian,
   };
 }
