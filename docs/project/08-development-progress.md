@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**打磨第二階段 6 頁全數 IMPLEMENTED**——
+> Last updated: 2026-08-18（**打磨第二階段 6 頁全數 ✅ ACCEPTED**（Human Owner「驗收過」）——
 > 版面斷句 + 多重身分標示。三題由 Human Owner 定案（區塊元件／只給多重身分看／六頁）。
 > 聯絡簿（範本頁）+ 娃娃車 / 出缺勤 / 請假 / 公告 / 學生整合視圖 5 頁都套上 Band。
 > 無 migration、無新端點。測試 522 → **545**。**下一輪：約 8 個「只缺斷句」的管理頁。**
@@ -180,7 +180,7 @@ A3 封面圖延伸到頁首後面           → AppShell 頁首改 sticky top-0�
 ```
 
 **打磨第二階段 —— 版面斷句 + 多重身分標示（Band 元件 + 6 頁）
-— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+— ✅ ACCEPTED（2026-08-18, Human Owner 線上驗證完畢）。**
 四項全綠：lint / typecheck / **測試 545（api 362 + shared 12 + web 171）** / build。
 無 migration、無新後端端點（純前端）。
 
