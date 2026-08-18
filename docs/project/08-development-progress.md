@@ -240,6 +240,14 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
 上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
 若 Human Owner 要，可另排。
 
+**B3（底部四格工具列可不可以由園所自訂）— Human Owner 定案「先不做」（2026-08-18）。**
+先前掛著等他回覆，2026-08-18 已回：**先不做**。查證過的結論留著，之後要做不必重查：
+① 那四格寫死在 `AppShell.tsx` 的 `TABS`；② 可挑的目的地與 LINE 圖文選單同一份清單，
+**娃娃車不能給家長挑**（那頁是隨車老師點名用的，家長按下去撞權限牆），家長可挑七個：
+首頁／聯絡簿／出缺勤／請假／公告／訊息／我的；③ 若要做成「園所統一決定」需要
+SchoolConfig **加一個欄位**（expand-only migration）+ `/school/config` 與 `/config/public`
+各多回一個欄位，**沒有新端點**；做成「每個家長自己挑」則是純前端，但那就不是園所客製。
+
 **B2 訊息中心（「通知」頁升級）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
 四項全綠：lint / typecheck / **測試 504（api 362 + shared 12 + web 130）** / build。
 **無 migration、無新後端端點**（改既有 `GET /notifications` 的回應，詳見 docs/07 §4j）。
