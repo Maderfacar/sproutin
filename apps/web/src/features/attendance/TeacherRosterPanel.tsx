@@ -9,11 +9,12 @@ import { ATTENDANCE_STATUS_LABEL } from './labels';
 import { apiErrorMessage } from '../../lib/api';
 import type { AttendanceStatus, AttendanceView } from '../../lib/types';
 import { SkeletonLines } from '../../components/Skeleton';
+import { schoolToday } from '../../lib/datetime';
 
 const STATUSES: AttendanceStatus[] = ['PRESENT', 'ABSENT', 'LEAVE', 'LATE'];
 
 function todayInput(): string {
-  return new Date().toISOString().slice(0, 10);
+  return schoolToday();
 }
 
 // 老師端:一天一班點名。列出班級學生 → 每人選狀態（新標記或改狀態）。

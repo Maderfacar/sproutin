@@ -15,15 +15,12 @@ import {
   TOILET_LABEL,
 } from './labels';
 import { hasContent, useStudentBook } from './hooks';
+import { schoolDayKeyIso, schoolToday } from '../../lib/datetime';
 import { HealthEditor } from './HealthEditor';
 import { SkeletonCards } from '../../components/Skeleton';
 
 const MS_PER_DAY = 86_400_000;
 const STRIP_DAYS = 7;
-
-function utcMidnight(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
 
 function shift(iso: string, days: number): string {
   return new Date(new Date(iso).getTime() + days * MS_PER_DAY).toISOString();
@@ -50,7 +47,7 @@ interface StudentBookViewProps {
 // 學生聯絡簿：**上半部是當日狀態，下半部是連續的親師對話**。
 // 對話刻意不依日期切割 —— 切碎會看不懂前因後果；翻日期只換上半部的狀態。
 export function StudentBookView({ studentId, canEdit }: StudentBookViewProps) {
-  const [selected, setSelected] = useState(() => utcMidnight(new Date()).toISOString());
+  const [selected, setSelected] = useState(() => schoolDayKeyIso());
 
   const from = shift(selected, -(STRIP_DAYS - 1));
   const { data: entries, isLoading, isError, error } = useStudentBook(studentId, { from, to: selected });
@@ -61,7 +58,7 @@ export function StudentBookView({ studentId, canEdit }: StudentBookViewProps) {
   const attendanceStatus = attendance?.find((a) => a.date.slice(0, 10) === selected.slice(0, 10))?.status;
 
   const strip = Array.from({ length: STRIP_DAYS }, (_, i) => shift(from, i));
-  const isToday = selected.slice(0, 10) === utcMidnight(new Date()).toISOString().slice(0, 10);
+  const isToday = selected.slice(0, 10) === schoolToday();
 
   return (
     <div className="flex flex-col gap-5">

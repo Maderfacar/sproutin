@@ -9,6 +9,7 @@ import { ROLE_LABEL } from '../../lib/roleLabels';
 import { RELATION_LABEL } from '../people/hooks';
 import type { MessageView } from '../../lib/types';
 import { SkeletonLines } from '../../components/Skeleton';
+import { formatDate, formatTime, schoolPartsOf, schoolWeekday } from '../../lib/datetime';
 
 function byCreatedAsc(a: MessageView, b: MessageView): number {
   return a.createdAt.localeCompare(b.createdAt);
@@ -27,13 +28,14 @@ function senderLabel(msg: MessageView): string {
 }
 
 function dayLabel(iso: string): string {
-  const d = new Date(iso);
-  const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-  return `${d.getMonth() + 1}月 ${d.getDate()}日 · 週${week}`;
+  const parts = schoolPartsOf(iso);
+  if (!parts) return '';
+  const week = ['日', '一', '二', '三', '四', '五', '六'][schoolWeekday(iso)];
+  return `${parts.month}月 ${parts.day}日 · 週${week}`;
 }
 
 function timeLabel(iso: string): string {
-  return iso.slice(11, 16);
+  return formatTime(iso);
 }
 
 // 訊息串（Student-centered，雙向，清葉）。自己靠右（森綠）、校方靠左（柔和）;
@@ -67,8 +69,9 @@ export function MessageThread({ studentId }: { studentId: string }) {
             const mine = msg.senderId === user.id;
             const showUnread = !mine && !msg.isRead;
             const prev = i > 0 ? (sorted[i - 1] ?? null) : null;
-            const prevDay = prev?.createdAt.slice(0, 10) ?? null;
-            const showDay = msg.createdAt.slice(0, 10) !== prevDay;
+            // 以台灣時間分日：晚上 8 點之後（UTC 已跨日）的訊息若照 UTC 切，會被歸到隔天。
+            const prevDay = prev ? formatDate(prev.createdAt) : null;
+            const showDay = formatDate(msg.createdAt) !== prevDay;
             // 同一個人連著講好幾句時只在第一句標名字 —— 每句都標，一來一往幾輪就滿版都是名字。
             // 換日期就重新標（隔了一天再看，記得上一句是誰講的才怪）。
             const showSender = !mine && (showDay || prev?.senderId !== msg.senderId);

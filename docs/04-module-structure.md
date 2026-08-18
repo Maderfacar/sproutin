@@ -58,9 +58,33 @@ apps/web/src/
 └── styles/               design tokens
 ```
 
+### 時間一律用園所時區（`lib/datetime.ts`，2026-08-19）
+
+Human Owner 回報「系統的時間與台灣時間不符」。兩個病灶：
+
+```text
+① 「今天」是 new Date().toISOString().slice(0, 10) —— 那是 UTC 的今天。
+   台灣 UTC+8，凌晨 0 點到早上 8 點之間，系統認定的今天是昨天。
+   老師七點到園點名、填聯絡簿，正好落在這個區間。
+② 時間戳直接切 ISO 字串（createdAt.slice(11, 16)）—— 顯示的是 UTC 時鐘，慢 8 小時。
+   稽核紀錄與親師對話都中招。
+```
+
+規則：**時間一律以園所所在時區（`Asia/Taipei`）呈現，不看使用者裝置的時區。**
+孩子的「今天」是園所的今天 —— 家長出國時看到的也該是園所的日子。
+新程式碼一律走 `lib/datetime.ts`（`schoolToday` / `schoolHour` / `formatDate` /
+`formatTime` / `formatDateTime` / `formatMonthDay` / `isSameSchoolDay`），
+**不要再寫 `toISOString().slice()`、`getHours()`、`toLocaleString()`**。
+
+後端對應的是 `events/day-key.ts` 的 `todayKey()`（台灣的今天 → UTC 午夜 key）。
+**儲存慣例沒有改**：日期型欄位仍然存「該日曆日的 UTC 午夜」，改的只是「現在是哪一天」
+與「時間怎麼顯示」。動 `dayKey()` 的正規化會改到既有資料的語意，那是另一件事。
+
 ### 尺寸與量測值寫在哪（2026-08-18）
 
-**字體大小（`lib/fontScale.ts`）**：家長可在「我的」選標準／中／大。實作是改 `html` 的
+**字體大小（`lib/fontScale.ts`）**：家長在手機的「我的」、園所人員在後台左欄下方
+（`<FontScaleControl compact />`，2026-08-19 追加）選標準／中／大 —— 同一個元件的兩種密度，
+後台欄寬只有 14.5rem，塞不下每個選項的說明。設定一律只記在那支瀏覽器上。實作是改 `html` 的
 `font-size`（100% / 112.5% / 125%），不是逐一調整每個 `text-*` —— Tailwind 的字級與間距
 全是 rem，所以整頁**等比**放大，版面比例天然不會跑掉。三個後果要記住：
 

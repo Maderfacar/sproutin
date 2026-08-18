@@ -6,6 +6,7 @@ import { useMyClasses } from '../classes/hooks';
 import { useCampaigns } from './hooks';
 import { AUDIENCE_LABEL, STATUS_LABEL, TEMPLATES, type CampaignView } from './types';
 import { SkeletonRows } from '../../components/Skeleton';
+import { formatDateTime } from '../../lib/datetime';
 
 // 送出紀錄。**這一段不是裝飾**：群發送出後無法收回，所以「發過什麼、給誰、幾則」必須留下帳，
 // 出事時才回答得出家長的疑問。
@@ -38,7 +39,7 @@ export function CampaignHistory() {
                   {c.audience === 'CLASS' ? className(c.classId) : AUDIENCE_LABEL[c.audience]}
                 </span>
                 <span className="ml-auto text-xs text-ink-soft">
-                  {new Date(c.createdAt).toLocaleString('zh-TW')}
+                  {formatDateTime(c.createdAt)}
                 </span>
               </div>
               <p className="mt-1 text-xs text-ink-soft">{summary(c)}</p>

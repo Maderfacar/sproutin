@@ -9,6 +9,7 @@ import { useSchoolPendingLeaves } from '../../../features/leave/hooks';
 import { useMyClasses } from '../../../features/classes/hooks';
 import { useAdminStudents } from '../../../features/students/adminHooks';
 import { Icon, type IconName } from '../../../components/Icon';
+import { schoolHour } from '../../../lib/datetime';
 
 const WEEKDAY = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -18,7 +19,7 @@ function today(): string {
 }
 
 function greeting(): string {
-  const h = new Date().getHours();
+  const h = schoolHour();
   if (h < 11) return '早安';
   if (h < 18) return '午安';
   return '晚安';

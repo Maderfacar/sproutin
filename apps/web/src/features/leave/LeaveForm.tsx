@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useCreateLeave } from './hooks';
 import { leaveErrorMessage } from './labels';
 import { Icon } from '../../components/Icon';
+import { schoolToday } from '../../lib/datetime';
 
 // 'YYYY-MM-DD'（date input）→ 該日 UTC 午夜的 ISO datetime（後端 zod 要求 datetime 格式，
 // 且事件投影以 UTC 逐日對齊 seed / Attendance @@unique([studentId,date])）。
@@ -12,7 +13,7 @@ function dateToIso(date: string): string {
 }
 
 function todayInput(): string {
-  return new Date().toISOString().slice(0, 10);
+  return schoolToday();
 }
 
 const CATEGORIES = ['病假', '事假', '其他'] as const;

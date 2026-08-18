@@ -23,6 +23,7 @@ import {
 } from './types';
 import { SkeletonCards } from '../../components/Skeleton';
 import { Band } from '../../components/Band';
+import { formatDateTime } from '../../lib/datetime';
 
 const AUDIENCES: RichMenuAudience[] = ['PARENT', 'STAFF', 'UNBOUND'];
 const TEMPLATES: RichMenuTemplate[] = ['SIX', 'FOUR', 'TWO'];
@@ -311,7 +312,7 @@ export function RichMenuSection() {
             {dirty
               ? '尚未儲存的變更'
               : current.appliedAt
-                ? `上次套用：${new Date(current.appliedAt).toLocaleString('zh-TW')}`
+                ? `上次套用：${formatDateTime(current.appliedAt)}`
                 : '還沒套用到 LINE'}
           </span>
           <button

@@ -12,6 +12,7 @@ import {
   useBusRoutes,
 } from './hooks';
 import { SkeletonCards, SkeletonRows } from '../../components/Skeleton';
+import { formatTime, schoolToday } from '../../lib/datetime';
 
 // 隨車老師點名。設計主軸＝**一手扶車、一手點**：
 //   - 按鈕大、一次一件事；
@@ -21,13 +22,11 @@ import { SkeletonCards, SkeletonRows } from '../../components/Skeleton';
 //   - 點錯有「取消」，車在動的時候誤觸是必然會發生的事。
 
 function todayInput(): string {
-  return new Date().toISOString().slice(0, 10);
+  return schoolToday();
 }
 
 function hhmm(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return iso ? formatTime(iso) : '';
 }
 
 export function BusBoardingPanel() {

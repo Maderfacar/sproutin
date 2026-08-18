@@ -9,6 +9,7 @@ import { useAuditLogs } from './hooks';
 import { AUDIT_RESOURCE_TYPES, AUDIT_RESULT_LABEL, actorText } from './labels';
 import { SkeletonRows } from '../../components/Skeleton';
 import { Band } from '../../components/Band';
+import { formatDateTime } from '../../lib/datetime';
 
 const PAGE_SIZE = 50;
 
@@ -160,7 +161,7 @@ export function AuditPanel() {
                         <span className="font-bold text-ink">{log.action}</span>
                         <span className={`chip ${result.className}`}>{result.label}</span>
                         <span className="ml-auto text-xs text-ink-soft">
-                          {log.createdAt.slice(0, 10)} {log.createdAt.slice(11, 16)}
+                          {formatDateTime(log.createdAt)}
                         </span>
                       </div>
                       <p className="mt-1 text-ink-soft">

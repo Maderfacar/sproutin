@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { todayKey } from '../events/day-key';
 import type { AuthUser } from '@sproutin/shared';
 import { AuditService } from '../core/audit/audit.service';
 import { BookActor, CommunicationBookService } from './communication-book.service';
@@ -26,10 +27,10 @@ type ScopeMock = {
 
 const MS_PER_DAY = 86_400_000;
 
+// 「今天」要跟 service 用同一把尺 —— 台灣的今天（見 events/day-key 的 todayKey）。
+// 用 UTC 午夜算的話，測試在台灣時區的機器上跑，下午之後就會把「明天」誤判成今天。
 function todayIso(offsetDays = 0): string {
-  const now = new Date();
-  const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return new Date(utcMidnight - offsetDays * MS_PER_DAY).toISOString();
+  return new Date(todayKey().getTime() - offsetDays * MS_PER_DAY).toISOString();
 }
 
 function makeTx(): TxMock {

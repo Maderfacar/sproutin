@@ -24,6 +24,7 @@ import {
 import { bookErrorMessage, hasContent, needsHealthAttention, useBookMutations, useClassBook } from './hooks';
 import { PublishPanel } from './PublishPanel';
 import { SkeletonLines } from '../../components/Skeleton';
+import { formatTime, schoolToday } from '../../lib/datetime';
 
 // 老師端「直欄模式」：一次只處理一件事、全班一起，且**預設全班正常、只點例外**。
 // 這是把導師負擔壓下來的關鍵（逐生逐欄約需 175 次點擊，此設計約 25 次）。
@@ -48,12 +49,11 @@ const COLUMNS: readonly ColumnDef[] = [
 ];
 
 function todayInput(): string {
-  return new Date().toISOString().slice(0, 10);
+  return schoolToday();
 }
 
 function nowHhMm(): string {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return formatTime(new Date());
 }
 
 export function TeacherBookPanel() {

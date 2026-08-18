@@ -3,7 +3,7 @@ import type { BusDirection, BusRideStatus, Prisma } from '@sproutin/db';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { ScopeResolver } from '../auth/scope-resolver.service';
 import { AuditService } from '../core/audit/audit.service';
-import { dayKey } from '../events/day-key';
+import { dayKey, todayKey } from '../events/day-key';
 import {
   actorRole,
   BusActor,
@@ -144,7 +144,7 @@ export class BusRidesService {
     const allowed = await this.scope.canAccessStudent(actor.id, actor.roles, studentId);
     if (!allowed) throw new ForbiddenException('out_of_scope');
 
-    const date = dayKey(dateIso ? new Date(dateIso) : new Date());
+    const date = dateIso ? dayKey(new Date(dateIso)) : todayKey();
     const assignment = await this.prisma.busAssignment.findUnique({
       where: { studentId },
       include: {

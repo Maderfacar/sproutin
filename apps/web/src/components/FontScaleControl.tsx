@@ -8,9 +8,14 @@ import {
   type FontScale,
 } from '../lib/fontScale';
 
-// 家長端的字體大小開關（Human Owner 2026-08-18 定案：只放手機端、只記在這支瀏覽器上）。
+// 字體大小開關（Human Owner 2026-08-18 定案：只記在這支瀏覽器上；2026-08-19 追加：後台也要有）。
 // 每個選項用自己的比例把「標準／中／大」三個字畫出來 —— 按下去之前就看得出差別。
-export function FontScaleControl() {
+//
+// 兩種密度共用同一個元件：
+//   家長手機的「我的」→ 完整版（有每個選項的說明、有一句話講清楚只影響這支手機）。
+//   後台左欄 → compact：欄寬只有 14.5rem，說明文字擠成三行反而看不懂，只留三顆按鈕。
+// 放大的實際效果兩邊一樣（改的是 html 的 font-size，全站等比放大，見 lib/fontScale）。
+export function FontScaleControl({ compact = false }: { compact?: boolean }) {
   const [scale, setScale] = useState<FontScale>('base');
   const [remembered, setRemembered] = useState(true);
 
@@ -22,6 +27,45 @@ export function FontScaleControl() {
   function choose(next: FontScale): void {
     setScale(next);
     setRemembered(applyFontScale(next));
+  }
+
+  if (compact) {
+    return (
+      <div>
+        <p className="eyebrow mb-1.5">字體大小</p>
+        <div role="radiogroup" aria-label="字體大小" className="flex gap-1.5">
+          {FONT_SCALE_OPTIONS.map((option) => {
+            const active = option.id === scale;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => choose(option.id)}
+                className={`tappable flex-1 rounded-md2 border py-1.5 leading-none transition ${
+                  active
+                    ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+                    : 'border-line text-ink-soft hover:border-brand-primary/50'
+                }`}
+              >
+                <span
+                  className="font-serif font-semibold"
+                  style={{ fontSize: `${option.percent}%` }}
+                >
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {!remembered && (
+          <p className="mt-2 text-3xs leading-relaxed text-ink-soft">
+            這個瀏覽器不讓我們記住設定，重新開啟後會回到標準。
+          </p>
+        )}
+      </div>
+    );
   }
 
   return (

@@ -3,6 +3,7 @@
 import { Icon } from '../../components/Icon';
 import { apiErrorMessage } from '../../lib/api';
 import type { BusRideView, MyBusView } from '../../lib/types';
+import { formatTime, schoolHour } from '../../lib/datetime';
 import { useMyBus } from './hooks';
 import { SkeletonCards } from '../../components/Skeleton';
 
@@ -11,9 +12,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 // 與其做一個看起來像即時追蹤其實不是的東西，不如老實說我們知道什麼。
 
 function hhmm(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return iso ? formatTime(iso) : '';
 }
 
 function headline(ride: BusRideView | null, rides: boolean): string {
@@ -107,7 +106,7 @@ export function BusTodayCard({ studentId }: { studentId: string | undefined }) {
 
   const view: MyBusView = data;
   // 中午之前先看上學那一段，之後把放學那段擺前面 —— 家長想看的永遠是「接下來這一趟」。
-  const afternoonFirst = new Date().getHours() >= 12;
+  const afternoonFirst = schoolHour() >= 12;
   const morning = (
     <Segment
       key="morning"

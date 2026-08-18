@@ -11,6 +11,7 @@ import { isPathWithin } from '../lib/surface';
 import { ROLE_LABEL } from '../lib/roleLabels';
 import { logout } from '../lib/auth';
 import { Icon } from './Icon';
+import { FontScaleControl } from './FontScaleControl';
 
 // 桌面後台外框：左側常駐導覽 + 主內容。與手機版 AppShell 是同一套設計語言（清葉）的兩種密度，
 // 裡面的功能元件完全共用 —— 差別只有外框，不是兩套 App。
@@ -91,6 +92,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
+
+        <div className="hidden border-t border-line px-5 py-4 md:block">
+          <FontScaleControl compact />
+        </div>
 
         <div className="hidden border-t border-line px-5 py-4 md:block">
           <p className="truncate text-sm font-semibold text-ink">{user.displayName}</p>

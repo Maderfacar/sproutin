@@ -13,7 +13,7 @@ import { PrismaService } from '../core/prisma/prisma.service';
 import { ScopeResolver } from '../auth/scope-resolver.service';
 import { AuditService } from '../core/audit/audit.service';
 import { AttendanceService } from '../attendance/attendance.service';
-import { dayKey } from '../events/day-key';
+import { dayKey, todayKey } from '../events/day-key';
 
 // 每日聯絡簿（Phase 9 階段2 刀4）。每生每日一列。
 //
@@ -337,7 +337,7 @@ export class CommunicationBookService {
 
   // 老師只能填寫「今天起回推 7 天」的紀錄，且不能預填未來。
   private assertWithinEditWindow(date: Date): void {
-    const today = dayKey(new Date());
+    const today = todayKey();
     const diffDays = (today.getTime() - date.getTime()) / MS_PER_DAY;
     if (diffDays < 0) throw new BadRequestException('book_future_date');
     if (diffDays > EDIT_WINDOW_DAYS) throw new BadRequestException('book_edit_window_expired');

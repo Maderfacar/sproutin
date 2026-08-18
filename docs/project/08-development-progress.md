@@ -2,7 +2,13 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**打磨第二階段下一輪：後台 8 頁斷句 IMPLEMENTED**——
+> Last updated: 2026-08-19（**時間改用台灣時區 + 後台也有字體放大 IMPLEMENTED**——
+> Human Owner 回報「系統的時間與台灣時間不符」：① 全站的「今天」原本是 UTC 的今天，
+> 台灣凌晨 0–8 點會整個差一天（老師七點到園就中招）② 稽核／對話的時間戳直接印 UTC，慢 8 小時。
+> 前端新增 lib/datetime.ts、後端新增 todayKey()，**儲存慣例不變**。無 migration、無新端點。
+> 測試 553 → **574**。後台左欄下方加上字體大小（精簡版，與家長端同一個元件）。
+>
+> （前次）2026-08-19（**打磨第二階段下一輪：後台 8 頁斷句 ✅ ACCEPTED**（Human Owner「已驗收」）——
 > 人員／權限／班級／學生管理／園所外觀／發送訊息／娃娃車設定／稽核紀錄。
 > 後台**不貼身分籤**（整頁都是校方的東西，每段掛一次只是噪音）。
 > 無 migration、無新端點。測試 545 → **553**。B3（底部四格自訂）Human Owner 定案先不做。
@@ -244,6 +250,45 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
 數字補間（列為「可有可無」，未排入）③ 請假送出目前是按鈕轉「送出中…」，**沒有**在請假清單
 上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
 若 Human Owner 要，可另排。
+
+**時間改用台灣時區 + 後台字體放大 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-19）。**
+四項全綠：lint / typecheck / **測試 574（api 366 + shared 12 + web 196）** / build。
+**無 migration、無新後端端點**（改的是既有 service 裡「今天是哪一天」的算法 + 前端顯示）。
+
+Human Owner 回報：「系統的時間與台灣時間不符」。查出兩個病灶：
+
+```text
+① 「今天」= new Date().toISOString().slice(0,10) → 那是 UTC 的今天。
+   台灣 UTC+8，凌晨 0 點到早上 8 點之間，系統認定的今天是**昨天**。
+   老師七點到園點名、填聯絡簿正好落在這個區間 ——
+   後端「不能填未來」的檢查會把台灣的今天當成明天而擋下來（真的會擋，不是理論）。
+② 時間戳直接切 ISO 字串（createdAt.slice(11,16)）→ 印的是 UTC 時鐘，畫面慢 8 小時。
+   稽核紀錄、親師對話、群發紀錄、圖文選單套用時間都中招。
+```
+
+作法：**時間一律以園所所在時區（Asia/Taipei）呈現，不看使用者裝置的時區**
+—— 孩子的「今天」是園所的今天，家長出國時看到的也該是園所的日子。
+
+```text
+新增  apps/web/src/lib/datetime.ts —— schoolToday / schoolMonth / schoolHour /
+      formatDate / formatTime / formatDateTime / formatMonthDay / isSameSchoolDay /
+      schoolDayKeyIso。新程式碼不要再寫 toISOString().slice()、getHours()、toLocaleString()。
+新增  apps/api/src/events/day-key.ts 的 todayKey()（台灣的今天 → UTC 午夜 key）,
+      用在聯絡簿的填寫窗檢查與娃娃車「今日狀態」的預設日期。
+改到  首頁問候語與今天、出缺勤點名日期、請假可選最早日期、娃娃車點名日期與上下車時間、
+      聯絡簿老師端日期與到校時間、家長端的「今天」、親師對話的日期分隔與泡泡時間、
+      收件匣的相對時間、稽核紀錄、群發紀錄、圖文選單套用時間、學生整合視圖的本月與日期。
+不動  **儲存慣例**：日期型欄位仍是「該日曆日的 UTC 午夜」。動 dayKey() 的正規化會改到
+      既有資料的語意，那是另一件事（docs/04 已寫明）。
+順帶  既有的 relativeTime 測試原本依賴跑測試那台機器的時區（CI 是 UTC、開發機是台灣），
+      改成一律寫死 +08:00。
+測試  web 179 → 196、api 362 → 366。
+```
+
+**後台字體放大**：`FontScaleControl` 加 `compact` 版，掛在 AdminShell 左欄下方（登出上面）。
+放大的效果與家長端完全一樣（改 html 的 font-size，全站等比放大）——
+差別只有後台欄寬 14.5rem 塞不下每個選項的說明，所以只留三顆按鈕。
+**窄視窗時左欄會收成上方橫向導覽，這一塊跟「登出」一樣會收起來**（沿用既有版型，沒有另做）。
 
 **打磨第二階段 下一輪 —— 後台 8 頁的斷句 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-19）。**
 四項全綠：lint / typecheck / **測試 553（api 362 + shared 12 + web 179）** / build。

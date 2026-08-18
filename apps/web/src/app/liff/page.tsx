@@ -12,9 +12,10 @@ import { MOOD_LABEL } from '../../features/communication-book/labels';
 import { cardMeta } from '../../features/dashboard/cards';
 import { HomeHero } from '../../features/home/HomeHero';
 import { Icon } from '../../components/Icon';
+import { formatDate, schoolHour, schoolToday } from '../../lib/datetime';
 
 function greeting(): string {
-  const h = new Date().getHours();
+  const h = schoolHour();
   if (h < 11) return '早安';
   if (h < 18) return '午安';
   return '晚安';
@@ -48,7 +49,7 @@ export default function DashboardPage() {
   const cards = selectDashboardCards(roles, config?.featureFlags ?? {}, config?.cardOrder ?? []);
   const student = students?.find((s) => s.id === studentId);
 
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = schoolToday();
   const todayIso = `${todayKey}T00:00:00.000Z`;
   const { data: bookEntries } = useStudentBook(studentId, { from: todayIso, to: todayIso });
   const todayBook = bookEntries?.[0];
@@ -189,7 +190,7 @@ export default function DashboardPage() {
           <Link href="/liff/announcement" className="tappable block">
             <p className="text-xs text-ink-soft">
               {latest.scope === 'SCHOOL' ? '全校' : '班級'} ·{' '}
-              {new Date(latest.createdAt).toLocaleDateString('zh-TW')}
+              {formatDate(latest.createdAt)}
             </p>
             <p className="mt-1 font-serif text-base font-semibold leading-snug text-ink">
               {latest.title}

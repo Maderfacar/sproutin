@@ -15,13 +15,10 @@ import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
 import { SkeletonCards } from '../../components/Skeleton';
 import { Band } from '../../components/Band';
+import { formatMonthDay, schoolMonth } from '../../lib/datetime';
 
 function monthKey(): string {
-  return new Date().toISOString().slice(0, 7);
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+  return schoolMonth();
 }
 
 // 學生整合視圖：把一個孩子散落在各頁的資訊收攏成一頁
@@ -103,7 +100,7 @@ export function StudentDetail({ studentId }: { studentId: string }) {
             <ul className="mt-4 border-t border-line pt-2">
               {recentAttendance.map((record) => (
                 <li key={record.id} className="flex items-center gap-3 py-1.5 text-sm">
-                  <span className="text-ink-soft">{formatDate(record.date)}</span>
+                  <span className="text-ink-soft">{formatMonthDay(record.date)}</span>
                   <span className="text-ink">{ATTENDANCE_STATUS_LABEL[record.status].label}</span>
                   {record.source === 'LEAVE_EVENT' && (
                     <span className="ml-auto text-xs text-ink-soft">由請假產生</span>
@@ -163,7 +160,7 @@ export function StudentDetail({ studentId }: { studentId: string }) {
                 <li key={leave.id} className="border-b border-line py-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-ink">
-                      {formatDate(leave.dateFrom)} – {formatDate(leave.dateTo)}
+                      {formatMonthDay(leave.dateFrom)} – {formatMonthDay(leave.dateTo)}
                     </span>
                     <span className={`chip ml-auto ${LEAVE_STATUS_LABEL[leave.status].className}`}>
                       {LEAVE_STATUS_LABEL[leave.status].label}

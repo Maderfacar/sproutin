@@ -45,3 +45,31 @@ describe('FontScaleControl', () => {
     expect(screen.getByText(/重新開啟後會回到標準/)).toBeTruthy();
   });
 });
+
+// Human Owner 2026-08-19：「後台也要像前台一樣有個字體放大」。
+// 後台左欄只有 14.5rem 寬 —— 說明文字擠成三行反而看不懂，所以只留三顆按鈕。
+describe('後台左欄的精簡版', () => {
+  it('三個選項都在，按下去一樣會放大整站', () => {
+    render(<FontScaleControl compact />);
+    expect(screen.getAllByRole('radio')).toHaveLength(3);
+
+    fireEvent.click(screen.getByRole('radio', { name: '大' }));
+    expect(document.documentElement.style.fontSize).toBe('125%');
+  });
+
+  it('不畫每個選項的說明，也不畫那句「只會改變這支手機」', () => {
+    render(<FontScaleControl compact />);
+    expect(screen.queryByText('長輩也看得清楚')).toBeNull();
+    expect(screen.queryByText(/只會改變這支手機/)).toBeNull();
+  });
+
+  // 存不進去照樣要講 —— 精簡不等於不誠實。
+  it('瀏覽器不給存時仍然講出來', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('storage disabled');
+    });
+    render(<FontScaleControl compact />);
+    fireEvent.click(screen.getByRole('radio', { name: '中' }));
+    expect(screen.getByText(/重新開啟後會回到標準/)).toBeTruthy();
+  });
+});
