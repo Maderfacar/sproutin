@@ -149,11 +149,6 @@ function ImageField({
 export function BrandSection({ draft, onChange }: BrandSectionProps) {
   return (
     <section className="rise-in card space-y-6 p-5">
-      <div>
-        <p className="section-title">園所識別</p>
-        <p className="mt-1 text-sm text-ink-soft">家長打開 App 第一眼看到的樣子。</p>
-      </div>
-
       <label className="field-label">
         園所名稱
         <input

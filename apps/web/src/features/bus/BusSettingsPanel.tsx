@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icon } from '../../components/Icon';
 import { StatusScreen } from '../../components/StatusScreen';
 import { SurfaceLink } from '../../components/SurfaceLink';
+import { Band } from '../../components/Band';
 import { apiErrorMessage } from '../../lib/api';
 import type { BusDirection } from '../../lib/types';
 import { usePeople } from '../people/hooks';
@@ -73,99 +74,106 @@ export function BusSettingsPanel() {
   };
 
   return (
-    <div className="space-y-5">
-      <section className="rise-in card p-5">
-        <p className="eyebrow">新增路線</p>
-        <div className="mt-3 flex gap-2">
-          <input
-            type="text"
-            value={newRouteName}
-            maxLength={40}
-            placeholder="路線名稱，例如「東區線」"
-            onChange={(e) => setNewRouteName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submitRoute()}
-            className="field"
-          />
-          <button
-            type="button"
-            onClick={submitRoute}
-            disabled={busy || newRouteName.trim().length === 0}
-            className="btn-primary shrink-0 text-sm"
-          >
-            新增
-          </button>
-        </div>
-      </section>
+    <div>
+      <Band kind="manage" title="新增路線" description="先建一條路線，再把每個孩子的家加進來當接送點">
+        <section className="rise-in card p-5">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newRouteName}
+              maxLength={40}
+              placeholder="路線名稱，例如「東區線」"
+              onChange={(e) => setNewRouteName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitRoute()}
+              className="field"
+            />
+            <button
+              type="button"
+              onClick={submitRoute}
+              disabled={busy || newRouteName.trim().length === 0}
+              className="btn-primary shrink-0 text-sm"
+            >
+              新增
+            </button>
+          </div>
+        </section>
+      </Band>
 
       {actionError && (
-        <p className="text-sm text-red-700">
+        <p className="mb-5 text-sm text-red-700">
           {busErrorMessage(actionError, apiErrorMessage(actionError))}
         </p>
       )}
 
-      {routes.length === 0 ? (
-        <section className="rise-in card p-6 text-center">
-          <p className="text-sm leading-relaxed text-ink">還沒有任何娃娃車路線。</p>
-          <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-            先建一條路線（例如「東區線」），再把每個孩子的家加進來當接送點。
-          </p>
-        </section>
-      ) : (
-        <section className="rise-in space-y-3" style={{ animationDelay: '0.05s' }}>
-          {routes.map((route) => {
-            const isOpen = openRouteId === route.id;
-            return (
-              <div key={route.id} className="card overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenRouteId(isOpen ? null : route.id)}
-                  className="flex w-full items-center gap-3 p-4 text-left"
-                >
-                  <Icon name="bus" className="h-5 w-5 shrink-0 text-ink-soft" />
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink">
-                      {route.name}
-                      {!route.isActive && (
-                        <span className="chip bg-black/5 text-ink-soft">已停用</span>
-                      )}
-                    </p>
-                    <p className="truncate text-xs text-ink-soft">
-                      上午 {route.morningDepart || '未設定'} · 下午 {route.afternoonDepart || '未設定'}
-                      {' · '}
-                      {route.points.length} 個接送點 · {countFor(route.id)} 人
-                    </p>
-                  </div>
-                  <span aria-hidden className="shrink-0 text-xs text-ink-soft">
-                    {isOpen ? '收合' : '展開'}
-                  </span>
-                </button>
+      <Band
+        kind="review"
+        title="目前的路線"
+        description="展開一條路線可以排接送點順序、設出發時間、指定隨車老師"
+      >
+        {routes.length === 0 ? (
+          <section className="rise-in card p-6 text-center">
+            <p className="text-sm leading-relaxed text-ink">還沒有任何娃娃車路線。</p>
+            <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+              先建一條路線（例如「東區線」），再把每個孩子的家加進來當接送點。
+            </p>
+          </section>
+        ) : (
+          <section className="rise-in space-y-3" style={{ animationDelay: '0.05s' }}>
+            {routes.map((route) => {
+              const isOpen = openRouteId === route.id;
+              return (
+                <div key={route.id} className="card overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setOpenRouteId(isOpen ? null : route.id)}
+                    className="flex w-full items-center gap-3 p-4 text-left"
+                  >
+                    <Icon name="bus" className="h-5 w-5 shrink-0 text-ink-soft" />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink">
+                        {route.name}
+                        {!route.isActive && (
+                          <span className="chip bg-black/5 text-ink-soft">已停用</span>
+                        )}
+                      </p>
+                      <p className="truncate text-xs text-ink-soft">
+                        上午 {route.morningDepart || '未設定'} · 下午 {route.afternoonDepart || '未設定'}
+                        {' · '}
+                        {route.points.length} 個接送點 · {countFor(route.id)} 人
+                      </p>
+                    </div>
+                    <span aria-hidden className="shrink-0 text-xs text-ink-soft">
+                      {isOpen ? '收合' : '展開'}
+                    </span>
+                  </button>
 
-                {isOpen && (
-                  <div className="border-t border-line p-4">
-                    <RouteEditor
-                      route={route}
-                      staff={staff}
-                      ridersByPoint={ridersByPoint}
-                      assignedCount={countFor(route.id)}
-                      busy={busy}
-                      onUpdateRoute={(patch) => m.updateRoute.mutate({ id: route.id, patch })}
-                      onDeleteRoute={() => m.deleteRoute.mutate(route.id)}
-                      onAddPoint={(input) =>
-                        m.createPoint.mutate({ routeId: route.id, name: input.name, address: input.address })
-                      }
-                      onUpdatePoint={(id, patch) => m.updatePoint.mutate({ id, patch })}
-                      onDeletePoint={(id) => m.deletePoint.mutate(id)}
-                      onMovePoint={(direction: BusDirection, pointIds) =>
-                        m.reorderPoints.mutate({ routeId: route.id, direction, pointIds })
-                      }
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </section>
-      )}
+                  {isOpen && (
+                    <div className="border-t border-line p-4">
+                      <RouteEditor
+                        route={route}
+                        staff={staff}
+                        ridersByPoint={ridersByPoint}
+                        assignedCount={countFor(route.id)}
+                        busy={busy}
+                        onUpdateRoute={(patch) => m.updateRoute.mutate({ id: route.id, patch })}
+                        onDeleteRoute={() => m.deleteRoute.mutate(route.id)}
+                        onAddPoint={(input) =>
+                          m.createPoint.mutate({ routeId: route.id, name: input.name, address: input.address })
+                        }
+                        onUpdatePoint={(id, patch) => m.updatePoint.mutate({ id, patch })}
+                        onDeletePoint={(id) => m.deletePoint.mutate(id)}
+                        onMovePoint={(direction: BusDirection, pointIds) =>
+                          m.reorderPoints.mutate({ routeId: route.id, direction, pointIds })
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </section>
+        )}
+      </Band>
 
       <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-soft">
         <Icon name="shield" className="mt-0.5 h-4 w-4 shrink-0" />

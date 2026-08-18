@@ -25,11 +25,10 @@ export function CampaignHistory() {
 
   return (
     <section className="card p-5">
-      <p className="section-title">送出紀錄</p>
       {data.length === 0 ? (
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">還沒有發送過群發訊息。</p>
+        <p className="text-sm leading-relaxed text-ink-soft">還沒有發送過群發訊息。</p>
       ) : (
-        <ul className="mt-3">
+        <ul>
           {data.map((c) => (
             <li key={c.id} className="border-b border-line py-3 last:border-b-0">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">

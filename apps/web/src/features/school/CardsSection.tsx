@@ -59,12 +59,7 @@ export function CardsSection({ draft, onChange, viewerRoles = [] }: CardsSection
 
   return (
     <section className="rise-in card p-5" style={{ animationDelay: '0.05s' }}>
-      <p className="section-title">功能卡片</p>
-      <p className="mt-1 text-sm text-ink-soft">
-        決定家長首頁出現哪些功能、順序如何。標示「規劃中」的功能開啟後會顯示為即將推出。
-      </p>
-
-      <ul className="mt-4 border-t border-line">
+      <ul className="border-t border-line">
         {cards.map((card, i) => {
           const meta = cardMeta(card.id);
           const visible = isVisible(card, draft.featureFlags);

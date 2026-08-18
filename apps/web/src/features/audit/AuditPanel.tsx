@@ -8,6 +8,7 @@ import type { AuditLogFilters, AuditResult } from '../../lib/types';
 import { useAuditLogs } from './hooks';
 import { AUDIT_RESOURCE_TYPES, AUDIT_RESULT_LABEL, actorText } from './labels';
 import { SkeletonRows } from '../../components/Skeleton';
+import { Band } from '../../components/Band';
 
 const PAGE_SIZE = 50;
 
@@ -67,136 +68,146 @@ export function AuditPanel() {
   const canNext = offset + PAGE_SIZE < total;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div>
       {/* 桌面上四個欄位一排放得下，手機上一欄一列 —— 同一份欄位，只是排法隨寬度變。 */}
-      <form onSubmit={handleSearch} className="card flex flex-col gap-3 p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="field-label sm:flex-1">
-            <span>資源類型</span>
-            <select
-              value={form.resourceType}
-              onChange={(e) => setForm({ ...form, resourceType: e.target.value })}
-              className="field"
-            >
-              <option value="">全部</option>
-              {AUDIT_RESOURCE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </label>
+      <Band kind="action" title="查詢條件" description="選範圍再按查詢；留空就是全部">
+        <form onSubmit={handleSearch} className="card flex flex-col gap-3 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="field-label sm:flex-1">
+              <span>資源類型</span>
+              <select
+                value={form.resourceType}
+                onChange={(e) => setForm({ ...form, resourceType: e.target.value })}
+                className="field"
+              >
+                <option value="">全部</option>
+                {AUDIT_RESOURCE_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="field-label sm:flex-1">
-            <span>操作者</span>
-            <input
-              type="text"
-              value={form.actor}
-              onChange={(e) => setForm({ ...form, actor: e.target.value })}
-              placeholder="留空 = 全部；用下方「只看這個人」自動帶入"
-              className="field"
-            />
-          </label>
+            <label className="field-label sm:flex-1">
+              <span>操作者</span>
+              <input
+                type="text"
+                value={form.actor}
+                onChange={(e) => setForm({ ...form, actor: e.target.value })}
+                placeholder="留空 = 全部；用下方「只看這個人」自動帶入"
+                className="field"
+              />
+            </label>
 
-          <label className="field-label sm:flex-1">
-            <span>起</span>
-            <input
-              type="date"
-              value={form.from}
-              onChange={(e) => setForm({ ...form, from: e.target.value })}
-              className="field"
-            />
-          </label>
+            <label className="field-label sm:flex-1">
+              <span>起</span>
+              <input
+                type="date"
+                value={form.from}
+                onChange={(e) => setForm({ ...form, from: e.target.value })}
+                className="field"
+              />
+            </label>
 
-          <label className="field-label sm:flex-1">
-            <span>迄</span>
-            <input
-              type="date"
-              value={form.to}
-              onChange={(e) => setForm({ ...form, to: e.target.value })}
-              className="field"
-            />
-          </label>
-        </div>
-
-        <button type="submit" className="btn-primary sm:self-start sm:px-8">
-          查詢
-        </button>
-      </form>
-
-      {isLoading && <SkeletonRows rows={5} />}
-      {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
-      {data && data.data.length === 0 && (
-        <p className="text-sm text-ink-soft">沒有符合條件的稽核紀錄。</p>
-      )}
-
-      {data && data.data.length > 0 && (
-        <>
-          <p className="text-xs text-ink-soft">
-            共 {total} 筆，顯示 {offset + 1}–{Math.min(offset + PAGE_SIZE, total)}
-            {isFetching && '（更新中…）'}
-          </p>
-          <ul className="flex flex-col gap-2">
-            {data.data.map((log) => {
-              const result = AUDIT_RESULT_LABEL[log.result as AuditResult] ?? {
-                label: log.result,
-                className: 'bg-black/5 text-ink-soft',
-              };
-              const actorId = log.actorUserId;
-              return (
-                <li key={log.id} className="card p-3 text-sm">
-                  {/* flex-wrap：動作代碼 + 結果 + 時間在放大字級的窄手機上擠不下同一行，
-                      讓時間整段掉到下一行，比把動作代碼折斷好讀。 */}
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="font-bold text-ink">{log.action}</span>
-                    <span className={`chip ${result.className}`}>{result.label}</span>
-                    <span className="ml-auto text-xs text-ink-soft">
-                      {log.createdAt.slice(0, 10)} {log.createdAt.slice(11, 16)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-ink-soft">
-                    {log.resourceType}
-                    {log.resourceId ? `｜${log.resourceId}` : ''}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ink-soft">
-                    操作者：{actorText(log.actorName, actorId, log.actorRole)}
-                    {actorId && (
-                      // 「操作者」欄位要填的是一串沒人記得住的 ID。從這裡按一下就填好，
-                      // 不必為了追一個人的操作而去別的頁面複製 ID。
-                      <button
-                        type="button"
-                        onClick={() => filterByActor(actorId)}
-                        className="ml-2 underline underline-offset-2 transition hover:text-brand-primary"
-                      >
-                        只看這個人
-                      </button>
-                    )}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              disabled={!canPrev}
-              onClick={() => setOffset(Math.max(offset - PAGE_SIZE, 0))}
-              className="btn-secondary text-sm"
-            >
-              上一頁
-            </button>
-            <button
-              type="button"
-              disabled={!canNext}
-              onClick={() => setOffset(offset + PAGE_SIZE)}
-              className="btn-secondary text-sm"
-            >
-              下一頁
-            </button>
+            <label className="field-label sm:flex-1">
+              <span>迄</span>
+              <input
+                type="date"
+                value={form.to}
+                onChange={(e) => setForm({ ...form, to: e.target.value })}
+                className="field"
+              />
+            </label>
           </div>
-        </>
-      )}
+
+          <button type="submit" className="btn-primary sm:self-start sm:px-8">
+            查詢
+          </button>
+        </form>
+      </Band>
+
+      <Band
+        kind="review"
+        title="查詢結果"
+        description="誰在什麼時候做了什麼。紀錄只能新增，不能修改或刪除"
+      >
+        <div className="flex flex-col gap-4">
+          {isLoading && <SkeletonRows rows={5} />}
+          {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
+          {data && data.data.length === 0 && (
+            <p className="text-sm text-ink-soft">沒有符合條件的稽核紀錄。</p>
+          )}
+
+          {data && data.data.length > 0 && (
+            <>
+              <p className="text-xs text-ink-soft">
+                共 {total} 筆，顯示 {offset + 1}–{Math.min(offset + PAGE_SIZE, total)}
+                {isFetching && '（更新中…）'}
+              </p>
+              <ul className="flex flex-col gap-2">
+                {data.data.map((log) => {
+                  const result = AUDIT_RESULT_LABEL[log.result as AuditResult] ?? {
+                    label: log.result,
+                    className: 'bg-black/5 text-ink-soft',
+                  };
+                  const actorId = log.actorUserId;
+                  return (
+                    <li key={log.id} className="card p-3 text-sm">
+                      {/* flex-wrap：動作代碼 + 結果 + 時間在放大字級的窄手機上擠不下同一行，
+                          讓時間整段掉到下一行，比把動作代碼折斷好讀。 */}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="font-bold text-ink">{log.action}</span>
+                        <span className={`chip ${result.className}`}>{result.label}</span>
+                        <span className="ml-auto text-xs text-ink-soft">
+                          {log.createdAt.slice(0, 10)} {log.createdAt.slice(11, 16)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-ink-soft">
+                        {log.resourceType}
+                        {log.resourceId ? `｜${log.resourceId}` : ''}
+                      </p>
+                      <p className="mt-0.5 text-xs text-ink-soft">
+                        操作者：{actorText(log.actorName, actorId, log.actorRole)}
+                        {actorId && (
+                          // 「操作者」欄位要填的是一串沒人記得住的 ID。從這裡按一下就填好，
+                          // 不必為了追一個人的操作而去別的頁面複製 ID。
+                          <button
+                            type="button"
+                            onClick={() => filterByActor(actorId)}
+                            className="ml-2 underline underline-offset-2 transition hover:text-brand-primary"
+                          >
+                            只看這個人
+                          </button>
+                        )}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  disabled={!canPrev}
+                  onClick={() => setOffset(Math.max(offset - PAGE_SIZE, 0))}
+                  className="btn-secondary text-sm"
+                >
+                  上一頁
+                </button>
+                <button
+                  type="button"
+                  disabled={!canNext}
+                  onClick={() => setOffset(offset + PAGE_SIZE)}
+                  className="btn-secondary text-sm"
+                >
+                  下一頁
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Band>
     </div>
   );
 }

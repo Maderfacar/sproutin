@@ -16,6 +16,7 @@ import {
   useUpdateStudent,
 } from './adminHooks';
 import { SkeletonRows } from '../../components/Skeleton';
+import { Band } from '../../components/Band';
 
 const STATUS_OPTIONS: StudentStatus[] = ['ACTIVE', 'INACTIVE', 'GRADUATED'];
 
@@ -60,111 +61,122 @@ export function StudentsManager() {
   };
 
   return (
-    <div className="space-y-6">
-      {!hasClasses ? (
-        <section className="rise-in card p-5">
-          <p className="text-sm leading-relaxed text-ink">還沒有任何班級，學生必須先有班可以進。</p>
-          <SurfaceLink href="/liff/admin/classes" className="btn-primary mt-4 inline-block text-sm">
-            先去建立班級
-          </SurfaceLink>
-        </section>
-      ) : (
-        <section className="rise-in card p-5">
-          <p className="eyebrow">新增學生</p>
-          <div className="mt-3 space-y-2">
-            <input
-              type="text"
-              value={newName}
-              maxLength={40}
-              placeholder="學生姓名"
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && submitNew()}
-              className="field"
-            />
-            <div className="flex gap-2">
-              <select
-                aria-label="班級"
-                value={newClassId || classes?.[0]?.id || ''}
-                onChange={(e) => setNewClassId(e.target.value)}
-                className="field"
-              >
-                {classes?.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={submitNew}
-                disabled={busy || newName.trim().length === 0}
-                className="btn-primary shrink-0 text-sm"
-              >
-                新增
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {actionError && <p className="text-sm text-red-700">{apiErrorMessage(actionError)}</p>}
-
-      <section className="rise-in" style={{ animationDelay: '0.05s' }}>
-        <div className="mb-2 flex items-center gap-3">
-          <p className="eyebrow">學生（{students.length}）</p>
-          <select
-            aria-label="依班級篩選"
-            value={filterClassId}
-            onChange={(e) => setFilterClassId(e.target.value)}
-            className="ml-auto bg-transparent text-xs font-bold text-ink outline-none"
-          >
-            <option value="">全部班級</option>
-            {classes?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {students.length === 0 ? (
-          <p className="border-t border-line py-6 text-center text-sm text-ink-soft">
-            這個範圍還沒有學生。
-          </p>
+    <div>
+      <Band
+        kind="manage"
+        title="新增學生"
+        description="打上姓名、選一個班就建立得了。學生必須先有班可以進"
+      >
+        {!hasClasses ? (
+          <section className="rise-in card p-5">
+            <p className="text-sm leading-relaxed text-ink">還沒有任何班級，學生必須先有班可以進。</p>
+            <SurfaceLink href="/liff/admin/classes" className="btn-primary mt-4 inline-block text-sm">
+              先去建立班級
+            </SurfaceLink>
+          </section>
         ) : (
-          <ul className="border-t border-line">
-            {students.map((student) => (
-              <li key={student.id} className="flex items-center gap-3 border-b border-line py-3">
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                  style={{ background: 'var(--brand-primary)' }}
-                  aria-hidden
+          <section className="rise-in card p-5">
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={newName}
+                maxLength={40}
+                placeholder="學生姓名"
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitNew()}
+                className="field"
+              />
+              <div className="flex gap-2">
+                <select
+                  aria-label="班級"
+                  value={newClassId || classes?.[0]?.id || ''}
+                  onChange={(e) => setNewClassId(e.target.value)}
+                  className="field"
                 >
-                  {student.name.charAt(0)}
-                </span>
-                <SurfaceLink href={`/liff/student/${student.id}`} className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink">{student.name}</p>
-                  <p className="truncate text-xs text-ink-soft">
-                    {className(student.classId)}
-                    {student.status !== 'ACTIVE' && ` · ${STUDENT_STATUS_LABEL[student.status]}`}
-                  </p>
-                </SurfaceLink>
+                  {classes?.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
-                  aria-label={`編輯 ${student.name}`}
-                  onClick={() => setEditing(student)}
-                  className="btn-secondary shrink-0 text-xs"
+                  onClick={submitNew}
+                  disabled={busy || newName.trim().length === 0}
+                  className="btn-primary shrink-0 text-sm"
                 >
-                  編輯
+                  新增
                 </button>
-              </li>
-            ))}
-          </ul>
+              </div>
+            </div>
+          </section>
         )}
-      </section>
+      </Band>
+
+      {actionError && <p className="mb-5 text-sm text-red-700">{apiErrorMessage(actionError)}</p>}
+
+      <Band
+        kind="review"
+        title="目前的學生"
+        description="點名字進去看他的整合視圖；點「編輯」可以改班級與在學狀態"
+      >
+        <section className="rise-in" style={{ animationDelay: '0.05s' }}>
+          <div className="mb-2 flex items-center gap-3">
+            <p className="text-xs font-semibold text-ink-soft">共 {students.length} 位學生</p>
+            <select
+              aria-label="依班級篩選"
+              value={filterClassId}
+              onChange={(e) => setFilterClassId(e.target.value)}
+              className="ml-auto bg-transparent text-xs font-bold text-ink outline-none"
+            >
+              <option value="">全部班級</option>
+              {classes?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {students.length === 0 ? (
+            <p className="border-t border-line py-6 text-center text-sm text-ink-soft">
+              這個範圍還沒有學生。
+            </p>
+          ) : (
+            <ul className="border-t border-line">
+              {students.map((student) => (
+                <li key={student.id} className="flex items-center gap-3 border-b border-line py-3">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                    style={{ background: 'var(--brand-primary)' }}
+                    aria-hidden
+                  >
+                    {student.name.charAt(0)}
+                  </span>
+                  <SurfaceLink href={`/liff/student/${student.id}`} className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-ink">{student.name}</p>
+                    <p className="truncate text-xs text-ink-soft">
+                      {className(student.classId)}
+                      {student.status !== 'ACTIVE' && ` · ${STUDENT_STATUS_LABEL[student.status]}`}
+                    </p>
+                  </SurfaceLink>
+                  <button
+                    type="button"
+                    aria-label={`編輯 ${student.name}`}
+                    onClick={() => setEditing(student)}
+                    className="btn-secondary shrink-0 text-xs"
+                  >
+                    編輯
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </Band>
 
       {editing && (
-        <section className="rise-in card space-y-4 p-5">
+        <section className="rise-in card mb-7 space-y-4 p-5">
           <p className="section-title">編輯：{editing.name}</p>
 
           <label className="field-label">

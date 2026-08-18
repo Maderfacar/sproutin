@@ -12,6 +12,7 @@ import { PersonEditor } from './PersonEditor';
 import { useMyClasses } from '../classes/hooks';
 import { useAdminStudents } from '../students/adminHooks';
 import { SkeletonRows } from '../../components/Skeleton';
+import { Band } from '../../components/Band';
 
 const COLUMNS: UserRoleName[] = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'];
 
@@ -46,71 +47,79 @@ export function RolesOverview() {
   const inactive = people.filter((p) => p.status !== 'ACTIVE');
 
   return (
-    <div className="space-y-7">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[40rem] border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-line">
-              <th className="py-2 pr-3 text-left font-semibold text-ink">姓名</th>
-              {COLUMNS.map((role) => (
-                <th key={role} className="px-2 py-2 text-center text-xs font-semibold text-ink-soft">
-                  {ROLE_LABEL[role] ?? role}
-                </th>
-              ))}
-              <th className="py-2 pl-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {[...active, ...inactive].map((person) => {
-              const held = new Set(person.roles.map((r) => r.role));
-              const isActive = person.status === 'ACTIVE';
-              return (
-                <tr key={person.id} className="border-b border-line">
-                  <td className={`py-2.5 pr-3 ${isActive ? 'text-ink' : 'text-ink-soft'}`}>
-                    {person.displayName}
-                    {!isActive && <span className="ml-2 text-xs">已停用</span>}
-                    {!person.hasLineLinked && isActive && (
-                      <span className="ml-2 text-xs text-ink-soft">未綁定</span>
-                    )}
-                  </td>
-                  {COLUMNS.map((role) => (
-                    <td key={role} className="px-2 py-2.5 text-center">
-                      {held.has(role) ? (
-                        <span
-                          aria-label={`有${ROLE_LABEL[role] ?? role}身分`}
-                          className="inline-block h-2 w-2 rounded-full"
-                          style={{ background: 'var(--brand-primary)' }}
-                        />
-                      ) : (
-                        <span className="text-ink-soft/40" aria-hidden>
-                          ·
-                        </span>
+    <div>
+      <Band
+        kind="review"
+        title="誰有什麼身分"
+        description="一列一個人，圓點就是他有的身分。橫向可以捲，右邊的「調整」可以改"
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-line">
+                <th className="py-2 pr-3 text-left font-semibold text-ink">姓名</th>
+                {COLUMNS.map((role) => (
+                  <th key={role} className="px-2 py-2 text-center text-xs font-semibold text-ink-soft">
+                    {ROLE_LABEL[role] ?? role}
+                  </th>
+                ))}
+                <th className="py-2 pl-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {[...active, ...inactive].map((person) => {
+                const held = new Set(person.roles.map((r) => r.role));
+                const isActive = person.status === 'ACTIVE';
+                return (
+                  <tr key={person.id} className="border-b border-line">
+                    <td className={`py-2.5 pr-3 ${isActive ? 'text-ink' : 'text-ink-soft'}`}>
+                      {person.displayName}
+                      {!isActive && <span className="ml-2 text-xs">已停用</span>}
+                      {!person.hasLineLinked && isActive && (
+                        <span className="ml-2 text-xs text-ink-soft">未綁定</span>
                       )}
                     </td>
-                  ))}
-                  <td className="py-2.5 pl-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(person.id === editingId ? null : person.id)}
-                      className="btn-secondary text-xs"
-                    >
-                      調整
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                    {COLUMNS.map((role) => (
+                      <td key={role} className="px-2 py-2.5 text-center">
+                        {held.has(role) ? (
+                          <span
+                            aria-label={`有${ROLE_LABEL[role] ?? role}身分`}
+                            className="inline-block h-2 w-2 rounded-full"
+                            style={{ background: 'var(--brand-primary)' }}
+                          />
+                        ) : (
+                          <span className="text-ink-soft/40" aria-hidden>
+                            ·
+                          </span>
+                        )}
+                      </td>
+                    ))}
+                    <td className="py-2.5 pl-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(person.id === editingId ? null : person.id)}
+                        className="btn-secondary text-xs"
+                      >
+                        調整
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Band>
 
       {editing && (
-        <PersonEditor
-          person={editing}
-          classes={classes ?? []}
-          students={students ?? []}
-          onClose={() => setEditingId(null)}
-        />
+        <div className="mb-7">
+          <PersonEditor
+            person={editing}
+            classes={classes ?? []}
+            students={students ?? []}
+            onClose={() => setEditingId(null)}
+          />
+        </div>
       )}
 
       <p className="border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">

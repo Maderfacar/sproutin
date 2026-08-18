@@ -9,6 +9,7 @@ import { useSchoolConfig, useUpdateSchoolConfig } from './hooks';
 import { BrandSection } from './BrandSection';
 import { CardsSection } from './CardsSection';
 import { SkeletonCards } from '../../components/Skeleton';
+import { Band } from '../../components/Band';
 
 // 只送出真正改過的欄位（PATCH 局部更新；後端要求至少一個欄位）。
 function diff(base: SchoolAdminConfig, draft: SchoolAdminConfig): Partial<SchoolAdminConfig> {
@@ -102,29 +103,41 @@ export function AppearanceEditor({ viewerRoles, stickyBar = false }: AppearanceE
   );
 
   return (
-    <div className={`space-y-6 ${stickyBar ? 'pb-24' : ''}`}>
-      <BrandSection draft={draft} onChange={change} />
-      <CardsSection draft={draft} onChange={change} viewerRoles={viewerRoles.map((r) => r.role)} />
+    <div className={stickyBar ? 'pb-24' : undefined}>
+      <Band kind="manage" title="園所識別" description="家長打開 App 第一眼看到的樣子：名稱、顏色、logo 與封面圖">
+        <BrandSection draft={draft} onChange={change} />
+      </Band>
 
-      <section className="rise-in card p-5" style={{ animationDelay: '0.1s' }}>
-        <p className="section-title">請假流程</p>
-        <label className="mt-3 flex items-start gap-3">
-          <input
-            type="checkbox"
-            checked={draft.leaveRequiresApproval}
-            onChange={(e) => change({ leaveRequiresApproval: e.target.checked })}
-            className="mt-1 h-4 w-4 shrink-0 accent-brand-primary"
-          />
-          <span>
-            <span className="text-sm font-semibold text-ink">請假需要老師或行政審核</span>
-            <span className="mt-0.5 block text-xs leading-relaxed text-ink-soft">
-              關閉後，家長送出的請假會直接生效，不需要有人按核准。
+      <Band
+        kind="manage"
+        title="功能卡片"
+        description="決定家長首頁出現哪些功能、順序如何。標示「規劃中」的開啟後會顯示為即將推出"
+      >
+        <CardsSection draft={draft} onChange={change} viewerRoles={viewerRoles.map((r) => r.role)} />
+      </Band>
+
+      <Band kind="manage" title="請假流程" description="決定家長送出的請假要不要有人按核准">
+        <section className="rise-in card p-5" style={{ animationDelay: '0.1s' }}>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={draft.leaveRequiresApproval}
+              onChange={(e) => change({ leaveRequiresApproval: e.target.checked })}
+              className="mt-1 h-4 w-4 shrink-0 accent-brand-primary"
+            />
+            <span>
+              <span className="text-sm font-semibold text-ink">請假需要老師或行政審核</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-ink-soft">
+                關閉後，家長送出的請假會直接生效，不需要有人按核准。
+              </span>
             </span>
-          </span>
-        </label>
-      </section>
+          </label>
+        </section>
+      </Band>
 
-      {update.isError && <p className="text-sm text-red-700">{apiErrorMessage(update.error)}</p>}
+      {update.isError && (
+        <p className="mb-5 text-sm text-red-700">{apiErrorMessage(update.error)}</p>
+      )}
 
       {stickyBar ? (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur">

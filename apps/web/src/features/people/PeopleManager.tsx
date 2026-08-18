@@ -13,6 +13,7 @@ import { useAdminStudents } from '../students/adminHooks';
 import { peopleErrorMessage, useCreatePerson, usePeople } from './hooks';
 import { PersonEditor } from './PersonEditor';
 import { SkeletonRows } from '../../components/Skeleton';
+import { Band } from '../../components/Band';
 
 // 可新增的身分（園長不從這裡新增 —— 交接園長屬敏感操作，demo 階段先不開放）。
 const CREATABLE_ROLES: UserRoleName[] = ['TEACHER', 'BUS_TEACHER', 'ADMIN', 'PARENT', 'GUARDIAN'];
@@ -73,131 +74,144 @@ export function PeopleManager() {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="rise-in card p-5">
-        <p className="eyebrow">新增人員</p>
-        <div className="mt-3 space-y-2 md:flex md:items-start md:gap-2 md:space-y-0">
-          <input
-            type="text"
-            value={newName}
-            maxLength={40}
-            placeholder="姓名（例如：林老師、張媽媽）"
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submitNew()}
-            className="field md:flex-1"
-          />
-          <div className="flex gap-2 md:shrink-0">
-            <select
-              aria-label="身分"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value as UserRoleName)}
-              className="field md:w-36"
-            >
-              {CREATABLE_ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {ROLE_LABEL[role]}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={submitNew}
-              disabled={createPerson.isPending || newName.trim().length === 0}
-              className="btn-primary shrink-0 text-sm"
-            >
-              新增
-            </button>
+    <div>
+      <Band
+        kind="manage"
+        title="新增人員"
+        description="打好姓名、選一個身分就建立得了；建立完再給他一組綁定碼"
+      >
+        <section className="rise-in card p-5">
+          <div className="space-y-2 md:flex md:items-start md:gap-2 md:space-y-0">
+            <input
+              type="text"
+              value={newName}
+              maxLength={40}
+              placeholder="姓名（例如：林老師、張媽媽）"
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitNew()}
+              className="field md:flex-1"
+            />
+            <div className="flex gap-2 md:shrink-0">
+              <select
+                aria-label="身分"
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as UserRoleName)}
+                className="field md:w-36"
+              >
+                {CREATABLE_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABEL[role]}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={submitNew}
+                disabled={createPerson.isPending || newName.trim().length === 0}
+                className="btn-primary shrink-0 text-sm"
+              >
+                新增
+              </button>
+            </div>
           </div>
-        </div>
-        {createPerson.isError && (
-          <p className="mt-2 text-sm text-red-700">
-            {peopleErrorMessage(createPerson.error, apiErrorMessage(createPerson.error))}
-          </p>
-        )}
-      </section>
+          {createPerson.isError && (
+            <p className="mt-2 text-sm text-red-700">
+              {peopleErrorMessage(createPerson.error, apiErrorMessage(createPerson.error))}
+            </p>
+          )}
+        </section>
+      </Band>
 
-      <section className="rise-in" style={{ animationDelay: '0.05s' }}>
-        <div className="mb-3 flex gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              aria-pressed={tab === t.key}
-              onClick={() => setTab(t.key)}
-              className={`chip border transition ${
-                tab === t.key
-                  ? 'border-brand-primary text-brand-primary'
-                  : 'border-line text-ink-soft hover:border-brand-primary'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <Band
+        kind="review"
+        title="目前的人員"
+        description="用上面的標籤切換教職員或家長；點「編輯」可以改身分、班級與綁定"
+      >
+        <section className="rise-in" style={{ animationDelay: '0.05s' }}>
+          <div className="mb-3 flex gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                aria-pressed={tab === t.key}
+                onClick={() => setTab(t.key)}
+                className={`chip border transition ${
+                  tab === t.key
+                    ? 'border-brand-primary text-brand-primary'
+                    : 'border-line text-ink-soft hover:border-brand-primary'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-        {visible.length === 0 ? (
-          <p className="border-t border-line py-6 text-center text-sm text-ink-soft">
-            這個範圍還沒有人員。
-          </p>
-        ) : (
-          <ul className="border-t border-line">
-            {visible.map((person) => {
-              const summary =
-                person.teaching.map((t) => t.className).join('、') ||
-                person.guardianOf.map((g) => g.studentName).join('、');
-              return (
-                <li key={person.id} className="flex items-center gap-3 border-b border-line py-3">
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
-                      person.status === 'ACTIVE' ? '' : 'opacity-40'
-                    }`}
-                    style={{ background: 'var(--brand-primary)' }}
-                    aria-hidden
-                  >
-                    {person.displayName.charAt(0)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink">
-                      {person.displayName}
-                      {person.status !== 'ACTIVE' && (
-                        <span className="ml-2 text-xs font-normal text-ink-soft">已停用</span>
-                      )}
-                    </p>
-                    <p className="truncate text-xs text-ink-soft">
-                      {person.roles.map((r) => ROLE_LABEL[r.role] ?? r.role).join(' · ')}
-                      {summary && ` · ${summary}`}
-                    </p>
-                  </div>
-                  {!person.hasLineLinked && (
+          {visible.length === 0 ? (
+            <p className="border-t border-line py-6 text-center text-sm text-ink-soft">
+              這個範圍還沒有人員。
+            </p>
+          ) : (
+            <ul className="border-t border-line">
+              {visible.map((person) => {
+                const summary =
+                  person.teaching.map((t) => t.className).join('、') ||
+                  person.guardianOf.map((g) => g.studentName).join('、');
+                return (
+                  <li key={person.id} className="flex items-center gap-3 border-b border-line py-3">
                     <span
-                      title="尚未綁定 LINE，本人還無法登入"
-                      className="chip shrink-0 border border-line text-ink-soft"
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
+                        person.status === 'ACTIVE' ? '' : 'opacity-40'
+                      }`}
+                      style={{ background: 'var(--brand-primary)' }}
+                      aria-hidden
                     >
-                      未綁定
+                      {person.displayName.charAt(0)}
                     </span>
-                  )}
-                  <button
-                    type="button"
-                    aria-label={`編輯 ${person.displayName}`}
-                    onClick={() => setEditingId(person.id === editingId ? null : person.id)}
-                    className="btn-secondary shrink-0 text-xs"
-                  >
-                    編輯
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {person.displayName}
+                        {person.status !== 'ACTIVE' && (
+                          <span className="ml-2 text-xs font-normal text-ink-soft">已停用</span>
+                        )}
+                      </p>
+                      <p className="truncate text-xs text-ink-soft">
+                        {person.roles.map((r) => ROLE_LABEL[r.role] ?? r.role).join(' · ')}
+                        {summary && ` · ${summary}`}
+                      </p>
+                    </div>
+                    {!person.hasLineLinked && (
+                      <span
+                        title="尚未綁定 LINE，本人還無法登入"
+                        className="chip shrink-0 border border-line text-ink-soft"
+                      >
+                        未綁定
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`編輯 ${person.displayName}`}
+                      onClick={() => setEditingId(person.id === editingId ? null : person.id)}
+                      className="btn-secondary shrink-0 text-xs"
+                    >
+                      編輯
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </Band>
 
       {editing && (
-        <PersonEditor
-          person={editing}
-          classes={classes ?? []}
-          students={students ?? []}
-          onClose={() => setEditingId(null)}
-        />
+        <div className="mb-7">
+          <PersonEditor
+            person={editing}
+            classes={classes ?? []}
+            students={students ?? []}
+            onClose={() => setEditingId(null)}
+          />
+        </div>
       )}
 
       <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-soft">

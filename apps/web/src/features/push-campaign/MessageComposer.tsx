@@ -96,13 +96,7 @@ export function MessageComposer() {
 
   return (
     <section className="card p-5">
-      <p className="section-title">發送訊息</p>
-      <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
-        直接送到家長的 LINE。<span className="text-ink">送出後沒有辦法收回</span>，
-        所以請在按下最後一顆按鈕之前確認人數與內容。
-      </p>
-
-      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_16.25rem]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16.25rem]">
         <div className="space-y-5">
           <div>
             <p className="eyebrow">版型</p>
