@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { StaticDocumentTitle } from '../components/DocumentTitle';
 
 // 找不到頁面（Next.js 會用這一頁接住所有對不上的網址）。
 //
@@ -11,6 +12,7 @@ import Link from 'next/link';
 export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
+      <StaticDocumentTitle title="找不到頁面 · Sproutin" />
       <div className="card w-full max-w-md p-8 text-center">
         <span className="text-4xl" aria-hidden>
           🌱

@@ -20,3 +20,15 @@ export function DocumentTitle() {
 
   return null;
 }
+
+// 分頁標題（給**拿不到園名**的頁面用）：根路徑、找不到頁面、錯誤頁都不在 BrandingProvider
+// 底下（見那三頁的說明），所以標題由呼叫端自己給一句寫死的。
+// 沒有這一支的話，這幾頁的分頁會停在 RootLayout 那個靜態的「Sproutin」，
+// 開了五個分頁就分不出哪個是哪個 —— 那正是當初做 pageTitle 要解決的事。
+export function StaticDocumentTitle({ title }: { title: string }) {
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+
+  return null;
+}

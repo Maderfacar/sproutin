@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { PublicConfig } from '@sproutin/shared';
 import { loadPublicConfig } from '../lib/config';
+import { StaticDocumentTitle } from '../components/DocumentTitle';
 
 // 網站根路徑。任何人（含搜尋引擎、隨手貼網址的人）都會看到這一頁，
 // 因此**不顯示任何系統內部資訊** —— 這裡原本是 Phase 5 驗證 runtime config 管線的骨架頁，
@@ -36,6 +37,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
+      <StaticDocumentTitle title={`入口 · ${brandName}`} />
       <div className="card w-full max-w-md p-8 text-center">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

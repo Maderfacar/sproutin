@@ -2,7 +2,12 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**時間改用台灣時區 + 後台也有字體放大 ✅ ACCEPTED**（Human Owner「驗收過關」）——
+> Last updated: 2026-08-19（**打磨收尾：自己的錯誤頁 + 三頁分頁標題 + 請假樂觀更新 IMPLEMENTED**——
+> 打磨第一批留下的兩條尾巴補完，B1 當初刻意沒做的請假樂觀更新補上。
+> 無 migration、無新端點。測試 574 → **585**。
+> **LINE 綁定碼線上驗收 ✅ ACCEPTED（Human Owner「驗收過」）；綁定碼 QR 定案不做並取消。**
+>
+> （前次）2026-08-19（**時間改用台灣時區 + 後台也有字體放大 ✅ ACCEPTED**（Human Owner「驗收過關」）——
 > Human Owner 回報「系統的時間與台灣時間不符」：① 全站的「今天」原本是 UTC 的今天，
 > 台灣凌晨 0–8 點會整個差一天（老師七點到園就中招）② 稽核／對話的時間戳直接印 UTC，慢 8 小時。
 > 前端新增 lib/datetime.ts、後端新增 todayKey()，**儲存慣例不變**。無 migration、無新端點。
@@ -250,6 +255,27 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
 數字補間（列為「可有可無」，未排入）③ 請假送出目前是按鈕轉「送出中…」，**沒有**在請假清單
 上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
 若 Human Owner 要，可另排。
+
+**打磨收尾（錯誤頁 + 分頁標題 + 請假樂觀更新）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-19）。**
+四項全綠：lint / typecheck / **測試 585（api 366 + shared 12 + web 207）** / build。
+**無 migration、無新後端端點**（純前端）。
+
+```text
+① 程式在瀏覽器出錯 → app/error.tsx（人話 + 重新載入 + 回入口 + 只給回報代碼，不印技術細節）
+   另加 app/global-error.tsx —— 連根版面都壞掉時 error.tsx 接不到，這是最後一道網
+   （會取代整份文件，所以自己畫 html/body、樣式用 inline，這種時候 CSS 可能沒載進來）。
+② 根路徑 / 找不到頁面 / 錯誤頁的分頁標題還是靜態「Sproutin」
+   → components/DocumentTitle 加 StaticDocumentTitle（那三頁都拿不到 BrandingProvider，
+     所以標題由呼叫端給一句寫死的）。根路徑用「入口 · 園名」（園名是那一頁自己載的）。
+③ 請假送出後清單沒有立刻長出一列（B1 當初刻意沒做的那件）
+   → useCreateLeave 加 onMutate/onError 樂觀更新。那一列顯示「送出中…」而**不是**「待審核」
+     ——伺服器才知道真正的 id 與審核狀態；也不給取消按鈕（沒有 id，取消不了）。
+     送不出去就把清單復原，不留下一列不存在的假資料。
+測試  web 196 → 207（錯誤頁 5、找不到頁面 2、請假樂觀更新 4）。
+```
+
+**LINE 綁定碼 — ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」）。** 從 2026-08-17 掛到現在的線上驗收完成。
+**綁定碼 QR — Human Owner 定案「不做並取消」（2026-08-19）**，不再列為待辦（原本要新套件，§D 提案也一併取消）。
 
 **時間改用台灣時區 + 後台字體放大 — ✅ ACCEPTED（2026-08-19, Human Owner 線上驗證完畢）。**
 四項全綠：lint / typecheck / **測試 574（api 366 + shared 12 + web 196）** / build。
