@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**時間改用台灣時區 + 後台也有字體放大 IMPLEMENTED**——
+> Last updated: 2026-08-19（**時間改用台灣時區 + 後台也有字體放大 ✅ ACCEPTED**（Human Owner「驗收過關」）——
 > Human Owner 回報「系統的時間與台灣時間不符」：① 全站的「今天」原本是 UTC 的今天，
 > 台灣凌晨 0–8 點會整個差一天（老師七點到園就中招）② 稽核／對話的時間戳直接印 UTC，慢 8 小時。
 > 前端新增 lib/datetime.ts、後端新增 todayKey()，**儲存慣例不變**。無 migration、無新端點。
@@ -251,7 +251,7 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
 上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
 若 Human Owner 要，可另排。
 
-**時間改用台灣時區 + 後台字體放大 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-19）。**
+**時間改用台灣時區 + 後台字體放大 — ✅ ACCEPTED（2026-08-19, Human Owner 線上驗證完畢）。**
 四項全綠：lint / typecheck / **測試 574（api 366 + shared 12 + web 196）** / build。
 **無 migration、無新後端端點**（改的是既有 service 裡「今天是哪一天」的算法 + 前端顯示）。
 
@@ -290,7 +290,7 @@ Human Owner 回報：「系統的時間與台灣時間不符」。查出兩個�
 差別只有後台欄寬 14.5rem 塞不下每個選項的說明，所以只留三顆按鈕。
 **窄視窗時左欄會收成上方橫向導覽，這一塊跟「登出」一樣會收起來**（沿用既有版型，沒有另做）。
 
-**打磨第二階段 下一輪 —— 後台 8 頁的斷句 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-19）。**
+**打磨第二階段 下一輪 —— 後台 8 頁的斷句 — ✅ ACCEPTED（2026-08-19, Human Owner「已驗收」）。**
 四項全綠：lint / typecheck / **測試 553（api 362 + shared 12 + web 179）** / build。
 **無 migration、無新後端端點**（純前端）。
 
