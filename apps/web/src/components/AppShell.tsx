@@ -10,7 +10,7 @@ import { Icon, type IconName } from './Icon';
 const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/liff', label: '首頁', icon: 'home' },
   { href: '/liff/communication-book', label: '聯絡簿', icon: 'book' },
-  { href: '/liff/notification', label: '通知', icon: 'bell' },
+  { href: '/liff/notification', label: '訊息', icon: 'bell' },
   { href: '/liff/me', label: '我的', icon: 'user' },
 ];
 

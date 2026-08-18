@@ -68,6 +68,9 @@ export interface NotificationView {
   payload: unknown;
   readAt: string | null;
   createdAt: string; // ISO
+  // 訊息中心用的人話（後端讀取時 join 補上，沒寫進資料庫）。
+  title: string;
+  subtitle: string;
 }
 
 export interface ClassView {

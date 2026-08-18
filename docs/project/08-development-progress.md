@@ -2,7 +2,9 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**插隊三件 A1–A3 IMPLEMENTED，待線上驗收**——
+> Last updated: 2026-08-18（**B1 手機體感 + B2 訊息中心 進行中**;插隊三件 A1–A3 已 ✅ ACCEPTED。
+>
+> （前次）2026-08-18（**插隊三件 A1–A3**——
 > A1 全站字體大小（標準／中／大，存在這支瀏覽器上、只在家長端「我的」提供開關）、
 > A2 最新公告移到「快速功能」上方、A3 首頁封面圖延伸到頁首後面且頁首改為固定在最上方。
 > 無 migration、無新端點。測試 445 → **464**。四題由 Human Owner 定案（見下方）。
@@ -139,7 +141,7 @@ B2 稽核紀錄的「操作者」是一串看不懂的 ID                → /au
 B3 lib/adminNav.ts 的 onlyMobile 沒有任何一條在用       → 刪除（含 AdminShell 的「手機版」標籤與那條測試）
 ```
 
-**插隊三件（A1 字體大小 / A2 公告位置 / A3 頁首與封面圖）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+**插隊三件（A1 字體大小 / A2 公告位置 / A3 頁首與封面圖）— ✅ ACCEPTED（2026-08-18, Human Owner 線上驗證完畢）。**
 四項全綠：lint / typecheck / **測試 464（api 346 + shared 12 + web 106）** / build。
 **無 migration、無新後端端點**（純前端）。
 
@@ -170,6 +172,24 @@ A3 封面圖延伸到頁首後面           → AppShell 頁首改 sticky top-0�
    —— 頁首下方看得到的 hero 與其下所有內容位置與改動前完全相同，只是圖多延伸到頁首後面。
    底線兩種狀態都保留（透明時看不見），否則捲動時頁首矮 1px、整頁會跳。
    hero 頂端加一層暗紗：封面圖是園所自己傳的，可能上半部很亮；品牌色也可能挑到淺色。
+```
+
+**B2 訊息中心（「通知」頁升級）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 504（api 362 + shared 12 + web 130）** / build。
+**無 migration、無新後端端點**（改既有 `GET /notifications` 的回應，詳見 docs/07 §4j）。
+
+Human Owner 定案：**不做四合一，把通知頁做成訊息中心**（收件匣 + 深層頁面）。
+
+```text
+後端  GET /notifications 多回 title / subtitle   讀取時 join，不寫回 payload
+      一種資源查一次（studentId/announcementId/messageId/senderId 去重後各一發）
+      補不出來退回分類名稱，不回空字串
+前端  features/notification/target.ts            type+payload → 手機版網址（後端不管路由）
+      NotificationList 改寫成收件匣               圖示 + 標題 + 來源 + 相對時間 + 未讀點
+      點一則＝標已讀（樂觀更新）再跳頁
+      載入用骨架屏、空狀態給得出下一步、取不到資料明講錯誤（不回空收件匣）
+命名  「通知」→「訊息中心」（網址 /liff/notification 不動，圖文選單與既有連結不受影響）
+刻意不收進來：出缺勤與行事曆（是紀錄不是訊息，推了會天天洗版）；請假申請與表單（是動作）
 ```
 
 **待線上驗收的重點面**：底部四格工具列、hero 上疊的白字與園名、首頁快速功能兩欄格線、

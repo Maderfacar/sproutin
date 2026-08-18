@@ -53,7 +53,7 @@ export function adminNav(flags: RoleFlags): AdminNavSection[] {
       { href: '/admin/attendance', label: '出缺勤', icon: 'check' },
       { href: '/admin/leave', label: '請假', icon: 'cal' },
       { href: '/admin/announcement', label: '公告', icon: 'mega' },
-      { href: '/admin/notification', label: '通知', icon: 'bell' },
+      { href: '/admin/notification', label: '訊息中心', icon: 'bell' },
     ],
   });
 

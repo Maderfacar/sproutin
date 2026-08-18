@@ -120,3 +120,28 @@ body {
     height: calc(16rem + var(--shell-header-h));
   }
 }
+
+/* 骨架屏（components/Skeleton）。米白底上的微光掃過，不用灰到像壞掉。
+   與 .rise-in 同一個慣例：使用者開了「減少動態效果」就只留靜態色塊。 */
+.skeleton {
+  background-color: color-mix(in srgb, var(--line) 62%, var(--surface));
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--surface) 80%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: skeletonSweep 1.4s var(--ease-out) infinite;
+}
+@keyframes skeletonSweep {
+  from { background-position: 220% 0; }
+  to { background-position: -20% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+}

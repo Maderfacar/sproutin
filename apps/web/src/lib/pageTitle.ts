@@ -14,7 +14,7 @@ const TITLES: Record<string, string> = {
   '/liff/attendance': '出缺勤',
   '/liff/leave': '請假',
   '/liff/announcement': '公告',
-  '/liff/notification': '通知',
+  '/liff/notification': '訊息中心',
   '/liff/audit': '稽核紀錄',
   '/liff/bus': '娃娃車點名',
   '/liff/me': '我的',
