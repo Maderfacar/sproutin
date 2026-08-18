@@ -47,7 +47,7 @@ export function RolesOverview() {
   return (
     <div className="space-y-7">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[40rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-line">
               <th className="py-2 pr-3 text-left font-semibold text-ink">姓名</th>

@@ -32,7 +32,7 @@ export function CardPreview({
     .filter((r) => r.value.length > 0);
 
   return (
-    <div className="mx-auto w-[248px] overflow-hidden rounded-[22px] border border-line bg-bg shadow-soft">
+    <div className="mx-auto w-[15.5rem] overflow-hidden rounded-[22px] border border-line bg-bg shadow-soft">
       <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2.5">
         <span className="truncate text-xs font-semibold text-ink">{brandName}</span>
       </div>
@@ -41,15 +41,15 @@ export function CardPreview({
         <div className="overflow-hidden rounded-md2 border border-line bg-surface">
           {imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="h-[100px] w-full object-cover" />
+            <img src={imageUrl} alt="" className="h-[6.25rem] w-full object-cover" />
           )}
           <div className="space-y-1.5 p-3">
             {spec.badge && (
-              <span className="inline-block rounded-md2 bg-black/[0.06] px-2 py-0.5 text-[10px] text-ink-soft">
+              <span className="inline-block rounded-md2 bg-black/[0.06] px-2 py-0.5 text-3xs text-ink-soft">
                 {spec.badge}
               </span>
             )}
-            <p className="text-[10px] tracking-[0.12em] text-ink-soft">{brandName}</p>
+            <p className="text-3xs tracking-[0.12em] text-ink-soft">{brandName}</p>
             <p className="text-sm font-semibold leading-snug text-ink">
               {title || '（還沒填標題）'}
             </p>
@@ -57,7 +57,7 @@ export function CardPreview({
             {rows.length > 0 && (
               <dl className="space-y-0.5 pt-1">
                 {rows.map((r) => (
-                  <div key={r.label} className="flex gap-2 text-[11px]">
+                  <div key={r.label} className="flex gap-2 text-2xs">
                     <dt className="w-12 shrink-0 text-ink-soft">{r.label}</dt>
                     <dd className="flex-1 text-ink">{r.value}</dd>
                   </div>
@@ -66,13 +66,13 @@ export function CardPreview({
             )}
 
             {body.trim().length > 0 && (
-              <p className="whitespace-pre-wrap pt-1 text-[11px] leading-relaxed text-ink-soft">
+              <p className="whitespace-pre-wrap pt-1 text-2xs leading-relaxed text-ink-soft">
                 {body}
               </p>
             )}
           </div>
           {buttonLabel.trim().length > 0 && (
-            <div className="border-t border-line px-3 py-2 text-center text-[11px] text-brand-primary">
+            <div className="border-t border-line px-3 py-2 text-center text-2xs text-brand-primary">
               {buttonLabel}
             </div>
           )}

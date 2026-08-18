@@ -33,7 +33,9 @@ const ATT: Record<string, { text: string; note: string; brand: boolean }> = {
   ABSENT: { text: '未到校', note: '今日缺席', brand: false },
 };
 
-// 清葉家長首頁：今日狀態 → 本月統計 → 快速功能 → 最新公告。
+// 清葉家長首頁：今日狀態 → 本月統計 → 今日聯絡簿 → 最新公告 → 快速功能。
+// 公告排在快速功能之前（Human Owner 2026-08-18）：公告是「今天有沒有新的事」,
+// 快速功能是常駐入口 —— 會變的東西要先看到。
 // 有學生者（家長 / 有監護的帳號）顯示今日/統計;純教職員顯示快速入口 + 公告。
 export default function DashboardPage() {
   const { user } = useSession();
@@ -171,8 +173,32 @@ export default function DashboardPage() {
         </section>
       )}
 
+      {/* 最新公告 */}
+      {latest && (
+        <section className="rise-in" style={{ animationDelay: '0.1s' }}>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="eyebrow">最新公告</p>
+            <Link
+              href="/liff/announcement"
+              className="flex items-center gap-0.5 text-xs font-bold text-brand-primary"
+            >
+              全部
+              <Icon name="chev" className="h-3 w-3" />
+            </Link>
+          </div>
+          <Link href="/liff/announcement" className="block">
+            <p className="text-xs text-ink-soft">
+              {latest.scope === 'SCHOOL' ? '全校' : '班級'} ·{' '}
+              {new Date(latest.createdAt).toLocaleDateString('zh-TW')}
+            </p>
+            <p className="mt-1 font-serif text-base font-semibold leading-snug text-ink">
+              {latest.title}
+            </p>
+          </Link>
+        </section>
+      )}
       {/* 快速功能 */}
-      <section className="rise-in" style={{ animationDelay: '0.1s' }}>
+      <section className="rise-in" style={{ animationDelay: '0.15s' }}>
         <p className="eyebrow mb-1">快速功能</p>
         <div className="grid grid-cols-2 border-t border-line">
           {cards.map((card) => {
@@ -182,10 +208,14 @@ export default function DashboardPage() {
             const inner = (
               <>
                 <Icon name={meta.icon} className="h-5 w-5 shrink-0" />
-                <span className="text-sm font-semibold text-ink">{meta.title}</span>
-                {!meta.enabled && (
-                  <span className="ml-auto text-[10px] text-ink-soft">即將推出</span>
-                )}
+                {/* 「即將推出」放在標題底下而不是右邊：字級放大時（lib/fontScale）
+                    兩者在窄手機上搶不到同一行，標題會被擠成怪斷行。 */}
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-ink">{meta.title}</span>
+                  {!meta.enabled && (
+                    <span className="mt-0.5 block text-3xs text-ink-soft">即將推出</span>
+                  )}
+                </span>
               </>
             );
             // 尚未完工的功能仍可點進預告頁（讓人知道接下來會有這功能），只是視覺上收斂。
@@ -208,30 +238,6 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* 最新公告 */}
-      {latest && (
-        <section className="rise-in" style={{ animationDelay: '0.15s' }}>
-          <div className="mb-2 flex items-center justify-between">
-            <p className="eyebrow">最新公告</p>
-            <Link
-              href="/liff/announcement"
-              className="flex items-center gap-0.5 text-xs font-bold text-brand-primary"
-            >
-              全部
-              <Icon name="chev" className="h-3 w-3" />
-            </Link>
-          </div>
-          <Link href="/liff/announcement" className="block">
-            <p className="text-xs text-ink-soft">
-              {latest.scope === 'SCHOOL' ? '全校' : '班級'} ·{' '}
-              {new Date(latest.createdAt).toLocaleDateString('zh-TW')}
-            </p>
-            <p className="mt-1 font-serif text-base font-semibold leading-snug text-ink">
-              {latest.title}
-            </p>
-          </Link>
-        </section>
-      )}
     </div>
   );
 }

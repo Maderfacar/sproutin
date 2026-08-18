@@ -127,14 +127,14 @@ export function RichMenuSection() {
               }`}
             >
               {AUDIENCE_LABEL[a]}
-              {config?.isApplied && <span className="ml-1.5 text-[10px]">已套用</span>}
+              {config?.isApplied && <span className="ml-1.5 text-3xs">已套用</span>}
             </button>
           );
         })}
       </div>
       <p className="mt-2 text-xs leading-relaxed text-ink-soft">{AUDIENCE_HINT[audience]}</p>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_16.25rem]">
         <div className="space-y-5">
           <div>
             <p className="eyebrow">版面</p>
@@ -275,7 +275,7 @@ export function RichMenuSection() {
             selectedIndex={selected}
             onSelect={setSelected}
           />
-          <p className="mt-2 text-center text-[11px] leading-relaxed text-ink-soft">
+          <p className="mt-2 text-center text-2xs leading-relaxed text-ink-soft">
             格線是實際可以點的區域。
             <br />
             確認底圖上的按鈕有對齊格線。

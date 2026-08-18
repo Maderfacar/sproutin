@@ -6,6 +6,13 @@ const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // 補上比 text-xs 更小的三級。原本這些地方寫死 `text-[10px]` 之類的 px，
+      // 改 html font-size 放大全站時它們不會跟著長大，大小字的比例會走鐘（見 lib/fontScale）。
+      fontSize: {
+        '2xs': ['0.6875rem', { lineHeight: '0.9375rem' }], // 11px
+        '3xs': ['0.625rem', { lineHeight: '0.875rem' }], // 10px
+        '4xs': ['0.5625rem', { lineHeight: '0.75rem' }], // 9px
+      },
       fontFamily: {
         sans: ['var(--font-sans)'],
         serif: ['var(--font-serif)'],

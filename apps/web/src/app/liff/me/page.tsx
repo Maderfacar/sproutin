@@ -7,6 +7,7 @@ import { roleFlags } from '../../../lib/roles';
 import { ROLE_LABEL } from '../../../lib/roleLabels';
 import { logout } from '../../../lib/auth';
 import { Icon, type IconName } from '../../../components/Icon';
+import { FontScaleControl } from '../../../components/FontScaleControl';
 
 // 園所管理入口（僅 OWNER/ADMIN 可見;真正授權在後端 Guard）。
 const ADMIN_LINKS: { href: string; title: string; description: string; icon: IconName }[] = [
@@ -49,7 +50,7 @@ async function handleLogout(): Promise<void> {
   window.location.reload();
 }
 
-// 清葉「我的」：個人資料 + 所屬園所 + 登出。
+// 清葉「我的」：個人資料 + 所屬園所 + 顯示設定 + （園所管理）+ 登出。
 export default function MePage() {
   const { user } = useSession();
   const branding = useBranding();
@@ -86,8 +87,13 @@ export default function MePage() {
         <p className="mt-2 font-serif text-lg font-semibold text-ink">{branding.brandName}</p>
       </section>
 
+      {/* 顯示設定（Human Owner 2026-08-18：只放家長手機端、只記在這支瀏覽器上）。 */}
+      <section className="rise-in" style={{ animationDelay: '0.1s' }}>
+        <FontScaleControl />
+      </section>
+
       {flags.canManageSchool && (
-        <section className="rise-in" style={{ animationDelay: '0.1s' }}>
+        <section className="rise-in" style={{ animationDelay: '0.15s' }}>
           <p className="eyebrow mb-1">園所管理</p>
           <div className="border-t border-line">
             {ADMIN_LINKS.map((item) => (

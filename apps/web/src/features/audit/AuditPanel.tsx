@@ -144,7 +144,9 @@ export function AuditPanel() {
               const actorId = log.actorUserId;
               return (
                 <li key={log.id} className="card p-3 text-sm">
-                  <div className="flex items-center gap-2">
+                  {/* flex-wrap：動作代碼 + 結果 + 時間在放大字級的窄手機上擠不下同一行，
+                      讓時間整段掉到下一行，比把動作代碼折斷好讀。 */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-bold text-ink">{log.action}</span>
                     <span className={`chip ${result.className}`}>{result.label}</span>
                     <span className="ml-auto text-xs text-ink-soft">

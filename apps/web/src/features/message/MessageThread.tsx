@@ -74,7 +74,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
             return (
               <Fragment key={msg.id}>
                 {showDay && (
-                  <div className="flex items-center gap-3 py-1 text-[10px] font-bold tracking-[0.1em] text-ink-soft">
+                  <div className="flex items-center gap-3 py-1 text-3xs font-bold tracking-[0.1em] text-ink-soft">
                     <span className="h-px flex-1 bg-line" />
                     {dayLabel(msg.createdAt)}
                     <span className="h-px flex-1 bg-line" />
@@ -87,7 +87,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
                           品牌色是每個園所自己設定的，第二個顏色不一定跟它搭。 */}
                       <span
                         aria-hidden
-                        className={`flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-bold ${
+                        className={`flex h-[1.375rem] w-[1.375rem] items-center justify-center rounded-full text-2xs font-bold ${
                           msg.senderRelation
                             ? 'border border-line bg-surface text-ink-soft'
                             : 'text-white'
@@ -98,7 +98,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
                       >
                         {msg.senderName.charAt(0)}
                       </span>
-                      <span className="text-[11.5px] font-semibold text-ink-soft">
+                      <span className="text-2xs font-semibold text-ink-soft">
                         {senderLabel(msg)}
                       </span>
                     </div>
@@ -117,7 +117,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
                   >
                     <p className="whitespace-pre-wrap break-words">{msg.body}</p>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2 px-1 text-[10px] text-ink-soft">
+                  <div className="mt-1.5 flex items-center gap-2 px-1 text-3xs text-ink-soft">
                     <span>{timeLabel(msg.createdAt)}</span>
                     {showUnread && (
                       <button

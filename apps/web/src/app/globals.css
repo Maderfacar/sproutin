@@ -26,6 +26,13 @@
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
+  /* 手機外框（AppShell）的量測值。首頁 hero 要鑽到頁首底下，就必須知道頁首多高;
+     寫成變數是為了「只有一個地方會走鐘」——改了 header 的 py 就改這裡。
+     4.5rem = 圓形 logo 2.5rem（h-10）+ 上下 py-4 各 1rem;+1px 是那條底線。
+     全部用 rem → 家長把字放大時（見 lib/fontScale）頁首與 hero 一起等比長大。 */
+  --shell-header-h: calc(4.5rem + 1px);
+  --shell-main-pt: 1.75rem; /* AppShell <main> 的 pt-7 */
+
   /* 字體：襯線標題 + 清爽正文 */
   --font-serif: 'Iowan Old Style', 'Palatino Linotype', 'Songti TC', 'Noto Serif TC', Georgia, serif;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Noto Sans TC',
@@ -96,5 +103,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rise-in {
     animation: none;
+  }
+}
+
+/* 首頁 hero：往上鑽到頁首底下，讓封面圖從畫面最頂端開始。
+   往上多鑽了一個頁首的高度,就要多長一個頁首的高度回來 —— 這樣「頁首下方看得到的
+   hero」以及它下面所有內容的位置,跟改動前完全一樣,只是圖多延伸到頁首後面。 */
+.home-hero {
+  margin-top: calc(-1 * (var(--shell-header-h) + var(--shell-main-pt)));
+}
+.home-hero-media {
+  height: calc(14rem + var(--shell-header-h));
+}
+@media (min-width: 640px) {
+  .home-hero-media {
+    height: calc(16rem + var(--shell-header-h));
   }
 }

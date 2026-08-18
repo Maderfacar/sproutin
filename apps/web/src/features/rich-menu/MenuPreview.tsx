@@ -36,19 +36,19 @@ export function MenuPreview({
   const byIndex = new Map(items.map((i) => [i.index, i.target]));
 
   return (
-    <div className="mx-auto w-[248px] overflow-hidden rounded-[22px] border border-line bg-bg shadow-soft">
+    <div className="mx-auto w-[15.5rem] overflow-hidden rounded-[22px] border border-line bg-bg shadow-soft">
       <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2.5">
         <Icon name="chev" className="h-3.5 w-3.5 rotate-180 text-ink-soft" />
         <span className="truncate text-xs font-semibold text-ink">{brandName}</span>
       </div>
 
-      <div className="min-h-[86px] p-3">
-        <p className="rounded-md2 border border-line bg-surface px-2.5 py-2 text-[11px] leading-relaxed text-ink-soft">
+      <div className="min-h-[5.375rem] p-3">
+        <p className="rounded-md2 border border-line bg-surface px-2.5 py-2 text-2xs leading-relaxed text-ink-soft">
           歡迎加入{brandName}！點下方選單就能看到孩子今天的狀況。
         </p>
       </div>
 
-      <div className="border-t border-line bg-surface px-3 py-1.5 text-center text-[11px] text-ink-soft">
+      <div className="border-t border-line bg-surface px-3 py-1.5 text-center text-2xs text-ink-soft">
         {chatBarText || '　'}
       </div>
 
@@ -79,13 +79,13 @@ export function MenuPreview({
                 <>
                   <Icon name={TARGET_ICON[target]} className="h-4 w-4 text-brand-primary" />
                   {!imageUrl && (
-                    <span className="text-[9px] font-semibold text-ink">
+                    <span className="text-4xs font-semibold text-ink">
                       {TARGET_LABEL[target]}
                     </span>
                   )}
                 </>
               ) : (
-                !imageUrl && <span className="text-[9px] text-ink-soft">未使用</span>
+                !imageUrl && <span className="text-4xs text-ink-soft">未使用</span>
               )}
             </button>
           );

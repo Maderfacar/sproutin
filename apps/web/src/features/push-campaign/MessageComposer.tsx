@@ -102,7 +102,7 @@ export function MessageComposer() {
         所以請在按下最後一顆按鈕之前確認人數與內容。
       </p>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
+      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_16.25rem]">
         <div className="space-y-5">
           <div>
             <p className="eyebrow">版型</p>
@@ -367,7 +367,7 @@ export function MessageComposer() {
             fields={fields}
             buttonLabel={buttonKind === 'none' ? '' : buttonLabel}
           />
-          <p className="mt-2 text-center text-[11px] leading-relaxed text-ink-soft">
+          <p className="mt-2 text-center text-2xs leading-relaxed text-ink-soft">
             家長在 LINE 裡看到的樣子。
             <br />
             沒填的欄位不會出現。

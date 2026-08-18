@@ -33,7 +33,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[232px_minmax(0,1fr)]">
+    <div className="min-h-screen md:grid md:grid-cols-[14.5rem_minmax(0,1fr)]">
       <aside className="border-b border-line bg-surface/70 md:sticky md:top-0 md:h-screen md:overflow-y-auto md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 px-5 py-5">
           {branding.logoUrl ? (
@@ -55,7 +55,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <p className="truncate font-serif text-base font-semibold text-ink">
               {branding.brandName}
             </p>
-            <p className="text-[11px] tracking-[0.16em] text-ink-soft">園務後台</p>
+            <p className="text-2xs tracking-[0.16em] text-ink-soft">園務後台</p>
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                             : 'text-ink-soft hover:bg-black/[0.03] hover:text-ink'
                         }`}
                       >
-                        <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
+                        <Icon name={item.icon} className="h-[1.125rem] w-[1.125rem] shrink-0" />
                         <span className="flex-1">{item.label}</span>
                       </Link>
                     </li>
