@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**打磨收尾：自己的錯誤頁 + 三頁分頁標題 + 請假樂觀更新 IMPLEMENTED**——
+> Last updated: 2026-08-19（**打磨收尾：自己的錯誤頁 + 三頁分頁標題 + 請假樂觀更新 ✅ ACCEPTED**（Human Owner「驗收過」）——
 > 打磨第一批留下的兩條尾巴補完，B1 當初刻意沒做的請假樂觀更新補上。
 > 無 migration、無新端點。測試 574 → **585**。
 > **LINE 綁定碼線上驗收 ✅ ACCEPTED（Human Owner「驗收過」）；綁定碼 QR 定案不做並取消。**
@@ -256,7 +256,7 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
 上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
 若 Human Owner 要，可另排。
 
-**打磨收尾（錯誤頁 + 分頁標題 + 請假樂觀更新）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-19）。**
+**打磨收尾（錯誤頁 + 分頁標題 + 請假樂觀更新）— ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」）。**
 四項全綠：lint / typecheck / **測試 585（api 366 + shared 12 + web 207）** / build。
 **無 migration、無新後端端點**（純前端）。
 
