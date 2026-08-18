@@ -43,8 +43,6 @@ export function TeacherRosterPanel() {
 
   return (
     <section className="card flex flex-col gap-3 p-5">
-      <h2 className="section-title">點名（老師）</h2>
-
       {classesLoading && <SkeletonLines lines={1} />}
       {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
 

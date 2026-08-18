@@ -44,8 +44,6 @@ export function TeacherAnnouncePanel() {
 
   return (
     <form onSubmit={handleSubmit} className="card flex flex-col gap-3 p-5">
-      <h2 className="section-title">發公告</h2>
-
       {flags.canAnnounceSchool && (
         <label className="field-label">
           <span>範圍</span>

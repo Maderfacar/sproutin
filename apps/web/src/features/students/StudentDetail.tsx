@@ -14,6 +14,7 @@ import { StudentBusSection } from '../bus/StudentBusSection';
 import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
 import { SkeletonCards } from '../../components/Skeleton';
+import { Band } from '../../components/Band';
 
 function monthKey(): string {
   return new Date().toISOString().slice(0, 7);
@@ -29,6 +30,10 @@ function formatDate(iso: string): string {
 //
 // 桌面版 /admin/students/[id] 與手機版 /liff/student/[id] 共用這一份（docs/04 §3b）。
 // 娃娃車設定要指派「這個孩子在哪裡上下車」時連的就是這一頁 —— 桌面版少了它，那條流程是斷的。
+//
+// 打磨第二階段（Human Owner 2026-08-18）：這一頁原本是四段份量一樣的資訊一路疊下來。
+// 改用 components/Band 斷句：翻閱的幾段用細線，唯一「動得了東西」的娃娃車設定用粗線收住
+// —— 讀的段落與改的段落一眼分得開。
 export function StudentDetail({ studentId }: { studentId: string }) {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
@@ -55,8 +60,9 @@ export function StudentDetail({ studentId }: { studentId: string }) {
     .slice(0, 3);
 
   return (
-    <div className="space-y-7">
-      <section className="rise-in flex items-center gap-4">
+    <div>
+      {/* 這一段是頁面的標題本身（誰的頁面），不是一個區塊 —— 所以不進 Band。 */}
+      <section className="rise-in mb-7 flex items-center gap-4">
         <span
           className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-2xl font-bold text-white"
           style={{ background: 'var(--brand-primary)' }}
@@ -73,97 +79,109 @@ export function StudentDetail({ studentId }: { studentId: string }) {
         </div>
       </section>
 
-      <section className="rise-in card p-5" style={{ animationDelay: '0.05s' }}>
-        <p className="eyebrow">本月出缺勤</p>
-        <div className="mt-3 flex border-t border-line pt-4">
-          {[
-            { value: present, label: '出席' },
-            { value: leaveDays, label: '請假' },
-            { value: absent, label: '缺席' },
-          ].map((stat, i) => (
-            <div
-              key={stat.label}
-              className={`flex-1 text-center ${i > 0 ? 'border-l border-line' : ''}`}
-            >
-              <p className="font-serif text-2xl font-semibold tabular-nums text-ink">{stat.value}</p>
-              <p className="text-xs text-ink-soft">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {recentAttendance.length > 0 && (
-          <ul className="mt-4 border-t border-line pt-2">
-            {recentAttendance.map((record) => (
-              <li key={record.id} className="flex items-center gap-3 py-1.5 text-sm">
-                <span className="text-ink-soft">{formatDate(record.date)}</span>
-                <span className="text-ink">{ATTENDANCE_STATUS_LABEL[record.status].label}</span>
-                {record.source === 'LEAVE_EVENT' && (
-                  <span className="ml-auto text-xs text-ink-soft">由請假產生</span>
-                )}
-              </li>
+      <Band kind="review" title="本月出缺勤" description="這個月的天數統計，以及最近五筆紀錄">
+        <section className="rise-in card p-5" style={{ animationDelay: '0.05s' }}>
+          <div className="flex">
+            {[
+              { value: present, label: '出席' },
+              { value: leaveDays, label: '請假' },
+              { value: absent, label: '缺席' },
+            ].map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`flex-1 text-center ${i > 0 ? 'border-l border-line' : ''}`}
+              >
+                <p className="font-serif text-2xl font-semibold tabular-nums text-ink">
+                  {stat.value}
+                </p>
+                <p className="text-xs text-ink-soft">{stat.label}</p>
+              </div>
             ))}
-          </ul>
-        )}
-      </section>
+          </div>
 
-      <section className="rise-in" style={{ animationDelay: '0.1s' }}>
-        <p className="eyebrow mb-2">家長 / 監護人</p>
-        {student.guardians.length === 0 ? (
-          <p className="border-t border-line py-4 text-sm text-ink-soft">
-            尚未綁定家長 —— 這個孩子的家人目前收不到任何通知。
-          </p>
-        ) : (
-          <ul className="border-t border-line">
-            {student.guardians.map((g) => (
-              <li key={g.userId} className="flex items-center gap-3 border-b border-line py-3">
-                <Icon name="user" className="h-5 w-5 shrink-0 text-ink-soft" />
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">{g.displayName}</span>
-                <span className="shrink-0 text-xs text-ink-soft">
-                  {RELATION_LABEL[g.relation]}
-                  {g.isPrimary && ' · 主要聯絡人'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          {recentAttendance.length > 0 && (
+            <ul className="mt-4 border-t border-line pt-2">
+              {recentAttendance.map((record) => (
+                <li key={record.id} className="flex items-center gap-3 py-1.5 text-sm">
+                  <span className="text-ink-soft">{formatDate(record.date)}</span>
+                  <span className="text-ink">{ATTENDANCE_STATUS_LABEL[record.status].label}</span>
+                  {record.source === 'LEAVE_EVENT' && (
+                    <span className="ml-auto text-xs text-ink-soft">由請假產生</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </Band>
+
+      <Band kind="review" title="家長 / 監護人" description="這個孩子的通知會送給這些人">
+        <section className="rise-in" style={{ animationDelay: '0.1s' }}>
+          {student.guardians.length === 0 ? (
+            <p className="py-4 text-sm text-ink-soft">
+              尚未綁定家長 —— 這個孩子的家人目前收不到任何通知。
+            </p>
+          ) : (
+            <ul>
+              {student.guardians.map((g) => (
+                <li key={g.userId} className="flex items-center gap-3 border-b border-line py-3">
+                  <Icon name="user" className="h-5 w-5 shrink-0 text-ink-soft" />
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink">{g.displayName}</span>
+                  <span className="shrink-0 text-xs text-ink-soft">
+                    {RELATION_LABEL[g.relation]}
+                    {g.isPrimary && ' · 主要聯絡人'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </Band>
 
       {/* 娃娃車是學生的屬性（搭哪一班、在哪裡上下車），所以掛在這一頁而不另開一頁。
-          只有園長／行政改得動；老師與家長不會看到這一段。 */}
+          只有園長／行政改得動；老師與家長不會看到這一段 —— 校方獨有，貼身分籤是安全的。 */}
       {flags.canManageSchool && (
-        <section className="rise-in" style={{ animationDelay: '0.15s' }}>
-          <p className="eyebrow mb-2">娃娃車</p>
-          <StudentBusSection studentId={studentId} />
-        </section>
+        <Band
+          kind="manage"
+          title="娃娃車"
+          description="這個孩子搭哪一條路線、在哪裡上下車"
+          audience="staff"
+        >
+          <section className="rise-in" style={{ animationDelay: '0.15s' }}>
+            <StudentBusSection studentId={studentId} />
+          </section>
+        </Band>
       )}
 
-      <section className="rise-in" style={{ animationDelay: '0.2s' }}>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="eyebrow">最近請假</p>
-          <SurfaceLink href="/liff/leave" className="text-xs font-bold text-brand-primary">
-            全部
+      <Band kind="review" title="最近請假" description="最新的三筆；要看全部從下面進去">
+        <section className="rise-in" style={{ animationDelay: '0.2s' }}>
+          {recentLeaves.length === 0 ? (
+            <p className="py-4 text-sm text-ink-soft">目前沒有請假紀錄。</p>
+          ) : (
+            <ul>
+              {recentLeaves.map((leave) => (
+                <li key={leave.id} className="border-b border-line py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-ink">
+                      {formatDate(leave.dateFrom)} – {formatDate(leave.dateTo)}
+                    </span>
+                    <span className={`chip ml-auto ${LEAVE_STATUS_LABEL[leave.status].className}`}>
+                      {LEAVE_STATUS_LABEL[leave.status].label}
+                    </span>
+                  </div>
+                  <p className="mt-1 truncate text-xs text-ink-soft">{leave.reason}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <SurfaceLink
+            href="/liff/leave"
+            className="tappable mt-3 block text-xs font-bold text-brand-primary"
+          >
+            看全部請假紀錄
           </SurfaceLink>
-        </div>
-        {recentLeaves.length === 0 ? (
-          <p className="border-t border-line py-4 text-sm text-ink-soft">目前沒有請假紀錄。</p>
-        ) : (
-          <ul className="border-t border-line">
-            {recentLeaves.map((leave) => (
-              <li key={leave.id} className="border-b border-line py-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-ink">
-                    {formatDate(leave.dateFrom)} – {formatDate(leave.dateTo)}
-                  </span>
-                  <span className={`chip ml-auto ${LEAVE_STATUS_LABEL[leave.status].className}`}>
-                    {LEAVE_STATUS_LABEL[leave.status].label}
-                  </span>
-                </div>
-                <p className="mt-1 truncate text-xs text-ink-soft">{leave.reason}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        </section>
+      </Band>
     </div>
   );
 }

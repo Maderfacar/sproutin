@@ -170,6 +170,14 @@ px 只留給不該放大的東西          hairline 邊框、裝飾用圓角。�
 桌面版仍由 `SplitColumns` 左右分欄 —— 那本來就是同一套分法的寬螢幕版本，
 `Band` 只是把它帶到手機上，兩邊講的是同一件事。
 
+**Band 與 SplitColumns 的疊法**：出缺勤／請假／公告是用 `SplitColumns` 包 primary／secondary，
+`Band` 放在 **primary／secondary 各自裡面** —— 桌面左右分欄、手機上下斷句，兩邊是同一條分界線。
+反過來（Band 包 SplitColumns）會變成一個標題底下又切兩欄，斷句反而消失。
+
+目前套上 Band 的頁面（六頁，Human Owner 定案的範圍）：聯絡簿、娃娃車、出缺勤、請假、公告、學生整合視圖。
+面板自己原本的 `<h2 className="section-title">` 在進 Band 之後要拿掉 —— 同一段不會有兩個標題。
+管理類頁面（人員／權限／班級／學生管理／園所外觀／發送訊息／娃娃車設定）排下一輪。
+
 ### 兩邊的網址對照
 
 ```text

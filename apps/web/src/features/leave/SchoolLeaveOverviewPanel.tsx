@@ -27,8 +27,6 @@ export function SchoolLeaveOverviewPanel() {
 
   return (
     <section className="card flex flex-col gap-3 p-5">
-      <h2 className="section-title">全校待審請假</h2>
-
       {isLoading && <SkeletonRows rows={4} />}
       {isError && <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>}
       {pending && pending.length === 0 && (
