@@ -3,6 +3,7 @@
 import { useLeaves, useCancelLeave } from './hooks';
 import { CANCELLABLE_STATUSES, LEAVE_STATUS_LABEL, leaveErrorMessage } from './labels';
 import type { LeaveView } from '../../lib/types';
+import { SkeletonRows } from '../../components/Skeleton';
 
 function formatRange(leave: LeaveView): string {
   const from = leave.dateFrom.slice(0, 10);
@@ -15,7 +16,7 @@ export function LeaveList({ studentId }: { studentId: string }) {
   const cancelLeave = useCancelLeave();
 
   if (isLoading) {
-    return <p className="text-sm text-ink-soft">載入請假紀錄中…</p>;
+    return <SkeletonRows rows={4} />;
   }
   if (isError) {
     return <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>;

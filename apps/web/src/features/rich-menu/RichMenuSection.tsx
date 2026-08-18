@@ -21,6 +21,7 @@ import {
   type RichMenuTarget,
   type RichMenuTemplate,
 } from './types';
+import { SkeletonCards } from '../../components/Skeleton';
 
 const AUDIENCES: RichMenuAudience[] = ['PARENT', 'STAFF', 'UNBOUND'];
 const TEMPLATES: RichMenuTemplate[] = ['SIX', 'FOUR', 'TWO'];
@@ -71,7 +72,7 @@ export function RichMenuSection() {
   }, [current]);
 
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入選單設定中…" />;
+    return <SkeletonCards cards={2} />;
   }
   if (isError || !configs || !current || !draft) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

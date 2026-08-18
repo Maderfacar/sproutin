@@ -8,6 +8,7 @@ import { useClassAttendance, useMarkAttendance } from './hooks';
 import { ATTENDANCE_STATUS_LABEL } from './labels';
 import { apiErrorMessage } from '../../lib/api';
 import type { AttendanceStatus, AttendanceView } from '../../lib/types';
+import { SkeletonLines } from '../../components/Skeleton';
 
 const STATUSES: AttendanceStatus[] = ['PRESENT', 'ABSENT', 'LEAVE', 'LATE'];
 
@@ -44,7 +45,7 @@ export function TeacherRosterPanel() {
     <section className="card flex flex-col gap-3 p-5">
       <h2 className="section-title">點名（老師）</h2>
 
-      {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+      {classesLoading && <SkeletonLines lines={1} />}
       {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
 
       <ClassSelect classes={classes} value={classId} onChange={setClassId} />

@@ -23,6 +23,7 @@ import {
 } from './labels';
 import { bookErrorMessage, hasContent, needsHealthAttention, useBookMutations, useClassBook } from './hooks';
 import { PublishPanel } from './PublishPanel';
+import { SkeletonLines } from '../../components/Skeleton';
 
 // 老師端「直欄模式」：一次只處理一件事、全班一起，且**預設全班正常、只點例外**。
 // 這是把導師負擔壓下來的關鍵（逐生逐欄約需 175 次點擊，此設計約 25 次）。
@@ -111,7 +112,7 @@ export function TeacherBookPanel() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field" />
         </label>
 
-        {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+        {classesLoading && <SkeletonLines lines={1} />}
         {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
         {classId && isLoading && <p className="text-sm text-ink-soft">載入聯絡簿中…</p>}
         {classId && isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}

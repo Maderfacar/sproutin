@@ -7,6 +7,7 @@ import { BusBoardingPanel } from './BusBoardingPanel';
 import { BusTodayCard } from './BusTodayCard';
 import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
+import { SkeletonLines } from '../../components/Skeleton';
 
 // 娃娃車（聯集視圖，與出缺勤同一種結構）：
 //   隨車老師／園所 → 點名；能看到學生的人 → 該孩子的今日狀態。
@@ -28,7 +29,7 @@ export function BusView() {
 
       <section className="flex flex-col gap-3">
         <h2 className="section-title">今日狀態</h2>
-        {isLoading && <p className="text-sm text-ink-soft">載入學生中…</p>}
+        {isLoading && <SkeletonLines lines={1} />}
         {isError && <p className="text-sm text-red-700">無法載入學生清單。</p>}
         {students && students.length === 0 && (
           <p className="text-sm text-ink-soft">目前沒有可查看的學生。</p>

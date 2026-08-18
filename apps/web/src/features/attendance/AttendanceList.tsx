@@ -4,6 +4,7 @@ import { useAttendance } from './hooks';
 import { ATTENDANCE_STATUS_LABEL } from './labels';
 import { apiErrorMessage } from '../../lib/api';
 import type { AttendanceView } from '../../lib/types';
+import { SkeletonRows } from '../../components/Skeleton';
 
 function byDateDesc(a: AttendanceView, b: AttendanceView): number {
   return b.date.localeCompare(a.date);
@@ -14,7 +15,7 @@ export function AttendanceList({ studentId }: { studentId: string }) {
   const { data, isLoading, isError, error } = useAttendance(studentId);
 
   if (isLoading) {
-    return <p className="text-sm text-ink-soft">載入出缺勤中…</p>;
+    return <SkeletonRows rows={5} />;
   }
   if (isError) {
     return <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>;

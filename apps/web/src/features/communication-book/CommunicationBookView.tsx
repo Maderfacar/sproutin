@@ -6,6 +6,7 @@ import { TeacherBookPanel } from './TeacherBookPanel';
 import { StudentBookView } from './StudentBookView';
 import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
+import { SkeletonLines } from '../../components/Skeleton';
 
 // 每日聯絡簿（聯集視圖）。老師／行政先看整班記錄面板；任何看得到學生的人都能翻閱該生聯絡簿。
 // 聯絡簿是「一個孩子的頁面」：當日狀態在上、親師對話在下，訊息功能已併入此處。
@@ -21,7 +22,7 @@ export function CommunicationBookView() {
 
       <section className="flex flex-col gap-3">
         {flags.canMarkAttendance && <h2 className="section-title">翻閱單一學生</h2>}
-        {isLoading && <p className="text-sm text-ink-soft">載入學生中…</p>}
+        {isLoading && <SkeletonLines lines={1} />}
         {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
         {students && students.length === 0 && (
           <p className="text-sm text-ink-soft">目前沒有可查看的學生。</p>

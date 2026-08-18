@@ -16,6 +16,7 @@ import {
 } from './labels';
 import { hasContent, useStudentBook } from './hooks';
 import { HealthEditor } from './HealthEditor';
+import { SkeletonCards } from '../../components/Skeleton';
 
 const MS_PER_DAY = 86_400_000;
 const STRIP_DAYS = 7;
@@ -119,7 +120,7 @@ export function StudentBookView({ studentId, canEdit }: StudentBookViewProps) {
           )}
         </div>
 
-        {isLoading && <p className="mt-3 text-sm text-ink-soft">載入聯絡簿中…</p>}
+        {isLoading && <div className="mt-3"><SkeletonCards cards={2} /></div>}
         {isError && <p className="mt-3 text-sm text-red-600">{apiErrorMessage(error)}</p>}
 
         {!isLoading && !hasContent(entry) && (

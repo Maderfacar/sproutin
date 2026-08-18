@@ -153,7 +153,7 @@ export default function DashboardPage() {
               <Icon name="chev" className="h-3 w-3" />
             </Link>
           </div>
-          <Link href={`/liff/communication-book/${studentId}`} className="block border-t border-line pt-3">
+          <Link href={`/liff/communication-book/${studentId}`} className="tappable block border-t border-line pt-3">
             <p className="text-sm text-ink-soft">
               {[
                 todayBook.arrivalTime ? `到校 ${todayBook.arrivalTime}` : null,
@@ -186,7 +186,7 @@ export default function DashboardPage() {
               <Icon name="chev" className="h-3 w-3" />
             </Link>
           </div>
-          <Link href="/liff/announcement" className="block">
+          <Link href="/liff/announcement" className="tappable block">
             <p className="text-xs text-ink-soft">
               {latest.scope === 'SCHOOL' ? '全校' : '班級'} ·{' '}
               {new Date(latest.createdAt).toLocaleDateString('zh-TW')}
@@ -204,7 +204,7 @@ export default function DashboardPage() {
           {cards.map((card) => {
             const meta = cardMeta(card.id);
             const rowClass =
-              'flex items-center gap-3 border-b border-line py-4 [&:nth-child(odd)]:border-r [&:nth-child(odd)]:pr-4 [&:nth-child(even)]:pl-4';
+              'tappable flex items-center gap-3 border-b border-line py-4 [&:nth-child(odd)]:border-r [&:nth-child(odd)]:pr-4 [&:nth-child(even)]:pl-4';
             const inner = (
               <>
                 <Icon name={meta.icon} className="h-5 w-5 shrink-0" />
@@ -223,7 +223,7 @@ export default function DashboardPage() {
               <Link
                 key={card.id}
                 href={meta.href}
-                className={`${rowClass} transition hover:bg-black/[0.015] ${
+                className={`${rowClass} hover:bg-black/[0.015] ${
                   meta.enabled ? 'text-brand-primary' : 'text-ink-soft'
                 }`}
               >

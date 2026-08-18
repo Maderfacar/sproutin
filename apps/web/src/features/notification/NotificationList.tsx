@@ -87,7 +87,7 @@ export function NotificationList() {
           );
 
           const rowClass =
-            'flex w-full items-start gap-3 border-b border-line px-1 py-3.5 text-left text-sm transition active:scale-[0.995]';
+            'tappable flex w-full items-start gap-3 border-b border-line px-1 py-3.5 text-left text-sm';
 
           // 點一則＝看過了 → 直接標已讀（樂觀更新，小圓點立刻消失）再跳頁。
           const onOpen = (): void => {

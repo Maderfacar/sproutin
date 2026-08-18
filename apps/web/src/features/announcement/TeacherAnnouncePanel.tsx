@@ -8,6 +8,7 @@ import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
 import { apiErrorMessage } from '../../lib/api';
 import type { AnnouncementScope } from '../../lib/types';
+import { SkeletonLines } from '../../components/Skeleton';
 
 // 發公告面板（Step 7c/7d）。老師 → 班級公告;園長/行政 → 可選全校或班級。
 export function TeacherAnnouncePanel() {
@@ -57,7 +58,7 @@ export function TeacherAnnouncePanel() {
 
       {scope === 'CLASS' && (
         <>
-          {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+          {classesLoading && <SkeletonLines lines={1} />}
           {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
           <ClassSelect classes={classes} value={classId} onChange={setClassId} />
         </>

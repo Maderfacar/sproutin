@@ -4,6 +4,7 @@ import { Icon } from '../../components/Icon';
 import { apiErrorMessage } from '../../lib/api';
 import type { BusRideView, MyBusView } from '../../lib/types';
 import { useMyBus } from './hooks';
+import { SkeletonCards } from '../../components/Skeleton';
 
 // 家長看今日狀態。刻意只有一個大狀態 + 一條時間軸：
 // 不做地圖、不做「車開到哪」——沒有即時 GPS（Human Owner 定案），
@@ -89,7 +90,7 @@ function Segment({ title, depart, pointName, rides, ride, boardLabel, alightLabe
 export function BusTodayCard({ studentId }: { studentId: string | undefined }) {
   const { data, isLoading, isError, error } = useMyBus(studentId);
 
-  if (isLoading) return <p className="text-sm text-ink-soft">載入乘車狀態中…</p>;
+  if (isLoading) return <SkeletonCards cards={1} />;
   if (isError) return <p className="text-sm text-red-700">{apiErrorMessage(error)}</p>;
   if (!data) return null;
 

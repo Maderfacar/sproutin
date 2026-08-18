@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Icon } from '../../components/Icon';
-import { StatusScreen } from '../../components/StatusScreen';
 import { apiErrorMessage } from '../../lib/api';
 import type { BusDirection, BusMarkBody, BusRosterEntry } from '../../lib/types';
 import {
@@ -12,6 +11,7 @@ import {
   useBusRoster,
   useBusRoutes,
 } from './hooks';
+import { SkeletonCards, SkeletonRows } from '../../components/Skeleton';
 
 // 隨車老師點名。設計主軸＝**一手扶車、一手點**：
 //   - 按鈕大、一次一件事；
@@ -44,7 +44,7 @@ export function BusBoardingPanel() {
   const busy = Object.values(rides).some((m) => m.isPending);
   const actionError = Object.values(rides).map((m) => m.error).find(Boolean) ?? null;
 
-  if (routesLoading) return <StatusScreen status="loading" message="載入路線中…" />;
+  if (routesLoading) return <SkeletonCards cards={2} />;
   if (!routes || routes.length === 0) {
     return (
       <section className="card p-6 text-center">
@@ -125,7 +125,7 @@ export function BusBoardingPanel() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field" />
         </label>
 
-        {isLoading && <p className="text-sm text-ink-soft">載入名單中…</p>}
+        {isLoading && <SkeletonRows rows={6} />}
         {isError && <p className="text-sm text-red-700">{apiErrorMessage(error)}</p>}
 
         {roster && (

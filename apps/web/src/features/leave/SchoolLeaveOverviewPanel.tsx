@@ -6,6 +6,7 @@ import { roleFlags } from '../../lib/roles';
 import { useSchoolPendingLeaves, useSetLeaveStatus } from './hooks';
 import { leaveErrorMessage } from './labels';
 import type { LeaveView } from '../../lib/types';
+import { SkeletonRows } from '../../components/Skeleton';
 
 function range(leave: LeaveView): string {
   const from = leave.dateFrom.slice(0, 10);
@@ -28,7 +29,7 @@ export function SchoolLeaveOverviewPanel() {
     <section className="card flex flex-col gap-3 p-5">
       <h2 className="section-title">全校待審請假</h2>
 
-      {isLoading && <p className="text-sm text-ink-soft">載入全校待審請假中…</p>}
+      {isLoading && <SkeletonRows rows={4} />}
       {isError && <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>}
       {pending && pending.length === 0 && (
         <p className="text-sm text-ink-soft">目前全校沒有待審核的請假。</p>

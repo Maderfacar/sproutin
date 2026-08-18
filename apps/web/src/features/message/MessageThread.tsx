@@ -8,6 +8,7 @@ import { Icon } from '../../components/Icon';
 import { ROLE_LABEL } from '../../lib/roleLabels';
 import { RELATION_LABEL } from '../people/hooks';
 import type { MessageView } from '../../lib/types';
+import { SkeletonLines } from '../../components/Skeleton';
 
 function byCreatedAsc(a: MessageView, b: MessageView): number {
   return a.createdAt.localeCompare(b.createdAt);
@@ -54,7 +55,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {isLoading && <p className="text-sm text-ink-soft">載入訊息中…</p>}
+      {isLoading && <SkeletonLines lines={3} />}
       {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
       {data && data.length === 0 && (
         <p className="py-6 text-center text-sm text-ink-soft">還沒有訊息，開始跟老師聊聊吧。</p>
@@ -134,6 +135,25 @@ export function MessageThread({ studentId }: { studentId: string }) {
             );
           })}
         </div>
+      )}
+
+      {/* 送出中的泡泡：按下去那一刻就先出現，不等伺服器回來（B1「按下去要立刻有反應」）。
+          刻意不把假資料塞進快取 —— 伺服器才知道這則訊息的 id 與時間;
+          這裡畫的是「這則正在送」這個事實本身，成功後重取就會換成真的那一則。 */}
+      {sendMessage.isPending && sendMessage.variables && (
+        <div className="flex justify-end">
+          <div className="max-w-[78%] rounded-[18px_4px_18px_18px] bg-brand-primary px-3.5 py-2 text-sm text-white opacity-70">
+            <p className="whitespace-pre-wrap">{sendMessage.variables.body}</p>
+            <p className="mt-1 text-3xs text-white/80">送出中…</p>
+          </div>
+        </div>
+      )}
+
+      {/* 送不出去要講，不能安靜地把使用者打的字留在框裡讓他以為送出了。 */}
+      {sendMessage.isError && (
+        <p className="text-right text-xs text-red-600">
+          {apiErrorMessage(sendMessage.error)} 訊息還留在下面，可以再送一次。
+        </p>
       )}
 
       <form onSubmit={handleSend} className="flex items-center gap-2.5 pt-1">

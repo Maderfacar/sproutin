@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../lib/api';
 import type { AuditLogFilters, AuditResult } from '../../lib/types';
 import { useAuditLogs } from './hooks';
 import { AUDIT_RESOURCE_TYPES, AUDIT_RESULT_LABEL, actorText } from './labels';
+import { SkeletonRows } from '../../components/Skeleton';
 
 const PAGE_SIZE = 50;
 
@@ -123,7 +124,7 @@ export function AuditPanel() {
         </button>
       </form>
 
-      {isLoading && <p className="text-sm text-ink-soft">載入稽核紀錄中…</p>}
+      {isLoading && <SkeletonRows rows={5} />}
       {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
       {data && data.data.length === 0 && (
         <p className="text-sm text-ink-soft">沒有符合條件的稽核紀錄。</p>

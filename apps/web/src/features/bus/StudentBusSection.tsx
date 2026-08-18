@@ -4,6 +4,7 @@ import { Icon } from '../../components/Icon';
 import { SurfaceLink } from '../../components/SurfaceLink';
 import { apiErrorMessage } from '../../lib/api';
 import { busErrorMessage, useBusAssignments, useBusRoutes, useBusSettingsMutations } from './hooks';
+import { SkeletonLines } from '../../components/Skeleton';
 
 // 學生的娃娃車設定（掛在學生整合視圖裡的一段，不另開一頁）。
 // **這是刻意的分層**：路線與接送點是全園共用的骨架（娃娃車設定頁）；
@@ -15,7 +16,7 @@ export function StudentBusSection({ studentId }: { studentId: string }) {
   const { data: assignments } = useBusAssignments();
   const m = useBusSettingsMutations();
 
-  if (isLoading) return <p className="text-sm text-ink-soft">載入娃娃車設定中…</p>;
+  if (isLoading) return <SkeletonLines lines={2} />;
   if (isError || !routes) return <p className="text-sm text-red-700">{apiErrorMessage(error)}</p>;
 
   const assignment = (assignments ?? []).find((a) => a.studentId === studentId) ?? null;

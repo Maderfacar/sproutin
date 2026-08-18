@@ -13,6 +13,7 @@ import {
   useMyClasses,
   useRenameClass,
 } from './hooks';
+import { SkeletonRows } from '../../components/Skeleton';
 
 // 班級管理（OWNER/ADMIN）：新增、改名、刪除空班。
 // 刪除只在「沒有學生、沒有老師編制」時允許 —— 由後端把關，前端只負責把原因講清楚。
@@ -36,7 +37,7 @@ export function ClassesManager() {
     return <StatusScreen status="error" message="只有園長或行政人員可以管理班級。" />;
   }
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入班級中…" />;
+    return <SkeletonRows rows={4} />;
   }
   if (isError || !classes) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

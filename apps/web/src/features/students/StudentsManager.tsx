@@ -15,6 +15,7 @@ import {
   useCreateStudent,
   useUpdateStudent,
 } from './adminHooks';
+import { SkeletonRows } from '../../components/Skeleton';
 
 const STATUS_OPTIONS: StudentStatus[] = ['ACTIVE', 'INACTIVE', 'GRADUATED'];
 
@@ -40,7 +41,7 @@ export function StudentsManager() {
     return <StatusScreen status="error" message="只有園長或行政人員可以管理學生。" />;
   }
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入學生名單中…" />;
+    return <SkeletonRows rows={6} />;
   }
   if (isError || !students) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

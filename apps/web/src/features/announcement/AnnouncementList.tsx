@@ -3,6 +3,7 @@
 import { useAnnouncements } from './hooks';
 import { apiErrorMessage } from '../../lib/api';
 import type { AnnouncementView } from '../../lib/types';
+import { SkeletonRows } from '../../components/Skeleton';
 
 function byCreatedDesc(a: AnnouncementView, b: AnnouncementView): number {
   return b.createdAt.localeCompare(a.createdAt);
@@ -12,7 +13,7 @@ export function AnnouncementList() {
   const { data, isLoading, isError, error } = useAnnouncements();
 
   if (isLoading) {
-    return <p className="text-sm text-ink-soft">載入公告中…</p>;
+    return <SkeletonRows rows={4} />;
   }
   if (isError) {
     return <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>;

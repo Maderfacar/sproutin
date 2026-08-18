@@ -12,6 +12,7 @@ import { useMyClasses } from '../classes/hooks';
 import { useAdminStudents } from '../students/adminHooks';
 import { peopleErrorMessage, useCreatePerson, usePeople } from './hooks';
 import { PersonEditor } from './PersonEditor';
+import { SkeletonRows } from '../../components/Skeleton';
 
 // 可新增的身分（園長不從這裡新增 —— 交接園長屬敏感操作，demo 階段先不開放）。
 const CREATABLE_ROLES: UserRoleName[] = ['TEACHER', 'BUS_TEACHER', 'ADMIN', 'PARENT', 'GUARDIAN'];
@@ -54,7 +55,7 @@ export function PeopleManager() {
     return <StatusScreen status="error" message="只有園長或行政人員可以管理人員帳號。" />;
   }
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入人員名單中…" />;
+    return <SkeletonRows rows={6} />;
   }
   if (isError || !people) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

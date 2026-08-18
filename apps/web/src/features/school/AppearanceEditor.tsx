@@ -8,6 +8,7 @@ import { StatusScreen } from '../../components/StatusScreen';
 import { useSchoolConfig, useUpdateSchoolConfig } from './hooks';
 import { BrandSection } from './BrandSection';
 import { CardsSection } from './CardsSection';
+import { SkeletonCards } from '../../components/Skeleton';
 
 // 只送出真正改過的欄位（PATCH 局部更新；後端要求至少一個欄位）。
 function diff(base: SchoolAdminConfig, draft: SchoolAdminConfig): Partial<SchoolAdminConfig> {
@@ -67,7 +68,7 @@ export function AppearanceEditor({ viewerRoles, stickyBar = false }: AppearanceE
   const dirty = Object.keys(patch).length > 0;
 
   if (isLoading || !draft) {
-    return <StatusScreen status="loading" message="載入園所設定中…" />;
+    return <SkeletonCards cards={3} />;
   }
   if (isError || !config) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

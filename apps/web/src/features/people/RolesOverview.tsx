@@ -11,6 +11,7 @@ import { usePeople } from './hooks';
 import { PersonEditor } from './PersonEditor';
 import { useMyClasses } from '../classes/hooks';
 import { useAdminStudents } from '../students/adminHooks';
+import { SkeletonRows } from '../../components/Skeleton';
 
 const COLUMNS: UserRoleName[] = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'];
 
@@ -34,7 +35,7 @@ export function RolesOverview() {
     return <StatusScreen status="error" message="只有園長或行政人員可以檢視權限設定。" />;
   }
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入權限總覽中…" />;
+    return <SkeletonRows rows={5} />;
   }
   if (isError || !people) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useBranding } from '../lib/branding';
 import { clearBackTarget } from '../lib/backTarget';
 import { Icon, type IconName } from './Icon';
+import { PageTransition } from './PageTransition';
 
 const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/liff', label: '首頁', icon: 'home' },
@@ -100,7 +101,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             Human Owner 決策 2026-08-17：每頁都掛一條橫帶會稀釋它，園所的門面應該只講一次、講得夠大。 */}
       </header>
 
-      <main className="mx-auto max-w-2xl px-5 pb-28 pt-7">{children}</main>
+      <main className="mx-auto max-w-2xl px-5 pb-28 pt-7">
+        <PageTransition>{children}</PageTransition>
+      </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur">
         <div
@@ -116,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 // 按了底部頁籤＝決定留在手機版 → 忘掉「從後台進來」這條線，返回鍵回手機版首頁。
                 onClick={clearBackTarget}
                 aria-current={active ? 'page' : undefined}
-                className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-3xs font-semibold transition ${
+                className={`tappable flex flex-1 flex-col items-center gap-1 py-2.5 text-3xs font-semibold ${
                   active ? 'text-brand-primary' : 'text-ink-soft'
                 }`}
               >

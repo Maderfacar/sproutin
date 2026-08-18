@@ -13,6 +13,7 @@ import { LEAVE_STATUS_LABEL } from '../leave/labels';
 import { StudentBusSection } from '../bus/StudentBusSection';
 import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
+import { SkeletonCards } from '../../components/Skeleton';
 
 function monthKey(): string {
   return new Date().toISOString().slice(0, 7);
@@ -36,7 +37,7 @@ export function StudentDetail({ studentId }: { studentId: string }) {
   const { data: leaves } = useLeaves(studentId);
 
   if (isLoading) {
-    return <StatusScreen status="loading" message="載入學生資料中…" />;
+    return <SkeletonCards cards={3} />;
   }
   if (isError || !student) {
     return <StatusScreen status="error" message={apiErrorMessage(error)} />;

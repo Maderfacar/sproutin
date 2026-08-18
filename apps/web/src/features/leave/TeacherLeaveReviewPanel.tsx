@@ -6,6 +6,7 @@ import { useMyStudents } from '../../lib/queries';
 import { useClassPendingLeaves, useSetLeaveStatus } from './hooks';
 import { leaveErrorMessage } from './labels';
 import type { LeaveView } from '../../lib/types';
+import { SkeletonLines } from '../../components/Skeleton';
 
 function range(leave: LeaveView): string {
   const from = leave.dateFrom.slice(0, 10);
@@ -27,7 +28,7 @@ export function TeacherLeaveReviewPanel() {
     <section className="card flex flex-col gap-3 p-5">
       <h2 className="section-title">待審核請假（老師）</h2>
 
-      {classesLoading && <p className="text-sm text-ink-soft">載入班級中…</p>}
+      {classesLoading && <SkeletonLines lines={1} />}
       {classes && classes.length === 0 && <p className="text-sm text-ink-soft">你目前沒有任教班級。</p>}
 
       <ClassSelect classes={classes} value={classId} onChange={setClassId} />

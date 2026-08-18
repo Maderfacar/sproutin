@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-18（**B1 手機體感 + B2 訊息中心 進行中**;插隊三件 A1–A3 已 ✅ ACCEPTED。
+> Last updated: 2026-08-18（**B1 手機體感前三件 + B2 訊息中心 IMPLEMENTED，待線上驗收**;插隊三件 A1–A3 已 ✅ ACCEPTED。
 >
 > （前次）2026-08-18（**插隊三件 A1–A3**——
 > A1 全站字體大小（標準／中／大，存在這支瀏覽器上、只在家長端「我的」提供開關）、
@@ -173,6 +173,32 @@ A3 封面圖延伸到頁首後面           → AppShell 頁首改 sticky top-0�
    底線兩種狀態都保留（透明時看不見），否則捲動時頁首矮 1px、整頁會跳。
    hero 頂端加一層暗紗：封面圖是園所自己傳的，可能上半部很亮；品牌色也可能挑到淺色。
 ```
+
+**B1 手機體感 前三件 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
+四項全綠：lint / typecheck / **測試 509（api 362 + shared 12 + web 135）** / build。
+**無 migration、無新後端端點**（純前端）。Human Owner 定案：只做前三件，PWA 不做。
+
+```text
+① 骨架屏取代「載入中…」   components/Skeleton（Rows / Cards / Lines 三種形狀）
+   全站 27 個檔案的載入文字全部換掉。形狀要像「等一下真的會出現的東西」，
+   否則資料到位時會整頁跳動 —— 所以是逐處配形狀，不是全部套同一個。
+   例外：/liff/message 的「訊息已併入聯絡簿，正在前往…」保留 StatusScreen
+   （那是轉址提示，不是在等資料）。
+② 按下去立刻有反應       .tappable（active 縮放 + 淡化）用在底部頁籤、首頁快速功能、
+   公告與聯絡簿卡片、訊息中心每一列;.btn-primary/.btn-secondary 的 active 加重。
+   親師對話：按下送出那一刻先畫出「送出中…」的泡泡，不等伺服器回來;
+   送不出去時明講並把字留在輸入框（不安靜吞掉）。
+   訊息中心的已讀是樂觀更新（小圓點立刻消失，失敗自動復原）。
+③ 換頁的方向感           components/PageTransition，進去從右滑進、返回從左滑回。
+   靠 popstate 分辨前進/返回;判斷不出來一律當前進（猜錯只是方向反了，不會壞）。
+   位移只有 14px —— 方向講清楚就好，滑太多會讓每次點擊都變慢。
+全部尊重 prefers-reduced-motion（與既有 .rise-in 同一個慣例）。
+```
+
+**刻意沒做的**：① PWA／加到主畫面（Human Owner 定案不做）② 下拉重新整理、頁籤微震動、
+數字補間（列為「可有可無」，未排入）③ 請假送出目前是按鈕轉「送出中…」，**沒有**在請假清單
+上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
+若 Human Owner 要，可另排。
 
 **B2 訊息中心（「通知」頁升級）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
 四項全綠：lint / typecheck / **測試 504（api 362 + shared 12 + web 130）** / build。

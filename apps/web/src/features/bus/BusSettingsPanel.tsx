@@ -10,6 +10,7 @@ import { usePeople } from '../people/hooks';
 import { useMyStudents } from '../../lib/queries';
 import { RouteEditor, type StaffOption } from './RouteEditor';
 import { busErrorMessage, useBusAssignments, useBusRoutes, useBusSettingsMutations } from './hooks';
+import { SkeletonCards } from '../../components/Skeleton';
 
 // 娃娃車設定（園長／行政）。**桌面版與手機版用的是這同一個元件**，
 // 差別只有外框（/admin/bus 與 /liff/admin/bus）—— 功能不因裝置而不同。
@@ -27,7 +28,7 @@ export function BusSettingsPanel() {
   const [openRouteId, setOpenRouteId] = useState<string | null>(null);
   const [newRouteName, setNewRouteName] = useState('');
 
-  if (isLoading) return <StatusScreen status="loading" message="載入娃娃車設定中…" />;
+  if (isLoading) return <SkeletonCards cards={2} />;
   if (isError || !routes) return <StatusScreen status="error" message={apiErrorMessage(error)} />;
 
   // 隨車老師的候選：帶 BUS_TEACHER 或 TEACHER 身分的在職人員。
