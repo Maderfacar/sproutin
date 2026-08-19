@@ -62,7 +62,7 @@ POST /auth/line/login
 | **POST** | **`/communication-book/publish`** | 一鍵送出全班 → `CommunicationBookPublished` | ADMIN/TEACHER | ✔ |
 | GET | `/announcements` | 公告清單 | Roles | – |
 | POST | `/announcements` | 發公告 → `AnnouncementPublished` | OWNER/ADMIN/TEACHER | ✔ |
-| GET | `/notifications` | 站內通知 | auth(自己) | – |
+| **GET** | **`/notifications[?unread=true][&relation=GUARDIAN]`** | 站內通知（一向只回本人的）；`relation=GUARDIAN` **只回跟我監護的小孩有關的**（家長身分）：帶 studentId 的必須是我的小孩、班級公告只留我小孩那一班、與特定孩子無關的系統通知留著。只縮小不放寬 | auth(自己) | – |
 | GET | `/audit-logs?resourceType=&resourceId=` | 稽核查詢（唯讀） | OWNER(/ADMIN 受限) | – |
 | **GET** | **`/push-campaigns/recipients`** | 送出前算「這次會送出幾則」 | OWNER/ADMIN | – |
 | **GET/POST** | **`/push-campaigns`** | LINE 群發：送出紀錄 / 排入一次群發 | OWNER/ADMIN | ✔(create) |
@@ -518,6 +518,26 @@ GET /notifications  回應新增
 **無新端點、無 migration。** 與「稽核紀錄的操作者姓名」「親師對話的發話者」同一類：
 改既有端點的回應，姓名與標題一律**讀取時 join**，不寫回 `Notification.payload`
 （不把 PII 複製到第二張表）。
+
+### `?relation=GUARDIAN`（2026-08-20）
+
+Human Owner 回報：**家長身分點開訊息中心，看得到其他小朋友的聯絡簿。**
+
+這些通知本來就都是發給他的（他同時是老師），所以不是權限問題 —— 是**世界混在一起**：
+老師收到的那些躺在家長的收件匣裡，點下去就進到別人小孩的那一本。
+與 `/me/students?relation=GUARDIAN`、`/classes?scope=TEACHING` 是同一條規則的第三次。
+
+```text
+帶 studentId       → 必須是我監護的那幾個
+帶 announcementId  → 全校公告留著；班級公告只留我小孩那一班的
+兩者都沒有         → 留著（系統層級的通知，與特定孩子無關）
+```
+
+過濾在**伺服器端**做而不是前端：通知的 `title` / `subtitle` 裡本來就寫著其他孩子的名字
+（讀取時 join），只在前端藏起來等於名字仍然送到了瀏覽器。
+而且**過濾在 join 名稱之前** —— 被濾掉的孩子連名字都不必查。
+
+**只縮小、永遠不放大**：沒有監護關係就只剩系統通知與全校公告，就算他是園長。
 
 三個刻意的決定：
 

@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useBranding } from '../../lib/branding';
 import { useActivePersona } from '../../lib/usePersona';
 import { useIdlePrefetch } from '../../lib/useIdlePrefetch';
+import { PERSONA_HOME, isRouteForPersona } from '../../lib/personaRoutes';
 import { TabBar } from '../ui/TabBar';
 import { Icon } from '../Icon';
 import { PageTransition } from '../PageTransition';
@@ -35,6 +36,20 @@ export function PersonaShell({ children }: { children: ReactNode }) {
   // 閒下來就把底部四格那幾頁的程式先抓好 —— 在 LINE 的內建瀏覽器裡，
   // 換頁最慢的一段不是 API，是那一頁的 JS 還沒下載（見 lib/useIdlePrefetch）。
   useIdlePrefetch(tabs.map((t) => t.href));
+
+  // 切換身分之後，站不住的頁面要退回首頁（Human Owner 2026-08-20 回報：
+  // 園長在人員管理頁上切成家長身分，那一頁還留在畫面上）。
+  // 「一次只用一種身分」的意思是切下去整個世界都要換掉，包括你現在站的位置。
+  //
+  // 只有**專屬於某一種身分**的那幾條會被退（見 lib/personaRoutes）；
+  // 大部分頁面兩種身分都成立、只是內容不同，那些留在原地才對。
+  const router = useRouter();
+  const allowed = isRouteForPersona(pathname, persona);
+  useEffect(() => {
+    if (!allowed) {
+      router.replace(PERSONA_HOME);
+    }
+  }, [allowed, router]);
 
   // 封面圖只在家長首頁 —— 校方的首頁是待辦清單，沒有圖可以疊。
   const hasHero = persona === 'parent' && pathname === HERO_PATH;

@@ -586,9 +586,9 @@ LINE 的建立選單每小時只有 100 次）。
 > 都是這樣），不是把 `<dialog>` 疊在 `<dialog>` 上。因此像 `PersonEditor` 這種
 > 留在頁面上而不收進面板的區塊，它底下的確認面板才永遠只有一層。
 
-### 切換身分的七個坑（Human Owner 2026-08-20 實機回報後修正）
+### 切換身分的九個坑（Human Owner 2026-08-20 實機回報後修正）
 
-改成「一次只用一種身分」之後踩到的七件事，每一件都不是版面問題：
+改成「一次只用一種身分」之後踩到的九件事，每一件都不是版面問題：
 
 **① 出口只有一半。** 切換鈕原本只畫在校方那一側，於是切到家長之後就找不到路回去
 —— 等於把人關在家長身分裡出不來。現在頁首的形狀對每一種身分都一樣：
@@ -675,6 +675,47 @@ features/classes/hooks.ts                useVisibleClasses()（useSelectedClass 
 >
 > 新頁面一律用 `useVisibleStudents()` / `useVisibleClasses()` / `useCapabilities()` 這三個，
 > 不要直接呼叫 `useMyStudents()` / `useMyClasses()` / `roleFlags()`。
+
+**⑧ 切換身分之後還站在原來那一頁。** 園長在人員管理頁上切成家長身分，那一頁還留在畫面上
+（Human Owner 2026-08-20 回報）。殼切了但位置沒切 ——「一次只用一種身分」的意思是
+切下去整個世界都要換掉，包括你現在站的位置。
+
+`lib/personaRoutes.ts` 列的是**例外**（只屬於某一種身分的那幾條），不是白名單：
+大部分頁面兩種身分都成立、只是內容不同（`/liff/leave` 家長是申請、校方是審核），
+**那些切過去要留在原地** —— 那正是「同一個網址，依身分渲染不同的頁」的設計。
+
+```text
+/liff/admin/*、/liff/audit   只有 staff 站得住
+/liff/class                  只有 teacher
+/liff/student/*              staff 或 teacher（家長看自己小孩走聯絡簿那條路）
+其餘                          每一種身分都站得住
+```
+
+站不住就 `router.replace('/liff')`——每一種身分的首頁都是同一個網址，內容才依身分不同。
+
+**⑨ 訊息中心與網址帶著的 studentId。** 家長身分的訊息中心看得到其他小朋友的聯絡簿
+（Human Owner 2026-08-20 回報）。兩層各修一次：
+
+```text
+收件匣本身   GET /notifications?relation=GUARDIAN（後端過濾，見 docs/07 §4j）
+那一扇門     StudentBookScreen 檢查 studentId 在不在 useVisibleStudents() 裡
+```
+
+**入口擋住不等於門擋住**：網址是可以被貼、被記住、被舊通知帶進來的。
+兩層都要，而且最後一道永遠在後端。
+
+**三個 hook 的分工到這裡定型**：
+
+```text
+useVisibleStudents() / useVisibleClasses()   這個身分看得到哪些資料
+useCapabilities()                            這個身分看得到哪些入口
+isRouteForPersona()                          這個身分站不站得住這一頁
+```
+
+三個都問同一個 `useScopedPersona()`：**桌面後台 `/admin/*` 一律回 null（不套身分）**。
+身分是手機殼的概念，桌面版沒有那層外框；而身分記在 localStorage 是跨外框共用的
+—— 園長昨天在手機上切到家長身分，今天打開電腦後台，點名頁只會列出他自己的小孩、
+人員管理整片空白。那不是「切身分」，那是壞掉。
 
 ### 手感規範（每一頁交付前都要對一次）
 

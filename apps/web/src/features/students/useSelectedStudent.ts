@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useMyStudents, useMyGuardianStudents, useMyTeachingStudents } from '../../lib/queries';
-import { useActivePersona } from '../../lib/usePersona';
+import { useScopedPersona } from '../../lib/useScopedPersona';
 import type { StudentView } from '../../lib/auth';
 
 // 現在這個身分「看得到哪些學生」。**全站只有這一個地方決定學生的資料範圍。**
@@ -26,7 +26,9 @@ import type { StudentView } from '../../lib/auth';
 // **新頁面請一律用這個 hook，不要直接呼叫 useMyStudents()**，
 // 否則就會再犯一次同樣的錯。
 export function useVisibleStudents(): UseQueryResult<StudentView[]> {
-  const { persona } = useActivePersona();
+  // useScopedPersona 而不是 useActivePersona：桌面後台不套身分（見那支的註解）——
+  // 否則園長昨天在手機上切到家長身分，今天打開電腦的點名頁只會列出他自己的小孩。
+  const persona = useScopedPersona();
   const isParent = persona === 'parent';
   const isTeacher = persona === 'teacher';
 

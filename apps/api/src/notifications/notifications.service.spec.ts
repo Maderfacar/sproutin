@@ -15,6 +15,8 @@ type PrismaMock = {
   announcement: { findMany: jest.Mock };
   message: { findMany: jest.Mock };
   user: { findMany: jest.Mock };
+  // relation=GUARDIAN 要知道「我監護哪幾個小孩、他們在哪一班」。
+  guardianship: { findMany: jest.Mock };
 };
 
 function makePrisma(): PrismaMock {
@@ -29,6 +31,7 @@ function makePrisma(): PrismaMock {
     announcement: { findMany: jest.fn(async () => []) },
     message: { findMany: jest.fn(async () => []) },
     user: { findMany: jest.fn(async () => []) },
+    guardianship: { findMany: jest.fn(async () => []) },
   } as PrismaMock;
 }
 
@@ -52,6 +55,82 @@ describe('NotificationsService.listForUser', () => {
     expect(prisma.notification.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: 'u1', readAt: null } }),
     );
+  });
+});
+
+// relation=GUARDIAN（Human Owner 2026-08-20 回報：家長身分的訊息中心看得到別人小孩的聯絡簿）。
+//
+// 這一組通知**全部都是發給本人的**（他同時是老師），所以不是權限問題 ——
+// 是世界混在一起。切到家長身分之後，收件匣裡只該留家長那一半。
+describe('NotificationsService.listForUser（relation=GUARDIAN）', () => {
+  const rows = [
+    { id: 'n-mine', type: 'CommunicationBookPublished', payload: { studentId: 'stu-mine' }, readAt: null, createdAt: new Date() },
+    { id: 'n-other', type: 'CommunicationBookPublished', payload: { studentId: 'stu-other' }, readAt: null, createdAt: new Date() },
+    { id: 'n-school', type: 'AnnouncementPublished', payload: { announcementId: 'a-school' }, readAt: null, createdAt: new Date() },
+    { id: 'n-myclass', type: 'AnnouncementPublished', payload: { announcementId: 'a-myclass' }, readAt: null, createdAt: new Date() },
+    { id: 'n-otherclass', type: 'AnnouncementPublished', payload: { announcementId: 'a-otherclass' }, readAt: null, createdAt: new Date() },
+    { id: 'n-system', type: 'attendance.override_conflict', payload: {}, readAt: null, createdAt: new Date() },
+  ];
+
+  function guardianPrisma(): PrismaMock {
+    const prisma = makePrisma();
+    prisma.notification.findMany = jest.fn(async () => rows);
+    prisma.guardianship.findMany = jest.fn(async () => [
+      { student: { id: 'stu-mine', classId: 'c-mine' } },
+    ]);
+    prisma.announcement.findMany = jest.fn(async () => [
+      { id: 'a-school', classId: null, title: '全校' },
+      { id: 'a-myclass', classId: 'c-mine', title: '我的班' },
+      { id: 'a-otherclass', classId: 'c-other', title: '別班' },
+    ]);
+    return prisma;
+  }
+
+  it('別人小孩的通知不會出現', async () => {
+    const ids = (await makeService(guardianPrisma()).listForUser({ id: 'u1' }, false, 'GUARDIAN')).map(
+      (n) => n.id,
+    );
+    expect(ids).toContain('n-mine');
+    expect(ids).not.toContain('n-other');
+  });
+
+  it('全校公告留著、我小孩那一班的公告留著、別班的不留', async () => {
+    const ids = (await makeService(guardianPrisma()).listForUser({ id: 'u1' }, false, 'GUARDIAN')).map(
+      (n) => n.id,
+    );
+    expect(ids).toContain('n-school');
+    expect(ids).toContain('n-myclass');
+    expect(ids).not.toContain('n-otherclass');
+  });
+
+  it('與特定孩子無關的系統通知一律留著', async () => {
+    const ids = (await makeService(guardianPrisma()).listForUser({ id: 'u1' }, false, 'GUARDIAN')).map(
+      (n) => n.id,
+    );
+    expect(ids).toContain('n-system');
+  });
+
+  // 只縮小、永遠不放大 —— 就算他是園長。
+  it('沒有監護關係 → 只剩系統通知與全校公告', async () => {
+    const prisma = guardianPrisma();
+    prisma.guardianship.findMany = jest.fn(async () => []);
+    const ids = (await makeService(prisma).listForUser({ id: 'u1' }, false, 'GUARDIAN')).map((n) => n.id);
+    expect(ids).toEqual(['n-school', 'n-system']);
+  });
+
+  // 被濾掉的孩子連名字都不必查 —— 過濾要在 join 名稱之前。
+  it('被濾掉的孩子不會出現在名稱查詢裡', async () => {
+    const prisma = guardianPrisma();
+    await makeService(prisma).listForUser({ id: 'u1' }, false, 'GUARDIAN');
+    const call = prisma.student.findMany.mock.calls.at(-1)?.[0] as
+      | { where: { id: { in: string[] } } }
+      | undefined;
+    expect(call?.where.id.in).toEqual(['stu-mine']);
+  });
+
+  it('不帶 relation → 一則都不過濾（校方身分看到的是全部）', async () => {
+    const ids = (await makeService(guardianPrisma()).listForUser({ id: 'u1' }, false)).map((n) => n.id);
+    expect(ids).toHaveLength(rows.length);
   });
 });
 

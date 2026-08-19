@@ -23,6 +23,11 @@ function str(payload: Prisma.JsonValue, key: string): string | null {
   return typeof value === 'string' ? value : null;
 }
 
+/** 單一則通知的 payload 欄位（給範圍過濾用；壞資料一律當成沒有）。 */
+export function payloadId(payload: Prisma.JsonValue, key: string): string | null {
+  return str(payload, key);
+}
+
 /** 這一批通知裡，某個 payload 欄位出現過的所有 id（去重、去空）。 */
 export function collectIds(
   notifications: { payload: Prisma.JsonValue }[],

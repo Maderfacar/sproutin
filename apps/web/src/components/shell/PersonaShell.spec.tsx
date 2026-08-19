@@ -6,12 +6,15 @@ import { PersonaShell } from './PersonaShell';
 
 const session = vi.hoisted(() => ({
   roles: [] as AuthUser['roles'],
+  pathname: '/liff',
 }));
+const replace = vi.hoisted(() => vi.fn());
 
-// useRouter：PersonaShell 會在閒下來時預先載入底部四格的路由（lib/useIdlePrefetch）。
+// useRouter：PersonaShell 會預先載入底部四格的路由（lib/useIdlePrefetch），
+// 也會在身分站不住這一頁時把人退回首頁（lib/personaRoutes）。
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/liff',
-  useRouter: () => ({ prefetch: () => {} }),
+  usePathname: () => session.pathname,
+  useRouter: () => ({ prefetch: () => {}, replace }),
 }));
 vi.mock('next/link', () => ({
   default: ({
@@ -48,6 +51,8 @@ describe('PersonaShell 的三套殼', () => {
     window.localStorage.clear();
     resetPersonaForTests();
     session.roles = [];
+    session.pathname = '/liff';
+    replace.mockReset();
   });
 
   it('家長：今天 / 聯絡簿 / 請假 / 我的', () => {
@@ -143,5 +148,41 @@ describe('PersonaShell 的三套殼', () => {
     render(<PersonaShell>今天的內容</PersonaShell>);
     expect(screen.getByText('晴光幼兒園')).toBeTruthy();
     expect(screen.getByText('今天的內容')).toBeTruthy();
+  });
+
+  // Human Owner 2026-08-20 回報：園長在人員管理頁上切成家長身分，那一頁還留在畫面上。
+  // 「一次只用一種身分」的意思是切下去整個世界都要換掉，包括你現在站的位置。
+  it('站不住這一頁的身分 → 退回首頁', () => {
+    session.roles = r('OWNER', 'PARENT');
+    session.pathname = '/liff/admin/people';
+    window.localStorage.setItem('sproutin.persona', 'parent');
+    resetPersonaForTests();
+
+    render(<PersonaShell>人員管理</PersonaShell>);
+
+    expect(replace).toHaveBeenCalledWith('/liff');
+  });
+
+  it('同一頁在園長身分下站得住，不會被退', () => {
+    session.roles = r('OWNER', 'PARENT');
+    session.pathname = '/liff/admin/people';
+    window.localStorage.setItem('sproutin.persona', 'staff');
+    resetPersonaForTests();
+
+    render(<PersonaShell>人員管理</PersonaShell>);
+
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  // 大部分的頁面兩種身分都成立、只是內容不同 —— 那些切過去要留在原地。
+  it('依身分渲染不同內容的頁面不會被退', () => {
+    session.roles = r('TEACHER', 'PARENT');
+    session.pathname = '/liff/leave';
+    window.localStorage.setItem('sproutin.persona', 'parent');
+    resetPersonaForTests();
+
+    render(<PersonaShell>請假</PersonaShell>);
+
+    expect(replace).not.toHaveBeenCalled();
   });
 });

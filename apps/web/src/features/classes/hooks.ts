@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { apiGet, apiSend } from '../../lib/api';
 import type { ClassView } from '../../lib/types';
-import { useActivePersona } from '../../lib/usePersona';
+import { useScopedPersona } from '../../lib/useScopedPersona';
 
 // 我的班級（staff;後端 scope 過濾）。授權走 cookie。
 // 這是**角色聯集**：園長／行政拿到全校的班，老師拿到自己帶的。
@@ -33,7 +33,8 @@ export function useTeachingClasses(enabled = true): UseQueryResult<ClassView[]> 
 // **新頁面請用這個，不要直接呼叫 useMyClasses()**（後台管理頁例外 ——
 // 那些頁面本來就只有園長／行政進得來，需要的就是全校的班）。
 export function useVisibleClasses(): UseQueryResult<ClassView[]> {
-  const { persona } = useActivePersona();
+  // 桌面後台不套身分（見 lib/useScopedPersona）。
+  const persona = useScopedPersona();
   const isTeacher = persona === 'teacher';
   const union = useMyClasses(!isTeacher);
   const teaching = useTeachingClasses(isTeacher);
