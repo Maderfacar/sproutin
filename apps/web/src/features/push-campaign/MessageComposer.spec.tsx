@@ -7,13 +7,18 @@ import { MessageComposer } from './MessageComposer';
 //   ② 則數要顯示「收得到／還沒綁定」兩個數字；
 //   ③ 0 人時不讓他送；
 //   ④ 改動內容會退回第一段（避免看著舊的則數按下確定）。
+//
+// 版型／收件範圍／按鈕這幾組選項改用分段選擇器之後，它們的角色是 radio 不是 button
+// （原生 select 全站退役，三個以內一律攤開）。
 
 const create = vi.fn();
+const onClose = vi.fn();
 const preview = { data: { willReceive: 12, unbound: 3 }, isLoading: false };
 
 vi.mock('./hooks', () => ({
   useCreateCampaign: () => ({
     mutate: create,
+    reset: vi.fn(),
     isPending: false,
     isError: false,
     isSuccess: false,
@@ -37,30 +42,39 @@ vi.mock('../../lib/branding', () => ({
   useBranding: () => ({ brandName: '晴光幼兒園' }),
 }));
 
+function renderComposer(): void {
+  render(<MessageComposer onClose={onClose} />);
+}
+
 function fillTitle(text = '中秋節親子活動'): void {
   fireEvent.change(screen.getByLabelText(/標題/), { target: { value: text } });
 }
 
+function pick(name: string): void {
+  fireEvent.click(screen.getByRole('radio', { name }));
+}
+
 beforeEach(() => {
   create.mockReset();
+  onClose.mockReset();
   preview.data = { willReceive: 12, unbound: 3 };
 });
 
 describe('MessageComposer', () => {
   it('先顯示人數（收得到 / 還沒綁定兩個數字）', () => {
-    render(<MessageComposer />);
+    renderComposer();
     expect(screen.getByText(/12 位收得到/)).toBeTruthy();
     expect(screen.getByText(/3 位還沒綁定/)).toBeTruthy();
   });
 
   it('沒填標題 → 不能進到送出那一步', () => {
-    render(<MessageComposer />);
+    renderComposer();
     expect(screen.getByRole('button', { name: '準備送出' }).hasAttribute('disabled')).toBe(true);
   });
 
   // 一顆按鈕直接送出太危險；確認對話框則會被習慣性按掉。
   it('兩段式送出：第一段沒有送出鍵，第二段才出現並標明則數與不可收回', () => {
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
     expect(screen.queryByRole('button', { name: /確定送出/ })).toBeNull();
 
@@ -72,7 +86,7 @@ describe('MessageComposer', () => {
   });
 
   it('按下確定 → 送出（帶版型、收件範圍與內容）', () => {
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
     fireEvent.click(screen.getByRole('button', { name: '準備送出' }));
     fireEvent.click(screen.getByRole('button', { name: '確定送出 12 則' }));
@@ -89,7 +103,7 @@ describe('MessageComposer', () => {
 
   // 看著「12 則」按下確定，內容卻已經改過 —— 必須退回第一段重新確認。
   it('進到確認後又改了內容 → 退回第一段', () => {
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
     fireEvent.click(screen.getByRole('button', { name: '準備送出' }));
     fillTitle('改成別的標題');
@@ -100,29 +114,31 @@ describe('MessageComposer', () => {
 
   it('這個範圍沒有人收得到 → 不讓他送，並說明原因', () => {
     preview.data = { willReceive: 0, unbound: 5 };
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
     fireEvent.click(screen.getByRole('button', { name: '準備送出' }));
 
-    expect(screen.getByRole('button', { name: /確定送出 0 則/ }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: /確定送出 0 則/ }).hasAttribute('disabled')).toBe(
+      true,
+    );
     expect(screen.getByText(/沒有人收得到/)).toBeTruthy();
   });
 
   it('選了指定班級但還沒挑班級 → 不能往下走', () => {
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
-    fireEvent.click(screen.getByRole('button', { name: '指定班級' }));
+    pick('指定班級');
 
     expect(screen.getByRole('button', { name: '準備送出' }).hasAttribute('disabled')).toBe(true);
-    fireEvent.change(screen.getByLabelText('班級'), { target: { value: 'class-sun' } });
+    pick('太陽班');
     expect(screen.getByRole('button', { name: '準備送出' }).hasAttribute('disabled')).toBe(false);
   });
 
   // 外部連結是 Human Owner 明確要的，但 http:// 會被 LINE 拒絕，也不該把家長帶去不安全的頁面。
   it('外部連結不是 https → 不能送出；改成 https 後才可以', () => {
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
-    fireEvent.click(screen.getByRole('button', { name: '連到外部網址' }));
+    pick('連到外部網址');
     fireEvent.change(screen.getByLabelText(/網址/), {
       target: { value: 'http://forms.example/signup' },
     });
@@ -135,26 +151,26 @@ describe('MessageComposer', () => {
   });
 
   it('外部連結會明講「我們無法確認那個頁面安全或還活著」', () => {
-    render(<MessageComposer />);
-    fireEvent.click(screen.getByRole('button', { name: '連到外部網址' }));
+    renderComposer();
+    pick('連到外部網址');
     expect(screen.getByText(/無法確認那個頁面安全/)).toBeTruthy();
   });
 
   it('繳費提醒版型：欄位標明是顯示用文字（系統不記帳）', () => {
-    render(<MessageComposer />);
-    fireEvent.click(screen.getByRole('button', { name: '繳費提醒' }));
+    renderComposer();
+    pick('繳費提醒');
 
     expect(screen.getByLabelText(/金額（顯示用文字）/)).toBeTruthy();
     expect(screen.getByText(/系統不會記帳也不會自動追繳/)).toBeTruthy();
   });
 
   it('換版型 → 前一個版型填的欄位不留下來', () => {
-    render(<MessageComposer />);
+    renderComposer();
     fillTitle();
-    fireEvent.click(screen.getByRole('button', { name: '活動通知' }));
+    pick('活動通知');
     fireEvent.change(screen.getByLabelText(/日期時間/), { target: { value: '9/20' } });
-    fireEvent.click(screen.getByRole('button', { name: '一般通知' }));
-    fireEvent.click(screen.getByRole('button', { name: '活動通知' }));
+    pick('一般通知');
+    pick('活動通知');
 
     expect((screen.getByLabelText(/日期時間/) as HTMLInputElement).value).toBe('');
   });

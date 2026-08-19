@@ -11,23 +11,28 @@ vi.mock('../../lib/session', () => ({
 vi.mock('./MessageComposer', () => ({ MessageComposer: () => <p>卡片編輯器</p> }));
 vi.mock('./CampaignHistory', () => ({ CampaignHistory: () => <p>歷史清單</p> }));
 
-function headings(container: HTMLElement): string[] {
-  return [...container.querySelectorAll('h2')].map((h) => h.textContent ?? '');
-}
-
-describe('發送訊息的斷句', () => {
+describe('發送訊息的版面', () => {
   beforeEach(() => {
     state.roles = [{ role: 'OWNER' }];
   });
 
-  it('要做的事在上、送出紀錄在下', () => {
+  // 群發送出後收不回來，回頭查「上次那則送出去了沒」的次數比新發一則還多，
+  // 所以頁面主體是紀錄，編輯器收進面板（一進來是關著的）。
+  it('主體是送出紀錄，編輯器收在面板裡而且預設關著', () => {
     const { container } = render(<PushCampaignPanel />);
-    expect(headings(container)).toEqual(['做一張卡片發出去', '送出紀錄']);
-    expect(container.querySelectorAll('.border-b-2')).toHaveLength(1);
+
+    expect(screen.getByText('送出紀錄')).toBeTruthy();
+    expect(screen.getByText('歷史清單')).toBeTruthy();
+    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
   });
 
-  // 送出後收不回來，這句話要在按鈕旁邊看得到，不能只寫在頁面最上面。
-  it('「收不回來」這句話留在發送那一段的說明上', () => {
+  it('只有一顆主要按鈕，就是「發一則群發訊息」', () => {
+    render(<PushCampaignPanel />);
+    expect(screen.getByRole('button', { name: /發一則群發訊息/ })).toBeTruthy();
+  });
+
+  // 寫在頁面最上面的警語在手機上會先被捲掉，要被提醒的那一刻正是手指停在按鈕上的那一刻。
+  it('「收不回來」這句話留在按鈕旁邊', () => {
     render(<PushCampaignPanel />);
     expect(screen.getByText(/送出後沒有辦法收回/)).toBeTruthy();
   });

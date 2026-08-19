@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import type { SchoolAdminConfig } from '@sproutin/shared';
 import { Icon } from '../../components/Icon';
+import { Button, Field } from '../../components/ui';
 import { BANNER_PRESETS, COLOR_PRESETS, LOGO_PRESETS, type ImagePreset } from './presets';
 import { uploadErrorMessage, useUploadImage, type UploadKind } from './hooks';
 
@@ -13,7 +14,10 @@ interface BrandSectionProps {
   onChange: (patch: Partial<Draft>) => void;
 }
 
-// 圖片欄位（logo / 封面）：內建圖庫 → 上傳 → 貼網址 → 移除。
+// 圖片欄位（logo / 封面）：先看到現在長什麼樣 → 換一張（上傳 / 貼網址 / 內建圖庫）→ 移除。
+//
+// 三種來源刻意都留著：園所大多直接挑內建圖庫；有設計師的園所會上傳；
+// 已經有官網的園所常常只想貼一個現成網址。少掉任何一種，就會有園所卡在這一步。
 function ImageField({
   kind,
   label,
@@ -42,13 +46,15 @@ function ImageField({
   };
 
   return (
-    <div>
-      <p className="eyebrow">{label}</p>
-      <p className="mt-1 text-xs text-ink-soft">{hint}</p>
-
-      <div className="mt-3 flex items-center gap-4">
+    <Field
+      label={label}
+      hint={hint}
+      error={upload.isError ? uploadErrorMessage(upload.error) : undefined}
+      group
+    >
+      <div className="flex items-center gap-3">
         <span
-          className={`flex shrink-0 items-center justify-center overflow-hidden border border-line bg-surface ${
+          className={`flex shrink-0 items-center justify-center overflow-hidden border border-line-strong bg-surface ${
             round ? 'h-16 w-16 rounded-full' : 'h-16 w-28 rounded-md2'
           }`}
         >
@@ -56,30 +62,26 @@ function ImageField({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" className="h-full w-full object-cover" />
           ) : (
-            <Icon name="image" className="h-6 w-6 text-ink-soft" />
+            <Icon name="image" className="h-6 w-6 text-ink-mute" />
           )}
         </span>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
+        <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            block={false}
             onClick={() => fileInput.current?.click()}
             disabled={upload.isPending}
-            className="btn-secondary text-sm"
           >
-            {upload.isPending ? '上傳中…' : '上傳圖片'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowUrlInput((v) => !v)}
-            className="btn-secondary text-sm"
-          >
+            {upload.isPending ? '上傳中…' : '上傳'}
+          </Button>
+          <Button variant="secondary" block={false} onClick={() => setShowUrlInput((v) => !v)}>
             貼網址
-          </button>
+          </Button>
           {value && (
-            <button type="button" onClick={() => onChange(null)} className="btn-secondary text-sm">
+            <Button variant="danger" block={false} onClick={() => onChange(null)}>
               移除
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -95,22 +97,19 @@ function ImageField({
         }}
       />
 
-      {upload.isError && (
-        <p className="mt-2 text-xs text-red-700">{uploadErrorMessage(upload.error)}</p>
-      )}
-
       {showUrlInput && (
-        <div className="mt-3 flex gap-2">
+        <div className="flex gap-2">
           <input
             type="url"
+            aria-label={`${label}的圖片網址`}
             value={urlDraft}
             onChange={(e) => setUrlDraft(e.target.value)}
             placeholder="https://…"
-            className="field text-sm"
+            className="field"
           />
-          <button
-            type="button"
-            className="btn-secondary shrink-0 text-sm"
+          <Button
+            variant="secondary"
+            block={false}
             onClick={() => {
               if (urlDraft.startsWith('http')) {
                 onChange(urlDraft);
@@ -120,11 +119,12 @@ function ImageField({
             }}
           >
             套用
-          </button>
+          </Button>
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <p className="text-2xs text-ink-mute">或從內建圖庫挑一張</p>
+      <div className="flex flex-wrap gap-2">
         {presets.map((preset) => (
           <button
             key={preset.id}
@@ -132,25 +132,26 @@ function ImageField({
             onClick={() => onChange(preset.url)}
             aria-pressed={value === preset.url}
             title={preset.label}
-            className={`overflow-hidden rounded-md2 border transition ${
-              value === preset.url ? 'border-brand-primary' : 'border-line hover:border-brand-primary'
-            } ${round ? 'h-12 w-12 rounded-full' : 'h-12 w-20'}`}
+            className={`tappable overflow-hidden border-2 transition ${
+              value === preset.url ? 'border-brand-primary' : 'border-line'
+            } ${round ? 'h-12 w-12 rounded-full' : 'h-12 w-20 rounded-md2'}`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preset.url} alt={preset.label} className="h-full w-full object-cover" />
           </button>
         ))}
       </div>
-    </div>
+    </Field>
   );
 }
 
-// 園所識別：名稱 + 色彩 + logo + 封面。改動即時反映在畫面上（儲存後才寫回園所資料）。
+// 園所識別：名稱 + 色彩 + logo + 封面。
+// 住在 AppearanceEditor 的底部面板裡，所以是單欄的一疊欄位。
+// 顏色改動即時套到整個 App（見 AppearanceEditor 的預覽 effect），按下「儲存」才寫回園所資料。
 export function BrandSection({ draft, onChange }: BrandSectionProps) {
   return (
-    <section className="rise-in card space-y-6 p-5">
-      <label className="field-label">
-        園所名稱
+    <div className="flex flex-col gap-5">
+      <Field label="園所名稱" hint="家長在每一頁的左上角看到的就是它">
         <input
           type="text"
           value={draft.brandName}
@@ -158,13 +159,10 @@ export function BrandSection({ draft, onChange }: BrandSectionProps) {
           onChange={(e) => onChange({ brandName: e.target.value })}
           className="field"
         />
-      </label>
+      </Field>
 
-      <div>
-        <p className="eyebrow">代表色</p>
-        <p className="mt-1 text-xs text-ink-soft">主色用於按鈕與重點，副色用於輔助點綴。</p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
+      <Field label="代表色" hint="主色用在按鈕與重點，副色用在輔助點綴。選了立刻套到整個畫面。" group>
+        <div className="flex flex-wrap gap-2">
           {COLOR_PRESETS.map((preset) => {
             const active = draft.primaryColor.toLowerCase() === preset.primary.toLowerCase();
             return (
@@ -175,14 +173,16 @@ export function BrandSection({ draft, onChange }: BrandSectionProps) {
                 onClick={() =>
                   onChange({ primaryColor: preset.primary, secondaryColor: preset.secondary })
                 }
-                className={`flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3 text-xs font-semibold transition ${
-                  active ? 'border-brand-primary text-ink' : 'border-line text-ink-soft hover:border-brand-primary'
+                className={`tappable flex min-h-touch items-center gap-2 rounded-md2 border px-3 text-sm font-semibold transition ${
+                  active
+                    ? 'border-brand-primary bg-brand-wash text-brand-primary'
+                    : 'border-line-strong bg-surface text-ink-soft'
                 }`}
               >
                 <span
-                  className="h-5 w-5 rounded-full border border-black/5"
-                  style={{ background: preset.primary }}
                   aria-hidden
+                  className="h-5 w-5 rounded-full border border-black/10"
+                  style={{ background: preset.primary }}
                 />
                 {preset.label}
               </button>
@@ -190,40 +190,38 @@ export function BrandSection({ draft, onChange }: BrandSectionProps) {
           })}
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <label className="field-label">
-            主色
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="主色">
             <span className="flex items-center gap-2">
               <input
                 type="color"
                 value={draft.primaryColor}
                 onChange={(e) => onChange({ primaryColor: e.target.value })}
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-md2 border border-line bg-surface"
                 aria-label="主色"
+                className="h-11 w-12 shrink-0 cursor-pointer rounded-md2 border border-line-strong bg-surface"
               />
               <span className="text-sm tabular-nums text-ink">{draft.primaryColor}</span>
             </span>
-          </label>
-          <label className="field-label">
-            副色
+          </Field>
+          <Field label="副色">
             <span className="flex items-center gap-2">
               <input
                 type="color"
                 value={draft.secondaryColor}
                 onChange={(e) => onChange({ secondaryColor: e.target.value })}
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-md2 border border-line bg-surface"
                 aria-label="副色"
+                className="h-11 w-12 shrink-0 cursor-pointer rounded-md2 border border-line-strong bg-surface"
               />
               <span className="text-sm tabular-nums text-ink">{draft.secondaryColor}</span>
             </span>
-          </label>
+          </Field>
         </div>
-      </div>
+      </Field>
 
       <ImageField
         kind="logo"
         label="園徽 / Logo"
-        hint="顯示於每一頁的左上角，建議正方形。"
+        hint="顯示在每一頁的左上角，建議正方形。"
         presets={LOGO_PRESETS}
         value={draft.logoUrl}
         round
@@ -233,12 +231,12 @@ export function BrandSection({ draft, onChange }: BrandSectionProps) {
       <ImageField
         kind="banner"
         label="首頁封面"
-        hint="顯示於頁首下方，建議橫幅比例；留空則不顯示。"
+        hint="家長首頁最上面那張圖，建議橫幅比例；留空就不顯示。"
         presets={BANNER_PRESETS}
         value={draft.bannerUrl}
         round={false}
         onChange={(bannerUrl) => onChange({ bannerUrl })}
       />
-    </section>
+    </div>
   );
 }

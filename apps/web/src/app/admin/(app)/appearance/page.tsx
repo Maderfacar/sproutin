@@ -4,12 +4,11 @@ import { useSession } from '../../../../lib/session';
 import { roleFlags } from '../../../../lib/roles';
 import { StatusScreen } from '../../../../components/StatusScreen';
 import { AppearanceEditor } from '../../../../features/school/AppearanceEditor';
-import { RichMenuSection } from '../../../../features/rich-menu/RichMenuSection';
 
 // 園所外觀設計（桌面版）。
 //
 // 圖文選單與品牌收在同一頁，是因為它們是同一件事：**這間園所在家長眼中長什麼樣子**。
-// 順序刻意把圖文選單放第一 —— 家長最先看到的是 LINE 選單，不是 App 內頁。
+// 改版後三塊（識別 / 卡片 / 圖文選單）都在 AppearanceEditor 裡，手機版因此也拿得到（§3b）。
 export default function AdminAppearancePage() {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
@@ -28,7 +27,6 @@ export default function AdminAppearancePage() {
         </p>
       </header>
 
-      <RichMenuSection />
       <AppearanceEditor viewerRoles={user.roles} />
     </div>
   );
