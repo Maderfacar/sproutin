@@ -325,7 +325,9 @@ SectionHead 分段標題。**取代 Band**
 （粗線＝要動手，細線＝只是看）。拿掉的是分類籤與身分籤——標題本身講內容
 （「今天還有 3 件事」），不再講「要做的事／查看」。身分改由整個殼區分，見下。
 
-> Band 目前仍在舊頁面上運作，隨第二～四批逐頁替換完後刪除。
+> `components/Band` 已於第四批之六刪除（最後兩個呼叫端 `StudentDetail` 與
+> `RolesOverview` 換成 `SectionHead`）。同一批一併刪掉的還有 `components/StudentSelect`
+> 與 `components/ClassSelect` —— 它們最後的使用者是聯集視圖 `BusView`。
 
 ### 三套殼（`components/shell/`）與身分（`lib/persona.ts`）
 
@@ -373,6 +375,7 @@ return persona === 'parent' ? <ParentLeave /> : <LeaveView />;
 /liff/attendance          家長＝每天紀錄 + 月統計  導師＝今天這一班的點名  行政＝共用 AttendanceView
 /liff/communication-book  家長＝我小孩那一本      導師＝今天整班要填的    行政＝共用 CommunicationBookView
 /liff/announcement        家長＝只讀列表          校方＝多一塊發布面板
+/liff/bus                 家長＝我小孩今天上下車了沒  校方／隨車老師＝這一趟的點名
 /liff/class               導師專屬：班級名單 + 每人今天的狀態
 /liff（園長）             全園今天的數字 + 需要你處理的 + 各班一覽 + 管理入口
 ```
@@ -491,6 +494,7 @@ return persona === 'parent' ? <ParentLeave /> : <LeaveView />;
 LeaveView                 → LeaveReview（一份元件兩種範圍：scope='class' | 'school'）
 AttendanceView            → TeacherRoster（點名）+ StudentAttendance（單一學生紀錄）
 CommunicationBookView     → TeacherBookPanel（整班填寫）+ ParentBook（自己小孩那一本）
+BusView（第四批之六）     → ParentBus（我小孩今天上下車了沒）+ BusBoardingPanel（點名）
 ```
 
 連帶刪除：`TeacherLeaveReviewPanel`、`SchoolLeaveOverviewPanel`、`LeaveForm`、`LeaveList`、
@@ -532,25 +536,58 @@ CommunicationBookView     → TeacherBookPanel（整班填寫）+ ParentBook（�
 而不是「病假」—— 螢幕閱讀器唸出來的東西是錯的。裝一組控制項時要傳 `group`
 （改渲染 div），群組自己的名稱由該元件的 `aria-label` 負責。
 
-#### 第四批還沒做完的（下一個視窗）
+#### 發送訊息、園所外觀、娃娃車、學生詳細、人員編輯（第四批之六，第四批完結）
+
+剩下的五組行政面板換完。前面幾批的樣板（`StudentsManager` 清單頁、`LeaveReview` 審核頁、
+`LeaveRequestSheet` 表單、`AdminHome` 首頁）沒有再長出新的版型 —— 這正是先蓋底層的回報。
 
 ```text
-發送訊息      MessageComposer、PushCampaignPanel、CardPreview、CampaignHistory
-園所外觀      AppearanceEditor、BrandSection、CardsSection、RichMenuSection
-娃娃車        BusView、BusBoardingPanel、BusSettingsPanel、RouteEditor、StudentBusSection
-學生詳細      StudentDetail
-其他零星      PersonEditor / RolesSection / BindingSection（版面尚未照新版重做）
+發送訊息   頁面主體＝送出紀錄，編輯器收進面板。群發送不出去的不能重來，
+           所以回頭查「上次那則送出去了沒、幾個人收到」的次數比新發一則還多。
+           **兩段式送出的流程一行沒動**（Human Owner 定案）：第一顆只是準備並攤開則數與
+           「不可收回」，第二顆才真的送；任何內容改動都退回第一段。只換視覺。
+園所外觀   主體＝一張「家長看到的樣子」預覽（封面＋logo＋園名＋兩個色點），
+           三個入口各自把編輯器收進面板。面板自己存得起來 —— 改完還要關掉面板
+           再找一顆按鈕，中間那一步就是「我到底存了沒」的來源。
+娃娃車     點名的互動一行沒動（Human Owner 已驗收「一手扶車一手點」），
+           補上進度條與已存檔：車上訊號不穩時，看不到回饋的人就會再點一次。
+           設定頁改清單頁；路線名稱與發車時間從「失焦就存」改成面板裡按儲存。
+學生詳細   最上面那塊是「這是誰的頁面」（不算一段，沒有標題也沒有線），
+           翻閱的段落細線、唯一改得動東西的娃娃車粗線。
+人員編輯   見下面「破壞性動作一律進面板」。
 ```
 
-這些頁面的**功能對等已經完成**（§3b），色彩、斷句、狀態色也已隨共用點一起換掉；
-還沒做的是版面本身：原生 `<select>`、空狀態文案、觸控目標，
-以及把 `btn-primary` / `.card` 換成 `components/ui` 的元件與「清單頁 / 表單頁」版型。
+**LINE 圖文選單補上手機版（修掉一個 §3b 的破口）。** `RichMenuSection` 原本只掛在
+桌面版 `/admin/appearance`，理由是「需要大畫面反覆比對」——但那不在 §3b 的明文例外裡，
+而且停課、颱風這種最需要臨時改選單的時刻，園長往往不在電腦前。改版後它收在
+`AppearanceEditor` 的面板中，兩個外框一起拿到，桌面頁反而少一個 import。
+它的主要按鈕跟著狀態換：**還沒存就是「儲存設計」，存好了才變「套用到 LINE」**
+——同時放三顆按鈕會讓人不知道現在該按哪一顆（儲存與套用分開的理由不變：
+LINE 的建立選單每小時只有 100 次）。
 
-樣板已經有了 —— 照 `StudentsManager`（清單頁）與 `LeaveReview`（審核頁）抄。
+#### 破壞性動作一律進面板（第四批之六真正修掉的東西）
 
-### 切換身分的三個坑（Human Owner 2026-08-20 實機回報後修正）
+人員編輯那三個檔案要改的其實不是版面，是**誤按**。原本有四處「就地把按鈕展開成兩顆」：
 
-改成「一次只用一種身分」之後踩到的三件事，每一件都不是版面問題：
+```text
+移除身分      RolesSection      連帶取消他帶的班 / 解除他綁的小孩
+解除小孩綁定  PersonEditor      他立刻看不到那個孩子的出缺勤、聯絡簿與請假
+解除 LINE 綁定 BindingSection   本人當場登不進來
+停用帳號      PersonEditor      登不進來，而且不能再被指派身分
+```
+
+就地展開的問題是：**「確定移除」正好長在手指剛按過「移除」的位置上**，連按兩下就沒了。
+四處全部改成底部面板問一次，而且每一句都寫出他會失去什麼。
+娃娃車的刪除路線／刪除接送點同理（並且講明「這條路線上的 N 個接送點會一起消失」）。
+`PersonEditor.spec` 把這條性質釘住：按了不會直接送出、確認鈕才送、警語一定要出現。
+
+> 面板不互相疊：刪除的確認是**關掉編輯面板、再開確認面板**（`RouteEditor`、`PersonEditor`
+> 都是這樣），不是把 `<dialog>` 疊在 `<dialog>` 上。因此像 `PersonEditor` 這種
+> 留在頁面上而不收進面板的區塊，它底下的確認面板才永遠只有一層。
+
+### 切換身分的六個坑（Human Owner 2026-08-20 實機回報後修正）
+
+改成「一次只用一種身分」之後踩到的六件事，每一件都不是版面問題：
 
 **① 出口只有一半。** 切換鈕原本只畫在校方那一側，於是切到家長之後就找不到路回去
 —— 等於把人關在家長身分裡出不來。現在頁首的形狀對每一種身分都一樣：
