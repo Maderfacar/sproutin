@@ -72,6 +72,31 @@ describe('公告頁', () => {
     expect(screen.getByRole('radio', { name: '單一班級' })).toBeTruthy();
   });
 
+  // Human Owner 2026-08-20 回報：老師在公告頁可以發全校公告。
+  // 他確實是園長（後端也會放行），但導師的形狀是「我這一班」——
+  // 要發全校就切回園長身分。
+  it('園長兼導師切到老師身分 → 沒有全校那個選項', () => {
+    state.roles = [{ role: 'OWNER' }, { role: 'TEACHER' }];
+    window.localStorage.setItem('sproutin.persona', 'teacher');
+    resetPersonaForTests();
+
+    render(<AnnouncementBoard />);
+    fireEvent.click(screen.getByRole('button', { name: /發一則公告/ }));
+
+    expect(screen.queryByRole('radio', { name: '全校' })).toBeNull();
+  });
+
+  it('同一個人切回園長身分，全校那個選項就回來了', () => {
+    state.roles = [{ role: 'OWNER' }, { role: 'TEACHER' }];
+    window.localStorage.setItem('sproutin.persona', 'staff');
+    resetPersonaForTests();
+
+    render(<AnnouncementBoard />);
+    fireEvent.click(screen.getByRole('button', { name: /發一則公告/ }));
+
+    expect(screen.getByRole('radio', { name: '全校' })).toBeTruthy();
+  });
+
   it('沒寫標題不會送出，並且就地說明', () => {
     state.roles = [{ role: 'TEACHER' }];
     render(<AnnouncementBoard />);

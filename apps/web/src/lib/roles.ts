@@ -59,28 +59,51 @@ export function roleFlags(roles: AuthUser['roles']): RoleFlags {
 // 這是同一個坑的第四次（前三次：GET /me/students、GET /classes、家長首頁的稽核卡）。
 // 前三次是資料範圍，這一次是介面入口 —— 所以修法也一樣：收斂成一個地方決定。
 //
-// **只縮小校方那一半，而且只在家長身分。** 校方的三種身分（staff / teacher / bus）維持角色聯集：
-// 那三個殼本來就都在校方的世界裡，而且硬切會出事 —— 例如同時是導師與隨車老師的人，
+// **一種身分收斂一次，不是一刀切。** 三個殼各自代表一種「看事情的形狀」，
+// 所以拿掉的東西也不一樣：
+//
+//   parent   家長：校方那一半全部收起來。
+//   teacher  班導：**收掉園所層級的**（全校公告、全校請假、園所設定、稽核）——
+//            導師的形狀是「我這一班」，發全校公告不屬於這個身分
+//            （Human Owner 2026-08-20 回報：老師在公告頁可以發全校公告）。
+//            班級層級的（點名、班級公告、審自己班的請假）要留著。
+//   bus      隨車老師：同 teacher 的收斂。他本來就不會有那些旗標
+//            （bus 身分要「沒有其他校方身分」才成立），寫出來是為了規則一致。
+//   staff    園長／行政：不收。那本來就是最上層的那個殼。
+//
+// **canMarkBusRide 在 teacher 身分下一定要留著**：同時是導師與隨車老師的人，
 // `availablePersonas` 只會給他 teacher（bus 身分要「沒有其他校方身分」才成立），
-// 在 teacher 身分下拿掉 canMarkBusRide，他就再也點不到娃娃車點名了。
+// 拿掉之後他就再也點不到娃娃車點名了。
 export function personaFlags(flags: RoleFlags, persona: Persona): RoleFlags {
-  if (persona !== 'parent') {
+  if (persona === 'staff') {
     return flags;
   }
+
+  if (persona === 'parent') {
+    return {
+      isGuardian: flags.isGuardian,
+      // 家長替自己的小孩請假。校方的「代家長請假」不屬於這個身分。
+      canApplyLeave: flags.isGuardian,
+      canReviewLeave: false,
+      canMarkAttendance: false,
+      canAnnounce: false,
+      canAnnounceSchool: false,
+      canViewSchoolLeaves: false,
+      canViewAudit: false,
+      canManageSchool: false,
+      canMarkBusRide: false,
+      isStaff: false,
+      // 在家長身分裡就只有家長身分，沒有「雙重」可言。
+      hasDualIdentity: false,
+    };
+  }
+
+  // teacher / bus：園所層級的東西收起來，班級層級的留著。
   return {
-    isGuardian: flags.isGuardian,
-    // 家長替自己的小孩請假。校方的「代家長請假」不屬於這個身分。
-    canApplyLeave: flags.isGuardian,
-    canReviewLeave: false,
-    canMarkAttendance: false,
-    canAnnounce: false,
+    ...flags,
     canAnnounceSchool: false,
     canViewSchoolLeaves: false,
-    canViewAudit: false,
     canManageSchool: false,
-    canMarkBusRide: false,
-    isStaff: false,
-    // 在家長身分裡就只有家長身分，沒有「雙重」可言。
-    hasDualIdentity: false,
+    canViewAudit: false,
   };
 }

@@ -118,15 +118,39 @@ describe('personaFlags', () => {
     expect(f.canApplyLeave).toBe(true);
   });
 
-  // 校方三種身分維持角色聯集。硬切會出事：同時是導師與隨車老師的人，
-  // availablePersonas 只給他 teacher（bus 身分要「沒有其他校方身分」才成立），
-  // 在 teacher 身分下拿掉 canMarkBusRide，他就再也點不到娃娃車點名了。
-  it('老師身分：不動它，否則兼隨車老師的人會失去點名入口', () => {
+  // Human Owner 2026-08-20 回報：老師在公告頁可以發全校公告。
+  // 導師的形狀是「我這一班」——園所層級的東西不屬於這個身分。
+  it('老師身分：園所層級的收起來（全校公告、全校請假、園所設定、稽核）', () => {
+    const ownerTeacher = roleFlags([
+      { role: 'OWNER', scopeType: 'SCHOOL', scopeId: null },
+      { role: 'TEACHER', scopeType: 'SCHOOL', scopeId: null },
+    ]);
+    const f = personaFlags(ownerTeacher, 'teacher');
+    expect(f.canAnnounceSchool).toBe(false);
+    expect(f.canViewSchoolLeaves).toBe(false);
+    expect(f.canManageSchool).toBe(false);
+    expect(f.canViewAudit).toBe(false);
+  });
+
+  it('老師身分：班級層級的留著（點名、班級公告、審自己班的請假）', () => {
+    const ownerTeacher = roleFlags([
+      { role: 'OWNER', scopeType: 'SCHOOL', scopeId: null },
+      { role: 'TEACHER', scopeType: 'SCHOOL', scopeId: null },
+    ]);
+    const f = personaFlags(ownerTeacher, 'teacher');
+    expect(f.canMarkAttendance).toBe(true);
+    expect(f.canAnnounce).toBe(true);
+    expect(f.canReviewLeave).toBe(true);
+  });
+
+  // 同時是導師與隨車老師的人，availablePersonas 只給他 teacher
+  // （bus 身分要「沒有其他校方身分」才成立）。在 teacher 身分下拿掉 canMarkBusRide，
+  // 他就再也點不到娃娃車點名了。
+  it('老師身分：娃娃車點名一定要留著，否則兼隨車老師的人會失去入口', () => {
     const busTeacher = roleFlags([
       { role: 'TEACHER', scopeType: 'SCHOOL', scopeId: null },
       { role: 'BUS_TEACHER', scopeType: 'SCHOOL', scopeId: null },
     ]);
-    expect(personaFlags(busTeacher, 'teacher')).toEqual(busTeacher);
     expect(personaFlags(busTeacher, 'teacher').canMarkBusRide).toBe(true);
   });
 

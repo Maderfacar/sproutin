@@ -3,8 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useSelectedClass } from '../classes/hooks';
 import { useCreateAnnouncement } from './hooks';
-import { useSession } from '../../lib/session';
-import { roleFlags } from '../../lib/roles';
+import { useCapabilities } from '../../lib/useCapabilities';
 import { apiErrorMessage } from '../../lib/api';
 import type { AnnouncementScope } from '../../lib/types';
 import { Button, Field, Segmented, Sheet } from '../../components/ui';
@@ -13,9 +12,12 @@ import { Button, Field, Segmented, Sheet } from '../../components/ui';
 //
 // 老師只能發給自己帶的班（班級清單已依身分縮小，見 useVisibleClasses）；
 // 園長／行政可以選全校或某一個班。
+//
+// **依身分不是角色聯集**（Human Owner 2026-08-20 回報：老師在公告頁可以發全校公告）：
+// 園長兼導師的人切到老師身分時，全校那個選項不該還在 —— 導師的形狀是「我這一班」。
+// 要發全校就切回園長身分。
 export function AnnounceSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { user } = useSession();
-  const flags = roleFlags(user.roles);
+  const flags = useCapabilities();
   const { classes, classId, setClassId } = useSelectedClass();
 
   const [scope, setScope] = useState<AnnouncementScope>(
