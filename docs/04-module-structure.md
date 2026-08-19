@@ -483,22 +483,56 @@ return persona === 'parent' ? <ParentLeave /> : <LeaveView />;
 > 這是刻意的順序：**先改「所有頁面共用的那一個地方」，再逐頁重做。**
 > 反過來的話，每一頁都要各自處理一次同樣的顏色與斷句。
 
+#### 聯集視圖全部退役（第四批之三、之四）
+
+「一頁同時服務兩種人」的東西已經清乾淨。三個聯集視圖都刪除了：
+
+```text
+LeaveView                 → LeaveReview（一份元件兩種範圍：scope='class' | 'school'）
+AttendanceView            → TeacherRoster（點名）+ StudentAttendance（單一學生紀錄）
+CommunicationBookView     → TeacherBookPanel（整班填寫）+ ParentBook（自己小孩那一本）
+```
+
+連帶刪除：`TeacherLeaveReviewPanel`、`SchoolLeaveOverviewPanel`、`LeaveForm`、`LeaveList`、
+`TeacherRosterPanel`、`AttendanceList`。`StudentBookScreen` 抽成自己的檔案。
+
+**§3b 的功能對等沒有被破壞**：桌面與手機仍是同一份元件，只是那份元件現在依身分渲染。
+`/admin/leave`、`/admin/attendance`、`/admin/communication-book` 都跟著換過去。
+
+兩個因此改變的動線，都是刻意的：
+
+```text
+校方查「某一個孩子」的出缺勤   → 學生整合視圖 /liff/student/[id]
+                                （那一頁本來就把一個孩子的所有東西放在一起）
+翻某個孩子過去的聯絡簿         → 班級名單或直欄模式那一列的箭頭
+                                → /liff/communication-book/[studentId]
+```
+
+**校方仍然可以代家長請假**（`canApplyLeave` 本來就含 TEACHER/ADMIN，家長打電話來請假
+是實際會發生的事）：做成 `LeaveReview` 上的次要按鈕，選學生併進同一個面板。
+`LeaveRequestSheet` 因此改成收一份 students 清單 —— 只有一位就不畫選擇器，
+家長端與校方端共用同一份表單。
+
+**只有 OWNER 身分的園長改不動請假**（docs/05 矩陣審核是 ADMIN/TEACHER）。
+舊版照樣畫兩顆按鈕、按下去 403；現在改成一句「這筆由導師或行政人員審核」——
+講清楚是誰能處理，比放一顆按了會失敗的按鈕好。
+
 #### 第四批還沒做完的（下一個視窗）
 
 ```text
-學生 / 班級 / 人員與綁定 / 權限     StudentsManager、ClassesManager、
-                                    PeopleManager+PersonEditor+BindingSection+RolesSection、
-                                    RolesOverview
-發送訊息                            MessageComposer、PushCampaignPanel、CardPreview、CampaignHistory
-園所外觀                            AppearanceEditor、BrandSection、CardsSection、RichMenuSection
-娃娃車設定                          BusSettingsPanel、RouteEditor、StudentBusSection
-稽核 / 全校請假 / 公告發布 / 學生詳細  AuditPanel、SchoolLeaveOverviewPanel、
-                                    TeacherAnnouncePanel、StudentDetail
+發送訊息      MessageComposer、PushCampaignPanel、CardPreview、CampaignHistory
+園所外觀      AppearanceEditor、BrandSection、CardsSection、RichMenuSection
+娃娃車設定    BusSettingsPanel、RouteEditor、StudentBusSection、BusView、BusBoardingPanel
+稽核          AuditPanel
+公告發布      TeacherAnnouncePanel、AnnouncementView
+學生詳細      StudentDetail
 ```
 
-這些頁面的**功能對等已經完成**（§3b），色彩與斷句也已隨上面兩個共用點一起換掉；
-還沒做的是版面本身：原生 `<select>`、空狀態文案、觸控目標、
-以及把 `btn-primary` / `.card` 換成 `components/ui` 的元件。
+這些頁面的**功能對等已經完成**（§3b），色彩、斷句、狀態色也已隨共用點一起換掉；
+還沒做的是版面本身：原生 `<select>`、空狀態文案、觸控目標，
+以及把 `btn-primary` / `.card` 換成 `components/ui` 的元件與「清單頁 / 表單頁」版型。
+
+樣板已經有了 —— 照 `StudentsManager`（清單頁）與 `LeaveReview`（審核頁）抄。
 
 ### 切換身分的三個坑（Human Owner 2026-08-20 實機回報後修正）
 
