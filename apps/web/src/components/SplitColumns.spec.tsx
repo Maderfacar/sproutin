@@ -10,7 +10,7 @@ function grid(container: HTMLElement): Element | null {
 }
 
 describe('SplitColumns', () => {
-  it('手機外框維持一欄（AppShell 的內容區只有 max-w-2xl，切兩欄會兩邊都太窄）', () => {
+  it('手機外框維持一欄（PersonaShell 的內容區只有 max-w-2xl，切兩欄會兩邊都太窄）', () => {
     pathname.value = '/liff/leave';
     const { container } = render(<SplitColumns primary={<p>點名</p>} secondary={<p>查詢</p>} />);
 

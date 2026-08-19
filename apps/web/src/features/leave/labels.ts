@@ -1,5 +1,6 @@
 import type { LeaveStatus } from '../../lib/types';
 import { ApiError } from '../../lib/api';
+import type { Tone } from '../../components/ui';
 
 export const LEAVE_STATUS_LABEL: Record<LeaveStatus, { label: string; className: string }> = {
   PENDING: { label: '待審核', className: 'bg-amber-100 text-amber-800' },
@@ -27,3 +28,12 @@ export function leaveErrorMessage(error: unknown): string {
   }
   return '操作失敗，請稍後再試。';
 }
+
+// 清葉加厚的狀態色（components/ui/tone）。舊的 className 仍給尚未改版的頁面用，
+// 第三、四批全部改完後移除。
+export const LEAVE_STATUS_TONE: Record<LeaveStatus, Tone> = {
+  PENDING: 'wait',
+  APPROVED: 'good',
+  REJECTED: 'stop',
+  CANCELLED: 'neutral',
+};

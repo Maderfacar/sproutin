@@ -6,12 +6,12 @@ import { usePublicConfig } from '../../lib/queries';
 import { BrandingProvider } from '../../lib/branding';
 import { SessionProvider } from '../../lib/session';
 import { liffRedirectFor } from '../../lib/liffState';
-import { AppShell } from '../../components/AppShell';
+import { PersonaShell } from '../../components/shell/PersonaShell';
 import { StatusScreen } from '../../components/StatusScreen';
 import { DocumentTitle } from '../../components/DocumentTitle';
 
 // /liff/* 的共用外框：先處理 LINE 指定的目的頁 → 取 runtime config（品牌 + liffId）
-// → 套品牌 → LIFF 登入 → AppShell。
+// → 套品牌 → LIFF 登入 → PersonaShell（依身分決定頁籤與頁首，見 components/shell）。
 export default function LiffLayout({ children }: { children: ReactNode }) {
   const { data: config, isLoading, isError, error, refetch } = usePublicConfig();
   const router = useRouter();
@@ -53,7 +53,7 @@ export default function LiffLayout({ children }: { children: ReactNode }) {
     <BrandingProvider config={config}>
       <DocumentTitle />
       <SessionProvider liffId={config.liffId}>
-        <AppShell>{children}</AppShell>
+        <PersonaShell>{children}</PersonaShell>
       </SessionProvider>
     </BrandingProvider>
   );

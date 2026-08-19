@@ -4,9 +4,9 @@ import { Icon, type IconName } from '../Icon';
 import { TONE, type Tone } from './tone';
 import { Badge } from './Badge';
 
-// 待辦磚塊。導師與行政首頁的主體。
+// 待辦磚塊。導師與行政首頁的主體，家長首頁的次要入口。
 //
-// 一塊＝今天要做的一件事：圖示、這是什麼、還剩多少、右邊一顆數字。
+// 一塊＝一件事：圖示、這是什麼、還剩多少、右邊一顆數字。
 // 取代舊版首頁那種「六張一樣大的功能卡」——那種排法把「今天有 3 人沒點名」和
 // 「稽核紀錄」講成同樣份量，眼睛沒有落點，只能整片掃過去讀。
 //
@@ -42,7 +42,7 @@ export function Tile({
     <>
       <span
         aria-hidden
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md2 ${TONE[tone].block}`}
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md2 border ${TONE[tone].block}`}
       >
         <Icon name={icon} className="h-5 w-5" />
       </span>
@@ -50,23 +50,37 @@ export function Tile({
         <span className="block truncate text-lg font-bold text-ink">{title}</span>
         {detail && <span className="mt-0.5 block truncate text-2xs text-ink-soft">{detail}</span>}
       </span>
-      {trailing ?? (count !== undefined && count > 0 ? <Badge tone="stop" count>{count}</Badge> : null)}
+      {trailing ??
+        (count !== undefined && count > 0 ? (
+          <Badge tone="stop" count>
+            {count}
+          </Badge>
+        ) : null)}
     </>
   );
 
   const shape =
-    'tappable flex min-h-touch w-full items-center gap-3.5 rounded-tile border border-line-strong bg-surface p-4 shadow-soft';
+    'flex min-h-touch w-full items-center gap-3.5 rounded-tile border border-line-strong bg-surface p-4 shadow-soft';
 
   if (href) {
     return (
-      <Link href={href} className={shape}>
+      <Link href={href} className={`tappable ${shape}`}>
         {inner}
       </Link>
     );
   }
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`tappable ${shape}`}>
+        {inner}
+      </button>
+    );
+  }
+  // 既沒有連結也沒有動作＝這件事現在還去不了（例如尚未完工的功能卡）。
+  // 渲染成不可點的一塊，而不是一顆按了沒反應的按鈕 —— 按了沒反應比不能按更讓人困惑。
   return (
-    <button type="button" onClick={onClick} className={shape}>
+    <div aria-disabled className={`${shape} opacity-60`}>
       {inner}
-    </button>
+    </div>
   );
 }

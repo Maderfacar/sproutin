@@ -21,7 +21,7 @@ interface SplitColumnsProps {
 // （見 AdminShell 的說明）。用 surfaceOf(pathname) 判斷現在人在哪一種外框，
 // 兩個十行的 page.tsx 就不必各記得傳一個 prop —— 少一個會漏改的地方。
 //
-// 手機外框一律維持一欄：AppShell 的內容區只有 max-w-2xl，硬切兩欄會兩邊都太窄。
+// 手機外框一律維持一欄：PersonaShell 的內容區只有 max-w-2xl，硬切兩欄會兩邊都太窄。
 // 桌面外框也只在 lg 以上才切 —— 窄視窗時 AdminShell 的導覽已經改成橫向，
 // 這時內容區跟手機一樣窄。
 //

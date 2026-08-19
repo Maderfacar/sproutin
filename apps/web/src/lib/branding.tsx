@@ -5,7 +5,7 @@ import type { PublicConfig } from '@sproutin/shared';
 import { themeVars } from './theme';
 
 // 園方品牌（ADR-001，runtime 套用；bundle 不含 per-school 值）。
-// primaryColor/secondaryColor → CSS 變數（Tailwind 以 var() 引用）；brandName/logo/banner 供 AppShell。
+// primaryColor/secondaryColor → CSS 變數（Tailwind 以 var() 引用）；brandName/logo/banner 供 PersonaShell。
 const BrandingContext = createContext<PublicConfig | null>(null);
 
 export function useBranding(): PublicConfig {

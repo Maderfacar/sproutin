@@ -13,7 +13,7 @@ interface HomeHeroProps {
 // 版面高度與層次維持一致，園所還沒上傳圖也不會看起來像壞掉。
 //
 // 圖往上延伸到頁首後面（Human Owner 2026-08-18）：負的 margin 與補回來的高度都寫在
-// globals.css 的 .home-hero / .home-hero-media，靠 --shell-header-h 對齊 AppShell（唯一的量測值來源）。
+// globals.css 的 .home-hero / .home-hero-media，靠 --shell-header-h 對齊 PersonaShell（唯一的量測值來源）。
 export function HomeHero({ greeting, displayName, dateLabel }: HomeHeroProps) {
   const branding = useBranding();
   const hasImage = Boolean(branding.bannerUrl);
