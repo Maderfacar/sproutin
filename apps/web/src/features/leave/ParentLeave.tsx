@@ -63,11 +63,12 @@ export function ParentLeave() {
         {student ? `幫 ${student.name} 請假` : '幫孩子請假'}
       </Button>
 
-      {studentId && student && (
+      {students && students.length > 0 && (
         <LeaveRequestSheet
           open={sheetOpen}
-          studentId={studentId}
-          studentName={student.name}
+          students={students}
+          defaultStudentId={studentId}
+          title={student ? `幫 ${student.name} 請假` : '幫孩子請假'}
           onClose={() => setSheetOpen(false)}
         />
       )}
