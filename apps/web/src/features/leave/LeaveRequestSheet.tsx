@@ -126,7 +126,7 @@ export function LeaveRequestSheet({
           </Field>
         )}
 
-        <Field label="哪一種假">
+        <Field label="哪一種假" group>
           <Segmented
             label="請假類別"
             options={CATEGORIES}

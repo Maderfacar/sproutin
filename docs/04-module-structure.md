@@ -517,15 +517,29 @@ CommunicationBookView     → TeacherBookPanel（整班填寫）+ ParentBook（�
 舊版照樣畫兩顆按鈕、按下去 403；現在改成一句「這筆由導師或行政人員審核」——
 講清楚是誰能處理，比放一顆按了會失敗的按鈕好。
 
+#### 稽核與公告（第四批之五）
+
+`AuditPanel`：查詢條件收進底部面板。進這一頁多數時候是「翻一下最近發生什麼」，
+不是來填四個欄位的；條件常駐在最上面等於每次都要先捲過它。
+目前套用了什麼條件用一句話寫在標題旁邊，不會因為收起來就不知道自己在看什麼。
+
+`AnnouncementBoard` 取代 `AnnouncementView` + `TeacherAnnouncePanel`：
+家長只讀（一份列表），能發公告的人多一顆按鈕，表單在 `AnnounceSheet` 裡。
+即使是老師，進這一頁十次有九次是來看有沒有新的 —— 發布是例外。
+
+**`Field` 的 `group` 屬性（寫測試時發現的真 bug）**：`<label>` 會把它的文字指派給
+第一個可標記的後代，於是被 `Field` 包住的分段選擇器，第一顆按鈕會被叫成「哪一種假」
+而不是「病假」—— 螢幕閱讀器唸出來的東西是錯的。裝一組控制項時要傳 `group`
+（改渲染 div），群組自己的名稱由該元件的 `aria-label` 負責。
+
 #### 第四批還沒做完的（下一個視窗）
 
 ```text
 發送訊息      MessageComposer、PushCampaignPanel、CardPreview、CampaignHistory
 園所外觀      AppearanceEditor、BrandSection、CardsSection、RichMenuSection
-娃娃車設定    BusSettingsPanel、RouteEditor、StudentBusSection、BusView、BusBoardingPanel
-稽核          AuditPanel
-公告發布      TeacherAnnouncePanel、AnnouncementView
+娃娃車        BusView、BusBoardingPanel、BusSettingsPanel、RouteEditor、StudentBusSection
 學生詳細      StudentDetail
+其他零星      PersonEditor / RolesSection / BindingSection（版面尚未照新版重做）
 ```
 
 這些頁面的**功能對等已經完成**（§3b），色彩、斷句、狀態色也已隨共用點一起換掉；

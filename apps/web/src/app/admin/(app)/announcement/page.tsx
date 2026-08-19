@@ -1,8 +1,8 @@
 'use client';
 
-import { AnnouncementView } from '../../../../features/announcement/AnnouncementView';
+import { AnnouncementBoard } from '../../../../features/announcement/AnnouncementBoard';
 
-// 桌面版公告。與手機版 /liff/announcement 共用 AnnouncementView（docs/04 §3b）。
+// 桌面版公告。與手機版 /liff/announcement 共用 AnnouncementBoard（docs/04 §3b）。
 export default function AdminAnnouncementPage() {
   return (
     <div className="space-y-7">
@@ -13,7 +13,7 @@ export default function AdminAnnouncementPage() {
           要做一張自己排版的卡片請改用「發送訊息」。
         </p>
       </header>
-      <AnnouncementView />
+      <AnnouncementBoard />
     </div>
   );
 }
