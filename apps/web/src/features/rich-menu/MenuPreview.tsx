@@ -79,13 +79,13 @@ export function MenuPreview({
                 <>
                   <Icon name={TARGET_ICON[target]} className="h-4 w-4 text-brand-primary" />
                   {!imageUrl && (
-                    <span className="text-4xs font-semibold text-ink">
+                    <span className="text-2xs font-semibold text-ink">
                       {TARGET_LABEL[target]}
                     </span>
                   )}
                 </>
               ) : (
-                !imageUrl && <span className="text-4xs text-ink-soft">未使用</span>
+                !imageUrl && <span className="text-2xs text-ink-soft">未使用</span>
               )}
             </button>
           );

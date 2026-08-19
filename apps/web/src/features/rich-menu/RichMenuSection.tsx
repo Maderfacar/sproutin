@@ -130,7 +130,7 @@ export function RichMenuSection() {
                 }`}
               >
                 {AUDIENCE_LABEL[a]}
-                {config?.isApplied && <span className="ml-1.5 text-3xs">已套用</span>}
+                {config?.isApplied && <span className="ml-1.5 text-2xs">已套用</span>}
               </button>
             );
           })}

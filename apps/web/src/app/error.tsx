@@ -48,7 +48,7 @@ export default function ErrorPage({
 
         {/* 回報用的代碼。不印錯誤訊息本身 —— 那可能含內部結構，對使用者也沒有意義。 */}
         {error.digest && (
-          <p className="mt-5 border-t border-line pt-4 text-3xs tabular-nums text-ink-soft">
+          <p className="mt-5 border-t border-line pt-4 text-2xs tabular-nums text-ink-soft">
             回報時請附上這組代碼：{error.digest}
           </p>
         )}

@@ -45,11 +45,11 @@ export function CardPreview({
           )}
           <div className="space-y-1.5 p-3">
             {spec.badge && (
-              <span className="inline-block rounded-md2 bg-black/[0.06] px-2 py-0.5 text-3xs text-ink-soft">
+              <span className="inline-block rounded-md2 bg-black/[0.06] px-2 py-0.5 text-2xs text-ink-soft">
                 {spec.badge}
               </span>
             )}
-            <p className="text-3xs tracking-[0.12em] text-ink-soft">{brandName}</p>
+            <p className="text-2xs tracking-[0.12em] text-ink-soft">{brandName}</p>
             <p className="text-sm font-semibold leading-snug text-ink">
               {title || '（還沒填標題）'}
             </p>

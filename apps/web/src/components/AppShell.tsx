@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 // 按了底部頁籤＝決定留在手機版 → 忘掉「從後台進來」這條線，返回鍵回手機版首頁。
                 onClick={clearBackTarget}
                 aria-current={active ? 'page' : undefined}
-                className={`tappable flex flex-1 flex-col items-center gap-1 py-2.5 text-3xs font-semibold ${
+                className={`tappable flex flex-1 flex-col items-center gap-1 py-2.5 text-2xs font-semibold ${
                   active ? 'text-brand-primary' : 'text-ink-soft'
                 }`}
               >

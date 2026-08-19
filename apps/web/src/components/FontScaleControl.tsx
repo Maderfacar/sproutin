@@ -60,7 +60,7 @@ export function FontScaleControl({ compact = false }: { compact?: boolean }) {
           })}
         </div>
         {!remembered && (
-          <p className="mt-2 text-3xs leading-relaxed text-ink-soft">
+          <p className="mt-2 text-2xs leading-relaxed text-ink-soft">
             這個瀏覽器不讓我們記住設定，重新開啟後會回到標準。
           </p>
         )}
@@ -94,7 +94,7 @@ export function FontScaleControl({ compact = false }: { compact?: boolean }) {
                 >
                   {option.label}
                 </span>
-                <span className="text-3xs leading-tight">{option.hint}</span>
+                <span className="text-2xs leading-tight">{option.hint}</span>
               </button>
             );
           })}

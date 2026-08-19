@@ -214,7 +214,7 @@ export default function DashboardPage() {
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-ink">{meta.title}</span>
                   {!meta.enabled && (
-                    <span className="mt-0.5 block text-3xs text-ink-soft">即將推出</span>
+                    <span className="mt-0.5 block text-2xs text-ink-soft">即將推出</span>
                   )}
                 </span>
               </>

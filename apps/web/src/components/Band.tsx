@@ -76,7 +76,7 @@ export function Band({ kind, title, description, audience, children }: BandProps
 
         {showAudience && (
           <span
-            className={`mt-1 shrink-0 rounded-full px-2.5 py-1 text-3xs font-bold ${AUDIENCE_CLASS[audience]}`}
+            className={`mt-1 shrink-0 rounded-full px-2.5 py-1 text-2xs font-bold ${AUDIENCE_CLASS[audience]}`}
           >
             {AUDIENCE_LABEL[audience]}
           </span>

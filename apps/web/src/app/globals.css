@@ -2,28 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== 清葉 設計系統（清新自然 / editorial）=====
+/* ===== 清葉加厚 設計系統 =====
    品牌色（--brand-*）為 per-school，由 BrandingProvider 於 runtime 覆寫（ADR-001）。
-   米白底、森綠、襯線標題、細線分隔、柔和留白為固定基調（全園一致的質感）。 */
+   米白底、森綠、襯線標題、柔和留白仍是固定基調 —— 「加厚」改的是**份量**不是氣質：
+   細線改實線、白底改色塊、字級距離拉開，讓答案自己跳出來，使用者不必逐行讀。
+   （Human Owner 2026-08-20 全站改版定案，方向 B「清葉加厚」。） */
 :root {
   /* 品牌（per-school fallback；森綠） */
   --brand-primary: #2f6b4f;
   --brand-secondary: #74b48a;
+  /* 品牌淡底。用 color-mix 而非寫死，園所換色時它會自己跟著換 —— 這正是
+     舊版 bg-green-100 那種 Tailwind 預設色做不到的事。 */
+  --brand-wash: color-mix(in srgb, var(--brand-primary) 12%, var(--surface));
 
   /* 清葉中性 */
   --bg: #f4f2ea; /* 米白 parchment */
   --bg-deep: #eeebe0; /* 漸層深一階 */
   --surface: #fbfaf4; /* 卡面（微暖白） */
+  --surface-sunk: #efede3; /* 凹槽：分段選擇器底、統計格、骨架 */
   --ink: #23302a; /* 森綠深字 */
-  --ink-soft: #8a9188; /* 柔和次要字 */
-  --line: #e1e0d2; /* 細線 */
+  --ink-soft: #6e7770; /* 次要字。比舊版 #8a9188 深一階 —— 長輩在戶外看得見才算數 */
+  --ink-mute: #9ba298; /* 真正可以淡掉的：placeholder、時間戳、已完成 */
+  --line: #e1e0d2; /* 細線：只是分隔 */
+  --line-strong: #cdcbb8; /* 實線：這一塊可以點 */
 
-  /* 形狀 / 陰影（清葉偏收斂、細） */
-  --radius-card: 18px;
-  --radius-md: 12px;
-  --shadow-soft: 0 1px 2px rgba(35, 48, 42, 0.04), 0 14px 34px -22px rgba(35, 48, 42, 0.22);
-  --shadow-lift: 0 16px 34px -18px rgba(35, 48, 42, 0.28);
+  /* 狀態語意色。**全園固定，不隨園所品牌變** —— 狀態講的是事實（到了沒、准了沒），
+     不是身分；園所把主色換成紅的，「缺席」還是得是紅的。
+     每個狀態三個值：wash 底 / edge 邊 / text 字，三個一起用才有份量。
+     這組取代散落各處的 bg-green-100 text-green-800（Tailwind 預設色，與米白森綠不同調）。 */
+  --good-wash: #e3efe3; /* 順利：到校、已核准、完成 */
+  --good-edge: #9cc3a0;
+  --good-text: #2c5e39;
+  --wait-wash: #f6eedc; /* 等待：請假、待審核 */
+  --wait-edge: #dfc38a;
+  --wait-text: #7a5a18;
+  --note-wash: #f7eadd; /* 留意：遲到、需注意 */
+  --note-edge: #e3bc93;
+  --note-text: #8a5423;
+  --stop-wash: #f5e4e1; /* 停：缺席、駁回、錯誤 */
+  --stop-edge: #dfaaa1;
+  --stop-text: #8a3a2e;
 
+  /* 形狀。加厚後圓角整體放大一階：磚塊 > 卡片 > 控制項。 */
+  --radius-tile: 20px; /* 待辦磚塊、狀態卡、底部面板 */
+  --radius-card: 16px; /* 一般卡片（原 18px） */
+  --radius-md: 12px; /* 按鈕、輸入框 */
+
+  --shadow-soft: 0 1px 2px rgba(35, 48, 42, 0.05), 0 14px 34px -22px rgba(35, 48, 42, 0.22);
+  --shadow-lift: 0 16px 34px -18px rgba(35, 48, 42, 0.3);
+
+  /* 動效。三段時間 + 一條曲線，全站只准用這幾個值。
+     只動 transform / opacity —— 動寬高位置在 LINE 內建瀏覽器上掉幀掉得特別明顯。 */
+  --dur-fast: 120ms; /* 按壓回饋：手指按下當下就要有反應，不等網路 */
+  --dur-base: 220ms; /* 換頁、展開、面板滑出 */
+  --dur-slow: 400ms; /* 首次進場 */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* 手機外框（AppShell）的量測值。首頁 hero 要鑽到頁首底下，就必須知道頁首多高;
@@ -63,13 +95,15 @@ body {
     @apply rounded-card border border-line bg-surface shadow-soft;
   }
   .field {
-    @apply w-full rounded-md2 border border-line bg-surface px-3.5 py-2.5 text-ink outline-none transition placeholder:text-ink-soft focus:border-brand-primary;
+    @apply w-full rounded-md2 border border-line-strong bg-surface px-3.5 py-2.5 text-ink outline-none transition placeholder:text-ink-mute focus:border-brand-primary;
+    /* 44px 觸控下限。手指蓋住的範圍比游標大得多，比這矮就會點不準。 */
+    min-height: 2.75rem;
   }
   .btn-primary {
-    @apply rounded-2xl bg-brand-primary px-5 py-3 font-semibold tracking-wide text-white shadow-soft transition duration-150 hover:opacity-90 active:scale-[0.97] active:opacity-95 disabled:opacity-50 disabled:active:scale-100;
+    @apply rounded-md2 bg-brand-primary px-5 py-3 font-semibold tracking-wide text-white shadow-soft transition duration-150 hover:opacity-90 active:scale-[0.97] active:opacity-95 disabled:opacity-50 disabled:active:scale-100;
   }
   .btn-secondary {
-    @apply rounded-2xl border border-line bg-surface px-4 py-2.5 font-medium text-ink transition duration-150 hover:bg-black/[0.02] active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100;
+    @apply rounded-md2 border border-line-strong bg-surface px-4 py-2.5 font-medium text-ink transition duration-150 hover:bg-black/[0.02] active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100;
   }
   .field-label {
     @apply flex flex-col gap-1.5 text-sm text-ink-soft;
@@ -79,12 +113,13 @@ body {
   }
   /* 小寫字段標籤（清葉常用：大寫字距 eyebrow） */
   .eyebrow {
-    @apply text-xs font-bold uppercase tracking-[0.16em] text-ink-soft;
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-ink-mute;
   }
   /* 可以點的一列／一格：按下去要看得出來被按到了。
      手指蓋住的地方比游標大得多，沒有這個回饋就會讓人以為沒按到而再按一次。 */
   .tappable {
-    @apply transition duration-150 active:scale-[0.985] active:opacity-90;
+    @apply transition active:scale-[0.985] active:opacity-90;
+    transition-duration: var(--dur-fast);
   }
   .chip {
     @apply rounded-full px-2.5 py-1 text-xs font-semibold;
@@ -103,10 +138,57 @@ body {
   }
 }
 .rise-in {
-  animation: riseIn 0.5s var(--ease-out) both;
+  animation: riseIn var(--dur-slow) var(--ease-out) both;
 }
 @media (prefers-reduced-motion: reduce) {
   .rise-in {
+    animation: none;
+  }
+}
+
+/* 底部面板（components/ui/Sheet）。原生 <dialog> 負責焦點鎖定與 Esc，
+   這裡只負責「從底部滑上來」的形狀與動線。位移不用 %，因為面板高度隨內容變，
+   用 % 會讓內容多的面板滑得比較慢 —— 同一個動作在不同頁面速度不一樣就是廉價感的來源。 */
+.sheet {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 32rem;
+  max-height: 85vh;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overscroll-behavior: contain;
+}
+.sheet::backdrop {
+  background: rgba(35, 48, 42, 0.34);
+}
+.sheet[open] .sheet-panel {
+  animation: sheetUp var(--dur-base) var(--ease-out) both;
+}
+.sheet[open]::backdrop {
+  animation: fadeIn var(--dur-base) var(--ease-out) both;
+}
+@keyframes sheetUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet[open] .sheet-panel,
+  .sheet[open]::backdrop {
     animation: none;
   }
 }
@@ -129,7 +211,7 @@ body {
 /* 骨架屏（components/Skeleton）。米白底上的微光掃過，不用灰到像壞掉。
    與 .rise-in 同一個慣例：使用者開了「減少動態效果」就只留靜態色塊。 */
 .skeleton {
-  background-color: color-mix(in srgb, var(--line) 62%, var(--surface));
+  background-color: var(--surface-sunk);
   background-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -161,8 +243,8 @@ body {
   from { opacity: 0; transform: translate3d(-14px, 0, 0); }
   to { opacity: 1; transform: none; }
 }
-.page-forward { animation: pageInForward 0.26s var(--ease-out) both; }
-.page-back { animation: pageInBack 0.26s var(--ease-out) both; }
+.page-forward { animation: pageInForward var(--dur-base) var(--ease-out) both; }
+.page-back { animation: pageInBack var(--dur-base) var(--ease-out) both; }
 @media (prefers-reduced-motion: reduce) {
   .page-forward,
   .page-back {
