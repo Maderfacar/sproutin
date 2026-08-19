@@ -8,6 +8,7 @@ import type { StudentView } from '../../lib/auth';
 import type { BookEntryView, PublishBookBody } from '../../lib/types';
 import { SYMPTOM_LABEL } from './labels';
 import { hasContent, needsHealthAttention } from './hooks';
+import { Button } from '../../components/ui';
 
 interface PublishPanelProps {
   classId: string;
@@ -43,7 +44,7 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
   }
 
   return (
-    <section className="card flex flex-col gap-3 p-5">
+    <section className="flex flex-col gap-3 rounded-tile border border-line-strong bg-surface shadow-soft p-5">
       <div className="flex items-center gap-3">
         <Icon name="check" className="h-5 w-5 shrink-0 text-brand-primary" />
         <div className="flex-1">
@@ -86,8 +87,8 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
         </div>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="primary"
         disabled={publish.isPending || readyCount === 0}
         onClick={() =>
           publish.mutate(
@@ -95,10 +96,9 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
             { onSuccess: () => setPushIds(null) },
           )
         }
-        className="btn-primary disabled:opacity-50"
       >
         {publish.isPending ? '送出中…' : '送出全班聯絡簿'}
-      </button>
+      </Button>
 
       {publish.isSuccess && (
         <p className="text-sm text-brand-primary">

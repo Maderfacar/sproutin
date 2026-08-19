@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import type { AuthUser } from '@sproutin/shared';
 import { AuthError, lineBind } from '../../lib/auth';
 import { useBranding } from '../../lib/branding';
+import { Button, Field } from '../../components/ui';
 
 interface BindScreenProps {
   // 手機（LIFF）帶 token 進來；電腦（網頁版 OAuth）為 null，token 在伺服器端 cookie 裡。
@@ -64,7 +65,7 @@ export function BindScreen({ idToken, onBound }: BindScreenProps) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-10">
-      <p className="eyebrow">{branding.brandName}</p>
+      <p className="text-2xs font-semibold text-ink-mute">{branding.brandName}</p>
       <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-ink">
         歡迎，先完成一次綁定
       </h1>
@@ -74,8 +75,7 @@ export function BindScreen({ idToken, onBound }: BindScreenProps) {
       </p>
 
       <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
-        <label className="field-label">
-          <span>綁定碼</span>
+        <Field label="綁定碼" error={error ?? undefined}>
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}
@@ -84,24 +84,18 @@ export function BindScreen({ idToken, onBound }: BindScreenProps) {
             autoCorrect="off"
             spellCheck={false}
             maxLength={20}
-            className="field text-center text-lg font-semibold tracking-[0.2em]"
+            className="field text-center text-lg font-bold tracking-[0.2em]"
           />
-        </label>
+        </Field>
 
-        {error && (
-          <p role="alert" className="rounded-md2 border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-700">
-            {error}
-          </p>
-        )}
-
-        <button type="submit" disabled={pending || !code.trim()} className="btn-primary disabled:opacity-50">
+        <Button type="submit" variant="primary" disabled={pending || !code.trim()}>
           {pending ? '綁定中…' : '完成綁定'}
-        </button>
+        </Button>
       </form>
 
       <div className="mt-8 border-t border-line pt-5">
-        <p className="text-xs font-bold text-ink">拿不到綁定碼？</p>
-        <p className="mt-1.5 text-xs leading-relaxed text-ink-soft">
+        <p className="text-base font-bold text-ink">拿不到綁定碼？</p>
+        <p className="mt-1.5 text-2xs leading-relaxed text-ink-soft">
           綁定碼由園所發給你本人，通常印在通知單上或由老師轉交。
           若你沒有收到、或碼已經過期，請直接聯絡園所重新索取。
         </p>

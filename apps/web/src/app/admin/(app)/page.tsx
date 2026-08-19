@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useSession } from '../../../lib/session';
 import { roleFlags } from '../../../lib/roles';
 import { adminEntries, type AdminEntry } from '../../../lib/adminEntries';
@@ -8,7 +7,8 @@ import { usePeople } from '../../../features/people/hooks';
 import { useSchoolPendingLeaves } from '../../../features/leave/hooks';
 import { useMyClasses } from '../../../features/classes/hooks';
 import { useAdminStudents } from '../../../features/students/adminHooks';
-import { Icon, type IconName } from '../../../components/Icon';
+import type { IconName } from '../../../components/Icon';
+import { EmptyState, SectionHead, Tile } from '../../../components/ui';
 import { schoolHour } from '../../../lib/datetime';
 
 const WEEKDAY = ['日', '一', '二', '三', '四', '五', '六'];
@@ -27,26 +27,15 @@ function greeting(): string {
 
 function Metric({ label, value, unit }: { label: string; value: number | null; unit?: string }) {
   return (
-    <div className="rounded-md2 bg-black/[0.025] p-4">
-      <p className="text-xs text-ink-soft">{label}</p>
-      <p className="mt-0.5 font-serif text-3xl font-semibold text-ink">
+    <div className="rounded-card bg-surface-sunk p-4">
+      <p className="text-2xs font-semibold text-ink-soft">{label}</p>
+      <p className="mt-0.5 font-serif text-3xl font-bold tabular-nums text-ink">
         {value === null ? '—' : value}
-        {unit && value !== null && <span className="ml-1 text-xs font-normal text-ink-soft">{unit}</span>}
+        {unit && value !== null && (
+          <span className="ml-1 text-2xs font-normal text-ink-soft">{unit}</span>
+        )}
       </p>
     </div>
-  );
-}
-
-function TodoRow({ href, icon, text }: { href: string; icon: IconName; text: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 border-b border-line py-2.5 text-sm text-ink-soft transition last:border-0 hover:text-ink"
-    >
-      <Icon name={icon} className="h-4 w-4 shrink-0 text-brand-primary" />
-      <span className="min-w-0 flex-1">{text}</span>
-      <Icon name="chev" className="h-4 w-4 shrink-0" />
-    </Link>
   );
 }
 
@@ -83,14 +72,14 @@ function SchoolOverview() {
         <Metric label="在學學生" value={students?.length ?? null} unit="人" />
       </section>
 
-      <section className="card p-5">
-        <p className="eyebrow">需要你處理</p>
+      <section>
+        <SectionHead title="需要你處理" weight={todos.length > 0 ? 'action' : 'review'} />
         {todos.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-soft">今天沒有待辦，一切正常。</p>
+          <EmptyState title="今天沒有待辦" hint="請假都審完了，人員也都綁定好了" />
         ) : (
-          <div className="mt-2">
+          <div className="flex flex-col gap-2">
             {todos.map((t) => (
-              <TodoRow key={t.href} {...t} />
+              <Tile key={t.href} icon={t.icon} title={t.text} tone="note" href={t.href} />
             ))}
           </div>
         )}
@@ -100,15 +89,7 @@ function SchoolOverview() {
 }
 
 function Entry({ href, icon, label, hint }: AdminEntry) {
-  return (
-    <Link href={href} className="card flex items-start gap-3 p-4 transition hover:shadow-lift">
-      <Icon name={icon} className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary" />
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold text-ink">{label}</span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-ink-soft">{hint}</span>
-      </span>
-    </Link>
-  );
+  return <Tile icon={icon} title={label} detail={hint} tone="neutral" href={href} />;
 }
 
 // 管理首頁（階段3 ②）。
@@ -124,7 +105,7 @@ export default function AdminHomePage() {
   return (
     <div className="space-y-8">
       <header>
-        <p className="eyebrow">園務後台</p>
+        <p className="text-2xs font-semibold text-ink-mute">園務後台</p>
         <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-ink">
           {user.displayName}，{greeting()}
         </h1>
@@ -134,17 +115,17 @@ export default function AdminHomePage() {
       {flags.canManageSchool && <SchoolOverview />}
 
       <section>
-        <p className="eyebrow">常用</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <SectionHead title="常用" description="左側每一條在手機上都有對應的頁面" weight="review" />
+        <div className="grid gap-2 sm:grid-cols-2">
           {adminEntries(flags).map((entry) => (
             <Entry key={entry.href} {...entry} />
           ))}
         </div>
       </section>
 
-      <p className="border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
-        今日到校人數與各班一覽會在之後加上（需要一支專門統計的後端端點）。
-        左側每一條在手機上都有對應的頁面 —— 同一套系統、同一份資料，差別只有操作介面。
+      <p className="border-t border-line pt-5 text-2xs leading-relaxed text-ink-soft">
+        「全園今天到幾個、哪一班還沒點完」在手機版的園長首頁（`features/home/AdminHome`）——
+        同一套系統、同一份資料，差別只有操作介面。
       </p>
     </div>
   );

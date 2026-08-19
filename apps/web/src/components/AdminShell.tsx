@@ -63,7 +63,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <nav className="flex gap-4 overflow-x-auto px-5 pb-4 md:block md:space-y-5 md:overflow-visible md:px-3">
           {sections.map((section) => (
             <div key={section.title} className="shrink-0">
-              <p className="eyebrow hidden md:block md:px-2 md:pb-1.5">{section.title}</p>
+              <p className="text-2xs font-semibold text-ink-mute hidden md:block md:px-2 md:pb-1.5">{section.title}</p>
               <ul className="flex gap-2 md:block md:space-y-0.5">
                 {section.items.map((item) => {
                   // 邊界比對（不是純 startsWith）：否則在「娃娃車點名」時

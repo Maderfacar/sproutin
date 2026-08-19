@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useBranding } from '../../../lib/branding';
+import { ErrorNotice } from '../../../components/ui';
 
 // 登入失敗的原因一律用大白話說，並且說清楚「下一步該做什麼」。
 const GENERIC_ERROR = '登入失敗，請稍後再試。若持續發生請聯絡園所。';
@@ -31,7 +32,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
-      <div className="card w-full max-w-sm p-8 text-center">
+      <div className="rounded-tile border border-line-strong bg-surface shadow-soft w-full max-w-sm p-8 text-center">
         {branding.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -51,20 +52,23 @@ export default function AdminLoginPage() {
         <h1 className="mt-5 font-serif text-2xl font-semibold tracking-tight text-ink">
           {branding.brandName}
         </h1>
-        <p className="mt-1 text-xs tracking-[0.18em] text-ink-soft">園務後台</p>
+        <p className="mt-1 text-2xs font-semibold text-ink-mute">園務後台</p>
 
         <div className="my-6 h-px bg-line" />
 
+        {/* 狀態色是全園固定的（狀態講的是事實，不是身分）——
+            這裡原本用的是 Tailwind 預設紅，跟米白森綠不同調。 */}
         {error && (
-          <p
-            role="alert"
-            className="mb-4 rounded-md2 border border-red-200 bg-red-50 p-3 text-left text-sm leading-relaxed text-red-700"
-          >
-            {error}
-          </p>
+          <div className="mb-4 text-left">
+            <ErrorNotice message={error} />
+          </div>
         )}
 
-        <a href="/api/admin/oauth/start" className="btn-primary block w-full text-center">
+        {/* 真的要離開本站再回來（伺服器端產生 state 後轉往 LINE），所以是 <a> 不是 <Link>。 */}
+        <a
+          href="/api/admin/oauth/start"
+          className="tappable inline-flex min-h-touch w-full items-center justify-center rounded-md2 bg-brand-primary px-5 py-3 font-semibold text-white shadow-soft transition hover:opacity-90"
+        >
           用 LINE 登入
         </a>
 

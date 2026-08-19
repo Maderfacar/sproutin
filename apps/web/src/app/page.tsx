@@ -38,7 +38,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <StaticDocumentTitle title={`入口 · ${brandName}`} />
-      <div className="card w-full max-w-md p-8 text-center">
+      <div className="rounded-tile border border-line-strong bg-surface shadow-soft w-full max-w-md p-8 text-center">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

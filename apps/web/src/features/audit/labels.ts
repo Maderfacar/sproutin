@@ -1,10 +1,13 @@
 import type { AuditResult } from '../../lib/types';
 import { ROLE_LABEL } from '../../lib/roleLabels';
 
-export const AUDIT_RESULT_LABEL: Record<AuditResult, { label: string; className: string }> = {
-  SUCCESS: { label: '成功', className: 'bg-green-100 text-green-800' },
-  FAILURE: { label: '失敗', className: 'bg-red-100 text-red-800' },
-  DENIED: { label: '拒絕', className: 'bg-amber-100 text-amber-800' },
+// 只有文字。顏色由呼叫端用 Badge + 狀態色決定（AuditPanel 的 RESULT_TONE）——
+// 這裡原本還掛著一組 Tailwind 預設色的 className，早就沒有人讀，
+// 但死掉的樣式最容易被下一個人複製走。
+export const AUDIT_RESULT_LABEL: Record<AuditResult, { label: string }> = {
+  SUCCESS: { label: '成功' },
+  FAILURE: { label: '失敗' },
+  DENIED: { label: '拒絕' },
 };
 
 // 常見資源類型（稽核篩選下拉;空 = 全部）。其他類型仍會出現在結果中。

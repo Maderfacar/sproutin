@@ -32,7 +32,7 @@ export function FontScaleControl({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <div>
-        <p className="eyebrow mb-1.5">字體大小</p>
+        <p className="text-2xs font-semibold text-ink-mute mb-1.5">字體大小</p>
         <div role="radiogroup" aria-label="字體大小" className="flex gap-1.5">
           {FONT_SCALE_OPTIONS.map((option) => {
             const active = option.id === scale;
@@ -70,7 +70,7 @@ export function FontScaleControl({ compact = false }: { compact?: boolean }) {
 
   return (
     <div>
-      <p className="eyebrow mb-1">字體大小</p>
+      <p className="text-2xs font-semibold text-ink-mute mb-1">字體大小</p>
       <div className="border-t border-line pt-3">
         <div role="radiogroup" aria-label="字體大小" className="grid grid-cols-3 gap-2">
           {FONT_SCALE_OPTIONS.map((option) => {

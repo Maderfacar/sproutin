@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { StaticDocumentTitle } from '../components/DocumentTitle';
+import { Button } from '../components/ui';
 
 // 程式在瀏覽器裡出錯時接住的頁面（Next.js 會用這一頁取代整段畫面）。
 //
@@ -23,7 +24,7 @@ export default function ErrorPage({
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <StaticDocumentTitle title="出了點狀況 · Sproutin" />
-      <div className="card w-full max-w-md p-8 text-center">
+      <div className="rounded-tile border border-line-strong bg-surface shadow-soft w-full max-w-md p-8 text-center">
         <span className="text-4xl" aria-hidden>
           🍃
         </span>
@@ -34,9 +35,11 @@ export default function ErrorPage({
           是我們這邊的問題，不是你操作錯了。多半是一時的連線或載入問題，先試一次重新載入。
         </p>
 
-        <button type="button" onClick={reset} className="btn-primary tappable mt-7 px-8">
-          重新載入這一頁
-        </button>
+        <div className="mt-7">
+          <Button variant="primary" onClick={reset}>
+            重新載入這一頁
+          </Button>
+        </div>
 
         <p className="mt-4 text-xs text-ink-soft">
           還是不行的話，

@@ -91,8 +91,13 @@ export function ParentHome() {
     : null;
 
   // 首頁已經給了聯絡簿與請假各自的入口（底部頁籤也有），不要在下面再列一次。
+  //
+  // **只用家長那一半的角色算卡片，不是 user.roles（角色聯集）**：這一頁是家長身分的首頁，
+  // 傳聯集的話，園長兼家長切到家長身分會在「其他」看到一張「稽核」卡
+  // —— 卡片本身點進去會被 AuditPanel 擋下來，但入口出現在家長的首頁上，
+  // 就等於這個殼沒有真的把兩個世界分開（同一個坑第三次，前兩次是 /me/students 與 /classes）。
   const cards = selectDashboardCards(
-    user.roles.map((r) => r.role),
+    user.roles.map((r) => r.role).filter((r) => r === 'PARENT' || r === 'GUARDIAN'),
     config?.featureFlags ?? {},
     config?.cardOrder ?? [],
   ).filter((c) => c.id !== 'communication-book' && c.id !== 'leave');

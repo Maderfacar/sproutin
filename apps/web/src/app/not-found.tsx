@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { StaticDocumentTitle } from '../components/DocumentTitle';
+import { Button } from '../components/ui';
 
 // 找不到頁面（Next.js 會用這一頁接住所有對不上的網址）。
 //
@@ -13,7 +14,7 @@ export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <StaticDocumentTitle title="找不到頁面 · Sproutin" />
-      <div className="card w-full max-w-md p-8 text-center">
+      <div className="rounded-tile border border-line-strong bg-surface shadow-soft w-full max-w-md p-8 text-center">
         <span className="text-4xl" aria-hidden>
           🌱
         </span>
@@ -24,9 +25,11 @@ export default function NotFound() {
           網址可能改過、打錯了，或這個頁面已經不在了。從下面回到入口再進去就好。
         </p>
 
-        <Link href="/" className="btn-primary mt-7 inline-block px-8">
-          回到首頁
-        </Link>
+        <div className="mt-7">
+          <Button href="/" variant="primary">
+            回到首頁
+          </Button>
+        </div>
 
         <p className="mt-4 text-xs text-ink-soft">
           園所人員可以直接前往

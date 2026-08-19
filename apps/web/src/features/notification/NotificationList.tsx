@@ -6,7 +6,7 @@ import { relativeTime } from './relativeTime';
 import { apiErrorMessage } from '../../lib/api';
 import { SurfaceLink } from '../../components/SurfaceLink';
 import { Icon } from '../../components/Icon';
-import { SkeletonRows } from '../../components/Skeleton';
+import { Badge, EmptyState, ErrorNotice, SkeletonRows, TONE } from '../../components/ui';
 import type { NotificationView } from '../../lib/types';
 
 function byCreatedDesc(a: NotificationView, b: NotificationView): number {
@@ -18,33 +18,43 @@ function byCreatedDesc(a: NotificationView, b: NotificationView): number {
 // 形狀是「收件匣 + 深層頁面」：這裡只負責「今天有什麼新的事」，
 // 每一則點進去仍然回到它原本那一頁（公告頁 / 聯絡簿 / 請假），細節與操作都在那邊。
 // 出缺勤與行事曆刻意**不**收進來 —— 它們是查得到的紀錄，當成訊息推會天天洗版。
+//
+// 清葉加厚（2026-08-20）：這一頁在四批裡都沒被點到（家長 6 頁的清單裡沒有它），
+// 所以顏色是自己 inline style 混出來的、空狀態與錯誤各寫一份。現在改用元件庫。
+// **未讀那一則要整列都看得出來**，不是只有右邊一個小圓點 ——
+// 收件匣的價值在於「哪幾則是新的」一眼掃得出來。
 export function NotificationList() {
-  const { data, isLoading, isError, error } = useNotifications();
+  const { data, isLoading, isError, error, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
 
   if (isLoading) {
     return <SkeletonRows rows={5} />;
   }
   if (isError) {
-    return <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>;
+    return <ErrorNotice message={apiErrorMessage(error)} onRetry={() => void refetch()} />;
   }
   if (!data || data.length === 0) {
     return (
-      <div className="py-10 text-center">
-        <p className="font-serif text-lg text-ink">目前沒有新訊息</p>
-        <p className="mt-1 text-sm text-ink-soft">公告、老師的留言與請假結果都會出現在這裡。</p>
-      </div>
+      <EmptyState
+        title="目前沒有新訊息"
+        hint="公告、老師的留言與請假結果都會出現在這裡"
+      />
     );
   }
 
   const unreadCount = data.filter((n) => n.readAt === null).length;
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {unreadCount > 0 && (
-        <p className="mb-2 text-xs font-semibold text-brand-primary">{unreadCount} 則未讀</p>
+        <div>
+          <Badge tone="stop" count>
+            {unreadCount} 則未讀
+          </Badge>
+        </div>
       )}
-      <ul className="border-t border-line">
+
+      <ul className="flex flex-col gap-2">
         {[...data].sort(byCreatedDesc).map((n) => {
           const unread = n.readAt === null;
           const href = notificationHref(n.type, n.payload);
@@ -52,42 +62,43 @@ export function NotificationList() {
           const inner = (
             <>
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                  unread ? 'text-brand-primary' : 'text-ink-soft'
-                }`}
-                style={
-                  unread
-                    ? { background: 'color-mix(in srgb, var(--brand-primary) 12%, var(--surface))' }
-                    : { background: 'rgba(0,0,0,0.03)' }
-                }
                 aria-hidden
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md2 border ${
+                  unread ? TONE.brand.block : TONE.neutral.block
+                }`}
               >
-                <Icon name={notificationIcon(n.type)} className="h-[1.125rem] w-[1.125rem]" />
+                <Icon name={notificationIcon(n.type)} className="h-5 w-5" />
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className={`block leading-snug ${unread ? 'font-semibold text-ink' : 'text-ink'}`}>
+                <span
+                  className={`block leading-snug ${unread ? 'text-base font-bold text-ink' : 'text-base text-ink-soft'}`}
+                >
                   {n.title}
                 </span>
                 {/* 副標與時間同一行，擠不下時讓時間掉下去，不折斷副標。 */}
-                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-soft">
+                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-2xs text-ink-mute">
                   <span>{n.subtitle}</span>
                   <span aria-hidden>·</span>
-                  <time dateTime={n.createdAt}>{relativeTime(n.createdAt)}</time>
+                  <time dateTime={n.createdAt} className="tabular-nums">
+                    {relativeTime(n.createdAt)}
+                  </time>
                 </span>
               </span>
 
               {unread && (
                 <span
-                  className="mt-2 h-2 w-2 shrink-0 self-start rounded-full bg-brand-primary"
                   aria-label="未讀"
+                  className="mt-1 h-2.5 w-2.5 shrink-0 self-start rounded-full bg-stop-text"
                 />
               )}
             </>
           );
 
-          const rowClass =
-            'tappable flex w-full items-start gap-3 border-b border-line px-1 py-3.5 text-left text-sm';
+          // 未讀整列加厚（實線 + 白底），讀過的退成細線 —— 一眼就掃得出哪幾則是新的。
+          const rowClass = `tappable flex min-h-touch w-full items-center gap-3 rounded-card border p-3.5 text-left ${
+            unread ? 'border-line-strong bg-surface shadow-soft' : 'border-line bg-surface/60'
+          }`;
 
           // 點一則＝看過了 → 直接標已讀（樂觀更新，小圓點立刻消失）再跳頁。
           const onOpen = (): void => {
@@ -99,11 +110,7 @@ export function NotificationList() {
           return (
             <li key={n.id}>
               {href ? (
-                <SurfaceLink
-                  href={href}
-                  onClick={onOpen}
-                  className={`${rowClass} hover:bg-black/[0.015]`}
-                >
+                <SurfaceLink href={href} onClick={onOpen} className={rowClass}>
                   {inner}
                 </SurfaceLink>
               ) : (

@@ -6,6 +6,7 @@ import { apiErrorMessage } from '../../lib/api';
 import type { BookEntryView, HealthSymptom } from '../../lib/types';
 import { NOTE_PHRASES, SYMPTOM_LABEL, SYMPTOM_OPTIONS } from './labels';
 import { bookErrorMessage, useBookMutations } from './hooks';
+import { Button, ErrorNotice, Field, SectionHead } from '../../components/ui';
 
 interface HealthEditorProps {
   studentId: string;
@@ -49,32 +50,35 @@ export function HealthEditor({ studentId, dateIso, entry }: HealthEditorProps) {
   }
 
   return (
-    <section className="card flex flex-col gap-3 p-5">
-      <h2 className="section-title">健康與留言（老師）</h2>
+    <section className="flex flex-col gap-4 rounded-tile border border-line-strong bg-surface p-5 shadow-soft">
+      <SectionHead title="健康與留言" description="老師填，家長在聯絡簿上看得到" weight="review" />
 
       <div>
-        <p className="eyebrow mb-2">今日狀況 · 可複選</p>
+        <p className="text-2xs font-semibold text-ink-mute mb-2">今日狀況 · 可複選</p>
         <div className="flex flex-wrap gap-1.5">
           {SYMPTOM_OPTIONS.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => toggleSymptom(s)}
-              className={`chip transition ${
+              aria-pressed={symptoms.includes(s)}
+              className={`tappable min-h-touch rounded-md2 px-3 text-2xs font-semibold transition border ${
                 symptoms.includes(s)
-                  ? 'border border-note-edge bg-note-wash text-note-text'
-                  : 'border border-line text-ink-soft'
+                  ? 'border-note-edge bg-note-wash text-note-text'
+                  : 'border-line text-ink-soft'
               }`}
             >
               {SYMPTOM_LABEL[s]}
             </button>
           ))}
         </div>
-        {symptoms.length === 0 && <p className="mt-1.5 text-xs text-ink-soft">未勾選即為無異狀。</p>}
+        {symptoms.length === 0 && <p className="mt-1.5 text-2xs text-ink-mute">未勾選即為無異狀。</p>}
       </div>
 
-      <label className="field-label">
-        <span>體溫（選填，量了才填）</span>
+      <Field
+        label="體溫（選填，量了才填）"
+        error={tempInvalid ? '體溫請填 30–43 之間的數字。' : undefined}
+      >
         <input
           type="number"
           inputMode="decimal"
@@ -86,23 +90,22 @@ export function HealthEditor({ studentId, dateIso, entry }: HealthEditorProps) {
           placeholder="例如 37.8"
           className="field"
         />
-      </label>
-      {tempInvalid && <p className="-mt-1 text-2xs font-medium text-stop-text">體溫請填 30–43 之間的數字。</p>}
+      </Field>
       {isFever && (
-        <p className="-mt-1 text-2xs font-bold text-note-text">
+        <p className="-mt-2 text-2xs font-bold text-note-text">
           偏高（{FEVER_THRESHOLD_C}°C 以上）。送出全班時會提醒你是否要立刻通知家長。
         </p>
       )}
 
       <div>
-        <p className="eyebrow mb-2">今日老師記錄 · 可點短語</p>
+        <p className="text-2xs font-semibold text-ink-mute mb-2">今日老師記錄 · 可點短語</p>
         <div className="mb-2 flex flex-wrap gap-1.5">
           {NOTE_PHRASES.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => setNote((prev) => (prev.trim() === '' ? p : `${prev}，${p}`))}
-              className="chip border border-line text-ink-soft transition"
+              className="tappable min-h-touch rounded-md2 px-3 text-2xs font-semibold transition border border-line text-ink-soft"
             >
               {p}
             </button>
@@ -118,12 +121,12 @@ export function HealthEditor({ studentId, dateIso, entry }: HealthEditorProps) {
         />
       </div>
 
-      <button type="button" onClick={submit} disabled={save.isPending || tempInvalid} className="btn-primary disabled:opacity-50">
+      <Button variant="primary" onClick={submit} disabled={save.isPending || tempInvalid}>
         {save.isPending ? '儲存中…' : '儲存'}
-      </button>
+      </Button>
 
       {save.isError && (
-        <p className="text-sm text-stop-text">{bookErrorMessage(save.error, apiErrorMessage(save.error))}</p>
+        <ErrorNotice message={bookErrorMessage(save.error, apiErrorMessage(save.error))} />
       )}
     </section>
   );

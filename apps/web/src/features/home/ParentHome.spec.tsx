@@ -9,6 +9,11 @@ const state = vi.hoisted(() => ({
   announcements: [] as { id: string; title: string; scope: string; createdAt: string }[],
   bus: undefined as unknown,
   flags: {} as Record<string, boolean>,
+  roles: [{ role: 'PARENT', scopeType: 'SCHOOL', scopeId: null }] as {
+    role: string;
+    scopeType: string;
+    scopeId: string | null;
+  }[],
 }));
 
 // className 一定要透傳 —— 這一頁的斷言看的就是樣式類別（主要按鈕、狀態色）。
@@ -32,7 +37,7 @@ vi.mock('../../lib/session', () => ({
     user: {
       id: 'u1',
       displayName: '王媽媽',
-      roles: [{ role: 'PARENT', scopeType: 'SCHOOL', scopeId: null }],
+      roles: state.roles,
     },
   }),
 }));
@@ -67,6 +72,7 @@ describe('家長首頁', () => {
     state.announcements = [];
     state.bus = undefined;
     state.flags = {};
+    state.roles = [{ role: 'PARENT', scopeType: 'SCHOOL', scopeId: null }];
   });
 
   // 這一頁存在的理由就是這句話。
@@ -152,5 +158,17 @@ describe('家長首頁', () => {
     state.students = [];
     render(<ParentHome />);
     expect(screen.getByText('還沒有連結到孩子的資料')).toBeTruthy();
+  });
+
+  // 同一個坑的第三次：UI 切成一次一種身分，但算入口時仍然用角色聯集。
+  // 卡片點進去會被 AuditPanel 擋下來，可是入口本身出現在家長首頁上，
+  // 就等於這個殼沒有真的把兩個世界分開。
+  it('園長兼家長切到家長身分，首頁不會冒出稽核入口', () => {
+    state.roles = [
+      { role: 'OWNER', scopeType: 'SCHOOL', scopeId: null },
+      { role: 'PARENT', scopeType: 'SCHOOL', scopeId: null },
+    ];
+    render(<ParentHome />);
+    expect(screen.queryByText('稽核')).toBeNull();
   });
 });

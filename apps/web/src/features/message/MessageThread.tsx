@@ -8,7 +8,7 @@ import { Icon } from '../../components/Icon';
 import { ROLE_LABEL } from '../../lib/roleLabels';
 import { RELATION_LABEL } from '../people/hooks';
 import type { MessageView } from '../../lib/types';
-import { SkeletonLines } from '../../components/Skeleton';
+import { EmptyState, ErrorNotice, SkeletonLines } from '../../components/ui';
 import { formatDate, formatTime, schoolPartsOf, schoolWeekday } from '../../lib/datetime';
 
 function byCreatedAsc(a: MessageView, b: MessageView): number {
@@ -40,9 +40,13 @@ function timeLabel(iso: string): string {
 
 // 訊息串（Student-centered，雙向，清葉）。自己靠右（森綠）、校方靠左（柔和）;
 // 依日期分隔;未讀可點標已讀;底部 pill 輸入 + 圓形送出。
+//
+// 對話泡泡刻意**不**進元件庫：它只有這一頁在用，而元件庫的規矩是
+// 「要加第 16 個之前，先確認前 15 個真的湊不出來」—— 一個只有一個呼叫端的元件，
+// 抽出去只是多一個要對齊的地方。空狀態與錯誤則一律用元件庫的那兩個。
 export function MessageThread({ studentId }: { studentId: string }) {
   const { user } = useSession();
-  const { data, isLoading, isError, error } = useMessages(studentId);
+  const { data, isLoading, isError, error, refetch } = useMessages(studentId);
   const sendMessage = useSendMessage();
   const markRead = useMarkMessageRead(studentId);
   const [body, setBody] = useState('');
@@ -58,9 +62,9 @@ export function MessageThread({ studentId }: { studentId: string }) {
   return (
     <div className="flex flex-col gap-4">
       {isLoading && <SkeletonLines lines={3} />}
-      {isError && <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>}
+      {isError && <ErrorNotice message={apiErrorMessage(error)} onRetry={() => void refetch()} />}
       {data && data.length === 0 && (
-        <p className="py-6 text-center text-sm text-ink-soft">還沒有訊息，開始跟老師聊聊吧。</p>
+        <EmptyState title="還沒有訊息" hint="在下面打一句話，老師就會收到" />
       )}
 
       {sorted.length > 0 && (
@@ -152,11 +156,13 @@ export function MessageThread({ studentId }: { studentId: string }) {
         </div>
       )}
 
-      {/* 送不出去要講，不能安靜地把使用者打的字留在框裡讓他以為送出了。 */}
+      {/* 送不出去要講，不能安靜地把使用者打的字留在框裡讓他以為送出了。
+          這句話原本在畫面上出現兩次（這裡一次、輸入框下面又一次）—— 同一件壞消息講兩遍
+          會讓人以為壞了兩次。留這一則就好，它就在最後一顆泡泡下面。 */}
       {sendMessage.isError && (
-        <p className="text-right text-2xs text-stop-text">
-          {apiErrorMessage(sendMessage.error)} 訊息還留在下面，可以再送一次。
-        </p>
+        <ErrorNotice
+          message={`${apiErrorMessage(sendMessage.error)} 訊息還留在下面，可以再送一次。`}
+        />
       )}
 
       <form onSubmit={handleSend} className="flex items-center gap-2.5 pt-1">
@@ -176,7 +182,6 @@ export function MessageThread({ studentId }: { studentId: string }) {
           <Icon name="send" className="h-5 w-5" />
         </button>
       </form>
-      {sendMessage.isError && <p className="text-sm text-stop-text">{apiErrorMessage(sendMessage.error)}</p>}
     </div>
   );
 }

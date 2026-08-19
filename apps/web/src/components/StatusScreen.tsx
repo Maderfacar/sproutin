@@ -1,3 +1,5 @@
+import { Button } from './ui';
+
 export type StatusKind = 'loading' | 'redirecting' | 'error';
 
 interface StatusScreenProps {
@@ -45,9 +47,9 @@ export function StatusScreen({ status, message, sub, onRetry, fullScreen }: Stat
         {message ?? DEFAULT_MESSAGE[status]}
       </p>
       {isError && onRetry && (
-        <button type="button" onClick={onRetry} className="btn-secondary text-sm">
+        <Button variant="secondary" block={false} onClick={onRetry}>
           再試一次
-        </button>
+        </Button>
       )}
       {isError && sub && (
         <p className="max-w-sm break-all rounded-card bg-surface p-3 text-sm text-ink-soft shadow-soft">

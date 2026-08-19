@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { AuthUser } from '@sproutin/shared';
 import { fetchMe, logout } from './auth';
 import { AuthedSession } from './session';
 import { roleFlags } from './roles';
 import { StatusScreen } from '../components/StatusScreen';
+import { Button } from '../components/ui';
 
 // 桌面後台的身分取得：**只看 httpOnly cookie**，完全不碰 LIFF（電腦上沒有 LINE App）。
 //   有 session → 直接進後台。
@@ -69,7 +69,7 @@ function ParentNotice({ name }: { name: string }) {
   const router = useRouter();
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-10">
-      <p className="eyebrow">園務後台</p>
+      <p className="text-2xs font-semibold text-ink-mute">園務後台</p>
       <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-ink">
         {name}，這裡是給園所人員用的
       </h1>
@@ -78,18 +78,17 @@ function ParentNotice({ name }: { name: string }) {
         請用手機打開園所的 LINE 官方帳號，從下方選單進入。
       </p>
       <div className="mt-6 flex flex-col gap-3">
-        <Link href="/liff" className="btn-primary text-center">
+        <Button href="/liff" variant="primary">
           在這台裝置上打開家長頁面
-        </Link>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
           onClick={() => {
             void logout().then(() => router.replace('/admin/login'));
           }}
-          className="btn-secondary"
         >
           換一個帳號登入
-        </button>
+        </Button>
       </div>
     </main>
   );

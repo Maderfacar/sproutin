@@ -51,7 +51,7 @@ export function SkeletonCards({ cards = 2 }: { cards?: number }) {
   return (
     <div aria-hidden className="flex flex-col gap-3">
       {Array.from({ length: cards }, (_, i) => (
-        <div key={i} className="card p-5">
+        <div key={i} className="rounded-tile border border-line-strong bg-surface p-5 shadow-soft">
           <Skeleton className="h-2.5 rounded-md2" width="24%" />
           <Skeleton className="mt-3 h-5 rounded-md2" width="58%" />
           <Skeleton className="mt-2 h-3 rounded-md2" width="40%" />
