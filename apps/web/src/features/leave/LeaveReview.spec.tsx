@@ -14,6 +14,8 @@ const state = vi.hoisted(() => ({
 vi.mock('../../lib/session', () => ({
   useSession: () => ({ user: { id: 'u1', displayName: '李老師', roles: state.roles } }),
 }));
+// useCapabilities 會問「現在在哪一種外框」（桌面後台不受身分影響）。
+vi.mock('next/navigation', () => ({ usePathname: () => '/liff/leave' }));
 vi.mock('../classes/hooks', () => ({
   useSelectedClass: () => ({
     classes: state.classes,

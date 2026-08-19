@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { roleFlags } from './roles';
+import { personaFlags, roleFlags } from './roles';
 import type { AuthUser } from '@sproutin/shared';
 
 const r = (...roles: AuthUser['roles'][number]['role'][]): AuthUser['roles'] =>
@@ -91,5 +91,56 @@ describe('hasDualIdentity', () => {
   it('只是老師 → false', () => {
     expect(r('TEACHER').hasDualIdentity).toBe(false);
     expect(r('OWNER', 'ADMIN').hasDualIdentity).toBe(false);
+  });
+});
+
+// 身分收斂（lib/roles 的 personaFlags）。這是「同一個坑第四次」之後補的：
+// 前三次是資料範圍（/me/students、/classes、家長首頁的卡片），這一次是介面入口。
+describe('personaFlags', () => {
+  const teacherParent = roleFlags([
+    { role: 'TEACHER', scopeType: 'SCHOOL', scopeId: null },
+    { role: 'PARENT', scopeType: 'SCHOOL', scopeId: null },
+  ]);
+
+  it('家長身分：校方的入口全部收起來', () => {
+    const f = personaFlags(teacherParent, 'parent');
+    expect(f.canAnnounce).toBe(false);
+    expect(f.canReviewLeave).toBe(false);
+    expect(f.canMarkAttendance).toBe(false);
+    expect(f.canManageSchool).toBe(false);
+    expect(f.canViewAudit).toBe(false);
+    expect(f.isStaff).toBe(false);
+  });
+
+  it('家長身分：還是家長 —— 看得到自己小孩、請得了假', () => {
+    const f = personaFlags(teacherParent, 'parent');
+    expect(f.isGuardian).toBe(true);
+    expect(f.canApplyLeave).toBe(true);
+  });
+
+  // 校方三種身分維持角色聯集。硬切會出事：同時是導師與隨車老師的人，
+  // availablePersonas 只給他 teacher（bus 身分要「沒有其他校方身分」才成立），
+  // 在 teacher 身分下拿掉 canMarkBusRide，他就再也點不到娃娃車點名了。
+  it('老師身分：不動它，否則兼隨車老師的人會失去點名入口', () => {
+    const busTeacher = roleFlags([
+      { role: 'TEACHER', scopeType: 'SCHOOL', scopeId: null },
+      { role: 'BUS_TEACHER', scopeType: 'SCHOOL', scopeId: null },
+    ]);
+    expect(personaFlags(busTeacher, 'teacher')).toEqual(busTeacher);
+    expect(personaFlags(busTeacher, 'teacher').canMarkBusRide).toBe(true);
+  });
+
+  it('園長身分：不動它', () => {
+    const owner = roleFlags([{ role: 'OWNER', scopeType: 'SCHOOL', scopeId: null }]);
+    expect(personaFlags(owner, 'staff')).toEqual(owner);
+  });
+
+  // 完全沒有身分的帳號會落在 parent（見 defaultPersona）——
+  // 那時連 isGuardian 都是 false，什麼都不該給。
+  it('沒有監護關係卻落在家長身分 → 請假也不給', () => {
+    const none = roleFlags([]);
+    const f = personaFlags(none, 'parent');
+    expect(f.isGuardian).toBe(false);
+    expect(f.canApplyLeave).toBe(false);
   });
 });

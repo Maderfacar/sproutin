@@ -2,7 +2,7 @@
 
 import { useBranding } from '../../../lib/branding';
 import { useSession } from '../../../lib/session';
-import { roleFlags } from '../../../lib/roles';
+import { useCapabilities } from '../../../lib/useCapabilities';
 import { ROLE_LABEL } from '../../../lib/roleLabels';
 import { logout } from '../../../lib/auth';
 import { useActivePersona } from '../../../lib/usePersona';
@@ -59,7 +59,7 @@ async function handleLogout(): Promise<void> {
 export default function MePage() {
   const { user } = useSession();
   const branding = useBranding();
-  const flags = roleFlags(user.roles);
+  const flags = useCapabilities();
   const { persona, canSwitch } = useActivePersona();
   const roleLabels = [...new Set(user.roles.map((r) => ROLE_LABEL[r.role] ?? r.role))];
 
@@ -119,8 +119,9 @@ export default function MePage() {
       {/* 園所管理只在校方身分下出現。家長身分的人**有沒有權限**是另一回事
           —— 他確實是園長，後端也會放行；但既然這個 App 一次只做一種身分，
           在家長的世界裡放一排後台入口就是把兩個世界又混回去了
-          （Human Owner 2026-08-20）。要用就切回園長身分。 */}
-      {flags.canManageSchool && persona === 'staff' && (
+          （Human Owner 2026-08-20）。要用就切回園長身分。
+          這裡是這條規則的第一個實作，後來收斂成 lib/useCapabilities（見那支的註解）。 */}
+      {flags.canManageSchool && (
         <section>
           <SectionHead
             title="園所管理"

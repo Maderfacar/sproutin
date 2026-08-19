@@ -10,8 +10,7 @@ import { useLeaves } from '../leave/hooks';
 import { ATTENDANCE_STATUS_LABEL, ATTENDANCE_STATUS_TONE } from '../attendance/labels';
 import { LEAVE_STATUS_LABEL, LEAVE_STATUS_TONE } from '../leave/labels';
 import { StudentBusSection } from '../bus/StudentBusSection';
-import { useSession } from '../../lib/session';
-import { roleFlags } from '../../lib/roles';
+import { useCapabilities } from '../../lib/useCapabilities';
 import {
   Avatar,
   Badge,
@@ -38,8 +37,8 @@ function monthKey(): string {
 // 細線＝只是翻閱。最上面那一塊是「這是誰的頁面」，所以不算一段，也不給標題 ——
 // 它就是頁面本身。
 export function StudentDetail({ studentId }: { studentId: string }) {
-  const { user } = useSession();
-  const flags = roleFlags(user.roles);
+  // 依身分而不是角色聯集：園長兼家長切到家長身分時，不該在孩子的頁面上看到娃娃車設定。
+  const flags = useCapabilities();
   const { data: student, isLoading, isError, error, refetch } = useStudentDetail(studentId);
   const { data: attendance } = useAttendance(studentId);
   const { data: leaves } = useLeaves(studentId);

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from '../../lib/session';
-import { roleFlags } from '../../lib/roles';
+import { useCapabilities } from '../../lib/useCapabilities';
 import { apiErrorMessage } from '../../lib/api';
 import type { AuditLogFilters, AuditResult } from '../../lib/types';
 import { useAuditLogs } from './hooks';
@@ -65,8 +64,7 @@ const RESULT_TONE: Record<string, 'good' | 'stop' | 'neutral'> = {
 // 條件常駐在最上面等於每次都要先捲過它才看得到紀錄。
 // 目前套用了什麼條件用一句話寫在標題旁邊，不會因為收起來就不知道自己在看什麼。
 export function AuditPanel() {
-  const { user } = useSession();
-  const flags = roleFlags(user.roles);
+  const flags = useCapabilities();
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [applied, setApplied] = useState<FormState>(EMPTY_FORM);

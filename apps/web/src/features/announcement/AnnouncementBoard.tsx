@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from '../../lib/session';
-import { roleFlags } from '../../lib/roles';
+import { useCapabilities } from '../../lib/useCapabilities';
 import { AnnouncementList } from './AnnouncementList';
 import { AnnounceSheet } from './AnnounceSheet';
 import { Button, SectionHead } from '../../components/ui';
@@ -15,8 +14,10 @@ import { Icon } from '../../components/Icon';
 //
 // 桌面版 /admin/announcement 與手機版 /liff/announcement 共用這一份（docs/04 §3b）。
 export function AnnouncementBoard() {
-  const { user } = useSession();
-  const flags = roleFlags(user.roles);
+  // useCapabilities 不是 roleFlags：老師兼家長切到家長身分時，這一頁不該有發布入口
+  // （Human Owner 2026-08-20 回報）。他確實是老師、後端也會放行，
+  // 但把「發一則公告」放在家長的世界裡，就等於這個殼沒有真的把兩個世界分開。
+  const flags = useCapabilities();
   const [open, setOpen] = useState(false);
 
   return (

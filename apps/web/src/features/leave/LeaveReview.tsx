@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from '../../lib/session';
-import { roleFlags } from '../../lib/roles';
+import { useCapabilities } from '../../lib/useCapabilities';
 import { useSelectedClass } from '../classes/hooks';
 import { useVisibleStudents } from '../students/useSelectedStudent';
 import { useClassPendingLeaves, useSchoolPendingLeaves, useSetLeaveStatus } from './hooks';
@@ -40,8 +39,7 @@ function range(leave: LeaveView): string {
 }
 
 export function LeaveReview({ scope }: { scope: 'class' | 'school' }) {
-  const { user } = useSession();
-  const flags = roleFlags(user.roles);
+  const flags = useCapabilities();
   const isSchool = scope === 'school';
 
   const { classes, classId, setClassId, isLoading: classesLoading } = useSelectedClass();

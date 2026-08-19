@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AnnouncementBoard } from './AnnouncementBoard';
+import { resetPersonaForTests } from '../../lib/usePersona';
 
 const state = vi.hoisted(() => ({
   roles: [{ role: 'PARENT' }] as { role: string }[],
@@ -10,6 +11,8 @@ const state = vi.hoisted(() => ({
 vi.mock('../../lib/session', () => ({
   useSession: () => ({ user: { id: 'u1', displayName: '測試', roles: state.roles } }),
 }));
+// useCapabilities 會問「現在在哪一種外框」（桌面後台不受身分影響）。
+vi.mock('next/navigation', () => ({ usePathname: () => '/liff/announcement' }));
 vi.mock('./AnnouncementList', () => ({ AnnouncementList: () => <p>公告列表</p> }));
 vi.mock('../classes/hooks', () => ({
   useSelectedClass: () => ({
@@ -33,6 +36,8 @@ describe('公告頁', () => {
   beforeEach(() => {
     state.roles = [{ role: 'PARENT' }];
     state.created = [];
+    window.localStorage.clear();
+    resetPersonaForTests();
   });
 
   // 家長只讀 —— 給他一顆發公告的按鈕是錯的。
@@ -92,5 +97,33 @@ describe('公告頁', () => {
     expect(state.created).toEqual([
       { scope: 'CLASS', classId: 'c1', title: '開學典禮', body: '9/1 上午 9 點' },
     ]);
+  });
+
+  // Human Owner 2026-08-20 回報：家長的公告頁上不該有「發一則公告」。
+  //
+  // 這一條測的不是權限 —— 他確實是老師，後端也會放行。測的是**入口出現在誰的世界裡**：
+  // 舊版用 roleFlags（角色聯集）判斷，於是老師兼家長切到家長身分之後，
+  // 發布按鈕還跟著他走進家長的世界。這是同一個坑的第四次（前三次是資料範圍）。
+  it('老師兼家長切到家長身分 → 公告頁沒有發布按鈕', () => {
+    state.roles = [{ role: 'TEACHER' }, { role: 'PARENT' }];
+    window.localStorage.setItem('sproutin.persona', 'parent');
+    resetPersonaForTests();
+
+    render(<AnnouncementBoard />);
+
+    expect(screen.getByText('公告列表')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /發一則公告/ })).toBeNull();
+    // 說明文字也要換成家長那一句，不能還在講「發出去的公告都留在這裡」。
+    expect(screen.getByText('園所與班級發布的消息')).toBeTruthy();
+  });
+
+  it('同一個人切回老師身分，按鈕就回來了', () => {
+    state.roles = [{ role: 'TEACHER' }, { role: 'PARENT' }];
+    window.localStorage.setItem('sproutin.persona', 'teacher');
+    resetPersonaForTests();
+
+    render(<AnnouncementBoard />);
+
+    expect(screen.getByRole('button', { name: /發一則公告/ })).toBeTruthy();
   });
 });
