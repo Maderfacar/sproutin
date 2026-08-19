@@ -26,7 +26,7 @@ export function NotificationList() {
     return <SkeletonRows rows={5} />;
   }
   if (isError) {
-    return <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>;
+    return <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>;
   }
   if (!data || data.length === 0) {
     return (

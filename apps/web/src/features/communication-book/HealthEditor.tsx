@@ -62,7 +62,7 @@ export function HealthEditor({ studentId, dateIso, entry }: HealthEditorProps) {
               onClick={() => toggleSymptom(s)}
               className={`chip transition ${
                 symptoms.includes(s)
-                  ? 'border border-amber-300 bg-amber-50 text-amber-800'
+                  ? 'border border-note-edge bg-note-wash text-note-text'
                   : 'border border-line text-ink-soft'
               }`}
             >
@@ -87,9 +87,9 @@ export function HealthEditor({ studentId, dateIso, entry }: HealthEditorProps) {
           className="field"
         />
       </label>
-      {tempInvalid && <p className="-mt-1 text-xs text-red-600">體溫請填 30–43 之間的數字。</p>}
+      {tempInvalid && <p className="-mt-1 text-2xs font-medium text-stop-text">體溫請填 30–43 之間的數字。</p>}
       {isFever && (
-        <p className="-mt-1 text-xs font-semibold text-amber-700">
+        <p className="-mt-1 text-2xs font-bold text-note-text">
           偏高（{FEVER_THRESHOLD_C}°C 以上）。送出全班時會提醒你是否要立刻通知家長。
         </p>
       )}
@@ -123,7 +123,7 @@ export function HealthEditor({ studentId, dateIso, entry }: HealthEditorProps) {
       </button>
 
       {save.isError && (
-        <p className="text-sm text-red-600">{bookErrorMessage(save.error, apiErrorMessage(save.error))}</p>
+        <p className="text-sm text-stop-text">{bookErrorMessage(save.error, apiErrorMessage(save.error))}</p>
       )}
     </section>
   );

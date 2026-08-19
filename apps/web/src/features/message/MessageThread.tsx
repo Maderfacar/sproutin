@@ -58,7 +58,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
   return (
     <div className="flex flex-col gap-4">
       {isLoading && <SkeletonLines lines={3} />}
-      {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
+      {isError && <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>}
       {data && data.length === 0 && (
         <p className="py-6 text-center text-sm text-ink-soft">還沒有訊息，開始跟老師聊聊吧。</p>
       )}
@@ -154,7 +154,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
 
       {/* 送不出去要講，不能安靜地把使用者打的字留在框裡讓他以為送出了。 */}
       {sendMessage.isError && (
-        <p className="text-right text-xs text-red-600">
+        <p className="text-right text-2xs text-stop-text">
           {apiErrorMessage(sendMessage.error)} 訊息還留在下面，可以再送一次。
         </p>
       )}
@@ -176,7 +176,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
           <Icon name="send" className="h-5 w-5" />
         </button>
       </form>
-      {sendMessage.isError && <p className="text-sm text-red-600">{apiErrorMessage(sendMessage.error)}</p>}
+      {sendMessage.isError && <p className="text-sm text-stop-text">{apiErrorMessage(sendMessage.error)}</p>}
     </div>
   );
 }

@@ -53,8 +53,8 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
       </div>
 
       {flagged.length > 0 && (
-        <div className="rounded-md2 border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm font-bold text-amber-800">
+        <div className="rounded-md2 border border-note-edge bg-note-wash p-3">
+          <p className="text-sm font-bold text-note-text">
             {flagged.length} 位今日健康需注意，要立刻用 LINE 通知家長嗎？
           </p>
           <ul className="mt-2 flex flex-col gap-1.5">
@@ -68,7 +68,7 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
                 .join('、');
               return (
                 <li key={s.id}>
-                  <label className="flex items-center gap-2 text-sm text-amber-900">
+                  <label className="flex min-h-touch items-center gap-2 text-sm text-note-text">
                     <input
                       type="checkbox"
                       checked={selected.includes(s.id)}
@@ -82,7 +82,7 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
               );
             })}
           </ul>
-          <p className="mt-2 text-xs text-amber-800">未勾選者與其餘學生只會收到 App 內通知。</p>
+          <p className="mt-2 text-2xs text-note-text">未勾選者與其餘學生只會收到 App 內通知。</p>
         </div>
       )}
 
@@ -106,7 +106,7 @@ export function PublishPanel({ classId, dateIso, students, entries, publish }: P
           {publish.data.pushed > 0 ? `，其中 ${publish.data.pushed} 位已 LINE 通知` : ''}。
         </p>
       )}
-      {publish.isError && <p className="text-sm text-red-600">{apiErrorMessage(publish.error)}</p>}
+      {publish.isError && <p className="text-sm text-stop-text">{apiErrorMessage(publish.error)}</p>}
     </section>
   );
 }

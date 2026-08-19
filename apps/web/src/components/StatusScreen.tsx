@@ -41,7 +41,7 @@ export function StatusScreen({ status, message, sub, onRetry, fullScreen }: Stat
           aria-hidden
         />
       )}
-      <p className={isError ? 'font-semibold text-red-600' : 'text-ink-soft'}>
+      <p className={isError ? 'font-semibold text-stop-text' : 'text-ink-soft'}>
         {message ?? DEFAULT_MESSAGE[status]}
       </p>
       {isError && onRetry && (
