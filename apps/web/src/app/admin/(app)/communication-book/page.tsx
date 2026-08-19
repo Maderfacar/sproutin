@@ -1,8 +1,9 @@
 'use client';
 
-import { CommunicationBookView } from '../../../../features/communication-book/CommunicationBookView';
+import { TeacherBookPanel } from '../../../../features/communication-book/TeacherBookPanel';
 
-// 桌面版聯絡簿。與手機版 /liff/communication-book 共用 CommunicationBookView（docs/04 §3b）。
+// 桌面版聯絡簿。與手機版 /liff/communication-book 共用 TeacherBookPanel（docs/04 §3b）。
+// 要翻某一個孩子過去的紀錄，從那一列的箭頭進 /admin/communication-book/[studentId]。
 export default function AdminCommunicationBookPage() {
   return (
     <div className="space-y-7">
@@ -13,7 +14,7 @@ export default function AdminCommunicationBookPage() {
           填完一鍵送出全班；家長端在送出之後才看得到。
         </p>
       </header>
-      <CommunicationBookView />
+      <TeacherBookPanel />
     </div>
   );
 }

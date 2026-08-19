@@ -15,10 +15,14 @@ import {
 } from '../../components/ui';
 import { schoolToday } from '../../lib/datetime';
 
-// 家長的出缺勤。**首頁只講今天，這一頁才講整體。**
+// 單一學生的出缺勤紀錄：這個月的三個數字 + 每一天一列。
 //
-// 本月統計原本擠在家長首頁上，和「今天到了沒」搶同一個位置 ——
-// 統計是「回頭看」不是「今天」，搬到這裡之後首頁只剩一個主角，這一頁也終於有存在的理由。
+// **首頁只講今天，這一頁才講整體。** 本月統計原本擠在家長首頁上，
+// 和「今天到了沒」搶同一個位置 —— 統計是「回頭看」不是「今天」，
+// 搬到這裡之後首頁只剩一個主角，這一頁也終於有存在的理由。
+//
+// 學生名單來自 useSelectedStudent，**範圍已經依身分切好**：
+// 家長只有自己的小孩，校方是可見範圍內的學生。所以這一份同時服務兩邊，不必做兩套。
 
 function byDateDesc(a: AttendanceView, b: AttendanceView): number {
   return b.date.localeCompare(a.date);
@@ -30,7 +34,7 @@ function weekday(dateIso: string): string {
   return WEEKDAY[new Date(dateIso).getUTCDay()] ?? '';
 }
 
-export function ParentAttendance() {
+export function StudentAttendance() {
   const { students, studentId, setStudentId, isLoading: studentsLoading } = useSelectedStudent();
   const { data, isLoading, isError, error, refetch } = useAttendance(studentId);
 

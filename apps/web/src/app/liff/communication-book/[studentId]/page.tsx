@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { PageHeader } from '../../../../components/PageHeader';
-import { StudentBookScreen } from '../../../../features/communication-book/CommunicationBookView';
+import { StudentBookScreen } from '../../../../features/communication-book/StudentBookScreen';
 import { useStudentName } from '../../../../features/students/useSelectedStudent';
 
 // 手機版單一學生聯絡簿。與桌面版 /admin/communication-book/[studentId] 共用（docs/04 §3b）。

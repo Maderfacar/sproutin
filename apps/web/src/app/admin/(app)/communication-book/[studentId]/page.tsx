@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Icon } from '../../../../../components/Icon';
-import { StudentBookScreen } from '../../../../../features/communication-book/CommunicationBookView';
+import { StudentBookScreen } from '../../../../../features/communication-book/StudentBookScreen';
 import { useStudentName } from '../../../../../features/students/useSelectedStudent';
 
 // 桌面版單一學生聯絡簿。與手機版 /liff/communication-book/[studentId] 共用（docs/04 §3b）。
