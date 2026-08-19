@@ -116,7 +116,11 @@ export default function MePage() {
       {/* 顯示設定（Human Owner 2026-08-18：只放家長手機端、只記在這支瀏覽器上）。 */}
       <FontScaleControl />
 
-      {flags.canManageSchool && (
+      {/* 園所管理只在校方身分下出現。家長身分的人**有沒有權限**是另一回事
+          —— 他確實是園長，後端也會放行；但既然這個 App 一次只做一種身分，
+          在家長的世界裡放一排後台入口就是把兩個世界又混回去了
+          （Human Owner 2026-08-20）。要用就切回園長身分。 */}
+      {flags.canManageSchool && persona === 'staff' && (
         <section>
           <SectionHead
             title="園所管理"

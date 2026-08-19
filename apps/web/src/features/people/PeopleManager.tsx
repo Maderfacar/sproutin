@@ -205,7 +205,12 @@ export function PeopleManager() {
 
       {editing && (
         <div className="mb-7">
+          {/* key 一定要帶 person.id：沒關掉面板就直接點另一個人的「編輯」時，
+              React 會沿用同一個元件實例，於是姓名欄、選到的小孩、選到的班級
+              全部留在上一個人身上（Human Owner 2026-08-20 回報：內容換了但名字還是前一位）。
+              換人＝換一個編輯對象，本地狀態本來就該整組重來。 */}
           <PersonEditor
+            key={editing.id}
             person={editing}
             classes={classes ?? []}
             students={students ?? []}
