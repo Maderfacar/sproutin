@@ -31,7 +31,8 @@ function makePrisma(): PrismaMock {
   };
   return {
     tx,
-    user: { findUnique: jest.fn(async () => ({ id: 'u-parent' })) },
+    // status 一定要有：新增關聯前會擋停用帳號（見 assertUserActive）。
+    user: { findUnique: jest.fn(async () => ({ id: 'u-parent', status: 'ACTIVE' })) },
     student: { findUnique: jest.fn(async () => ({ id: 'stu-1' })) },
     class: { findUnique: jest.fn(async () => ({ id: 'c1' })) },
     guardianship: {
@@ -145,5 +146,45 @@ describe('RelationsService — 老師編制班級', () => {
     const entry = prisma.tx.auditLog.create.mock.calls[0][0].data;
     expect(entry.action).toBe('teacher_assignment.remove');
     expect(entry.metadata).toMatchObject({ userId: 'u-teacher', classId: 'c1' });
+  });
+});
+
+
+// 停用的帳號不能再被指派班級或綁定小孩（Human Owner 2026-08-20 回報：
+// 已停用的帳號仍可分配導師身分）。避免製造幽靈關聯 ——
+// 班級名單上掛著一個登不進來的老師，之後帳號一旦重新啟用又會默默帶著權限回來。
+describe('RelationsService — 停用帳號不得新增關聯', () => {
+  it('停用的人不能被綁小孩', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique = jest.fn(async () => ({ id: 'u-parent', status: 'DISABLED' }));
+
+    await expect(
+      makeService(prisma).addGuardianship(owner, {
+        userId: 'u-parent',
+        studentId: 'stu-1',
+        relation: 'MOTHER',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.tx.guardianship.create).not.toHaveBeenCalled();
+  });
+
+  it('停用的人不能被指派班級', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique = jest.fn(async () => ({ id: 'u-teacher', status: 'DISABLED' }));
+
+    await expect(
+      makeService(prisma).addTeacherAssignment(owner, { userId: 'u-teacher', classId: 'c1' }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.tx.teacherAssignment.create).not.toHaveBeenCalled();
+  });
+
+  // **移除**不受此限 —— 那正是清理停用帳號要做的事。
+  it('停用的人身上的關聯仍然解除得掉', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique = jest.fn(async () => ({ id: 'u-teacher', status: 'DISABLED' }));
+
+    await makeService(prisma).removeTeacherAssignment(owner, 'ta-1');
+
+    expect(prisma.tx.teacherAssignment.delete).toHaveBeenCalled();
   });
 });

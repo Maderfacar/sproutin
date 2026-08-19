@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { SurfaceLink } from '../../components/SurfaceLink';
 import { Icon } from '../../components/Icon';
 import { useSelectedClass } from '../classes/hooks';
-import { useMyStudents } from '../../lib/queries';
+import { useVisibleStudents } from '../students/useSelectedStudent';
 import { useClassAttendance } from '../attendance/hooks';
 import { apiErrorMessage } from '../../lib/api';
 import type { BookEntryView, SaveBookEntryBody } from '../../lib/types';
@@ -80,7 +80,7 @@ export function TeacherBookPanel() {
   const [classSheet, setClassSheet] = useState(false);
   const dateIso = new Date(`${date}T00:00:00.000Z`).toISOString();
 
-  const { data: students } = useMyStudents();
+  const { data: students } = useVisibleStudents();
   const { data: entries, isLoading, isError, error, refetch } = useClassBook(classId, dateIso);
   const { data: attendance } = useClassAttendance(classId, dateIso);
   const { save, checkIn, publish } = useBookMutations();

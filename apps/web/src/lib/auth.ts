@@ -81,10 +81,14 @@ export interface StudentView {
 
 // 後端已依角色/scope 過濾（家長自己小孩 / 老師自班 / OWNER 全校）。
 //
-// relation='GUARDIAN' → **只要我監護的小孩**，不取聯集。園長兼家長的人切到家長身分時
-// 必須用這個，否則「選擇孩子」會列出全校名單（Human Owner 2026-08-20 回報）。
+// relation → **只要那一種關係**，不取聯集（Human Owner 2026-08-20 回報）：
+//   GUARDIAN 我監護的小孩（家長身分）
+//   TEACHING 我實際帶的班上的孩子（導師身分）
+// 兼多重身分的人切過去時一定要用，否則會拿到全校名單。
 // 過濾在後端做 —— 前端過濾等於名單仍然送到瀏覽器。
-export async function fetchMyStudents(relation?: 'GUARDIAN'): Promise<StudentView[]> {
+export type StudentRelation = 'GUARDIAN' | 'TEACHING';
+
+export async function fetchMyStudents(relation?: StudentRelation): Promise<StudentView[]> {
   const url = relation ? `/api/me/students?relation=${relation}` : '/api/me/students';
   const res = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
   if (!res.ok) {

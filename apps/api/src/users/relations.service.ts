@@ -19,7 +19,7 @@ export class RelationsService {
     actor: UserActor,
     input: { userId: string; studentId: string; relation: GuardianRelation; isPrimary?: boolean },
   ): Promise<{ id: string }> {
-    await this.assertUserExists(input.userId);
+    await this.assertUserActive(input.userId);
     await this.assertStudentExists(input.studentId);
 
     const duplicate = await this.prisma.guardianship.findFirst({
@@ -80,7 +80,7 @@ export class RelationsService {
     actor: UserActor,
     input: { userId: string; classId: string },
   ): Promise<{ id: string }> {
-    await this.assertUserExists(input.userId);
+    await this.assertUserActive(input.userId);
     const cls = await this.prisma.class.findUnique({
       where: { id: input.classId },
       select: { id: true },
@@ -142,6 +142,23 @@ export class RelationsService {
     const found = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
     if (!found) {
       throw new BadRequestException('user_not_found');
+    }
+  }
+
+  // 停用的帳號不能再被指派班級或綁定小孩（Human Owner 2026-08-20 回報：
+  // 已停用的帳號仍可分配導師身分）。這不是刁難，是避免製造**幽靈關聯**：
+  // 班級名單上掛著一個登不進來的老師，之後帳號一旦重新啟用又會默默帶著權限回來。
+  // 要指派就先啟用他 —— 而**移除**關聯不受此限，那正是清理停用帳號要做的事。
+  private async assertUserActive(userId: string): Promise<void> {
+    const found = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { status: true },
+    });
+    if (!found) {
+      throw new BadRequestException('user_not_found');
+    }
+    if (found.status !== 'ACTIVE') {
+      throw new ConflictException('user_disabled');
     }
   }
 

@@ -109,6 +109,16 @@ export function PersonEditor({ person, classes, students, onClose }: PersonEdito
         </button>
       </div>
 
+      {/* 停用的帳號不能再被指派身分或關聯（後端 409 user_disabled）——
+          先在這裡講清楚，比讓人填完按下去才發現好（Human Owner 2026-08-20 回報：
+          已停用的帳號仍可分配導師身分）。 */}
+      {!isActive && (
+        <div className="rounded-md2 border border-note-edge bg-note-wash px-4 py-3 text-sm leading-relaxed text-note-text">
+          這個帳號目前停用中，不能再指派身分、班級或綁定小孩。
+          既有的關聯仍然解除得掉；要新增請先按上面的「重新啟用」。
+        </div>
+      )}
+
       <RolesSection person={person} />
 
       {isGuardianRole && (

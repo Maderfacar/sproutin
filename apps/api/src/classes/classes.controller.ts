@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -27,11 +28,16 @@ const classNameSchema = z.object({ name: z.string().trim().min(1).max(40) });
 export class ClassesController {
   constructor(private readonly classes: ClassesService) {}
 
+  // ?scope=TEACHING → **只回我實際帶的班**，不取角色聯集（Human Owner 2026-08-20 回報：
+  // 園長兼導師切到導師身分後，點名頁的班級選擇器列出全校的班）。只縮小不放寬。
   @Get()
   @Roles('OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER')
-  async list(@Req() req: AuthedRequest): Promise<ClassView[]> {
+  async list(@Req() req: AuthedRequest, @Query('scope') scope?: string): Promise<ClassView[]> {
+    if (scope !== undefined && scope !== 'TEACHING') {
+      throw new BadRequestException('invalid_scope');
+    }
     const user = req.user!;
-    return this.classes.listForUser(user.id, user.roles);
+    return this.classes.listForUser(user.id, user.roles, scope);
   }
 
   @Post()

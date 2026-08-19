@@ -1,7 +1,8 @@
 'use client';
 
 import { useSession } from '../../lib/session';
-import { usePublicConfig, useMyStudents } from '../../lib/queries';
+import { usePublicConfig } from '../../lib/queries';
+import { useVisibleStudents } from '../students/useSelectedStudent';
 import { roleFlags } from '../../lib/roles';
 import { useSelectedClass } from '../classes/hooks';
 import { useClassAttendance } from '../attendance/hooks';
@@ -30,7 +31,7 @@ export function TeacherHome() {
   const todayKey = schoolToday();
   const dateIso = `${todayKey}T00:00:00.000Z`;
 
-  const { data: students } = useMyStudents();
+  const { data: students } = useVisibleStudents();
   const { data: attendance } = useClassAttendance(classId, dateIso);
   const { data: book } = useClassBook(classId, dateIso);
   const { data: pendingLeaves } = useClassPendingLeaves(classId);

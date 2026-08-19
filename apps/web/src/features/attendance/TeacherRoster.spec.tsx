@@ -25,7 +25,9 @@ vi.mock('../classes/hooks', () => ({
     isError: false,
   }),
 }));
-vi.mock('../../lib/queries', () => ({ useMyStudents: () => ({ data: state.students }) }));
+vi.mock('../students/useSelectedStudent', () => ({
+  useVisibleStudents: () => ({ data: state.students }),
+}));
 vi.mock('./hooks', () => ({
   useClassAttendance: () => ({
     data: state.attendance,

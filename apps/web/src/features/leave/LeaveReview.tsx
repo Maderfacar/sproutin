@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession } from '../../lib/session';
 import { roleFlags } from '../../lib/roles';
 import { useSelectedClass } from '../classes/hooks';
-import { useMyStudents } from '../../lib/queries';
+import { useVisibleStudents } from '../students/useSelectedStudent';
 import { useClassPendingLeaves, useSchoolPendingLeaves, useSetLeaveStatus } from './hooks';
 import { leaveErrorMessage } from './labels';
 import { LeaveRequestSheet } from './LeaveRequestSheet';
@@ -45,7 +45,7 @@ export function LeaveReview({ scope }: { scope: 'class' | 'school' }) {
   const isSchool = scope === 'school';
 
   const { classes, classId, setClassId, isLoading: classesLoading } = useSelectedClass();
-  const { data: students } = useMyStudents();
+  const { data: students } = useVisibleStudents();
 
   // 兩支查詢都要無條件呼叫（Rules of Hooks），用 enabled 決定誰真的去抓。
   const classQuery = useClassPendingLeaves(isSchool ? undefined : classId);

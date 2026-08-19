@@ -43,6 +43,10 @@ export interface StudentDetailView extends StudentView {
 
 const STUDENT_VIEW = { id: true, name: true, classId: true, status: true } as const;
 
+// 「只要某一種關係」的縮小範圍（不取角色聯集）。與前端的身分一一對應：
+// 家長 → GUARDIAN、導師 → TEACHING。**只縮小，永遠不放大。**
+export type StudentRelationScope = 'GUARDIAN' | 'TEACHING';
+
 @Injectable()
 export class StudentsService {
   constructor(
@@ -96,6 +100,9 @@ export class StudentsService {
     };
   }
 
+  // 「只要某一種關係」的縮小範圍（不取角色聯集）。見 listForUser 的說明。
+  // 這兩個值與前端的身分（persona）一一對應：家長→GUARDIAN、導師→TEACHING。
+  //
   // Step 4 讀取切片：後端依角色/scope 回「這個使用者能看到的學生」（docs/05 §2-3）。
   // 授權在後端（Rule 5/6）;前端只顯示回傳結果。多角色取聯集、去重。
   // classId 為選填篩選（階段2 刀2 管理介面用）——**篩選不放寬授權**，只在可見範圍內再縮小。
@@ -109,9 +116,26 @@ export class StudentsService {
     userId: string,
     roles: AuthUser['roles'],
     classId?: string,
-    relation?: 'GUARDIAN',
+    relation?: StudentRelationScope,
   ): Promise<StudentView[]> {
     const roleNames = new Set(roles.map((r) => r.role));
+
+    // relation='TEACHING' ＝「**只要我實際帶的班上的孩子**」，同樣不取聯集。
+    // 園長兼導師的人切到導師身分時，點名與聯絡簿都只該看到自己那一班。
+    if (relation === 'TEACHING') {
+      const assignments = await this.prisma.teacherAssignment.findMany({
+        where: { userId },
+        select: { classId: true },
+      });
+      const classIds = assignments.map((a) => a.classId);
+      if (classIds.length === 0) return [];
+      const rows = await this.prisma.student.findMany({
+        where: classId ? { classId: { in: classIds.filter((c) => c === classId) } } : { classId: { in: classIds } },
+        select: STUDENT_VIEW,
+        orderBy: { name: 'asc' },
+      });
+      return rows;
+    }
 
     if (relation === 'GUARDIAN') {
       const guardianships = await this.prisma.guardianship.findMany({

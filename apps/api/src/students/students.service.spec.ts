@@ -208,6 +208,82 @@ describe('StudentsService.listForUser', () => {
       expect(list.map((s) => s.name)).toEqual(['范小星', '范小鬱']);
     });
   });
+
+  // relation='TEACHING'（Human Owner 2026-08-20 第二次回報同一類問題）：
+  // 只帶一個班的導師（同時也是園長）在點名與聯絡簿看得到別班的孩子。
+  // 與 GUARDIAN 同一條規則：**只縮小，永遠不放大。**
+  describe("relation='TEACHING'（導師身分專用）", () => {
+    it('園長兼導師：只回他實際帶的班上的孩子，不回全校', async () => {
+      const prisma = emptyPrisma();
+      prisma.teacherAssignment.findMany.mockResolvedValue([{ classId: 'class-sun' }]);
+      prisma.student.findMany.mockResolvedValue([
+        { id: 'stu-sun-1', name: '范小星', classId: 'class-sun' },
+      ]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser(
+        'u-owner-teacher',
+        [role('OWNER'), role('TEACHER', 'class-sun')],
+        undefined,
+        'TEACHING',
+      );
+
+      expect(list.map((s) => s.id)).toEqual(['stu-sun-1']);
+      expect(prisma.student.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { classId: { in: ['class-sun'] } } }),
+      );
+    });
+
+    it('沒有帶班的園長：回空清單，不因為他是園長就放行', async () => {
+      const prisma = emptyPrisma();
+      prisma.teacherAssignment.findMany.mockResolvedValue([]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser('u-owner', [role('OWNER')], undefined, 'TEACHING');
+
+      expect(list).toEqual([]);
+      expect(prisma.student.findMany).not.toHaveBeenCalled();
+    });
+
+    it('不會混進他監護的小孩（那是家長身分的事）', async () => {
+      const prisma = emptyPrisma();
+      prisma.teacherAssignment.findMany.mockResolvedValue([{ classId: 'class-sun' }]);
+      prisma.student.findMany.mockResolvedValue([
+        { id: 'stu-sun-1', name: '范小星', classId: 'class-sun' },
+      ]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser(
+        'u-teacher-parent',
+        [role('TEACHER', 'class-sun'), role('PARENT')],
+        undefined,
+        'TEACHING',
+      );
+
+      expect(list.map((s) => s.id)).toEqual(['stu-sun-1']);
+      expect(prisma.guardianship.findMany).not.toHaveBeenCalled();
+    });
+
+    // classId 篩選同樣只縮小：帶別班的 id 進來也拿不到別人的班。
+    it('帶別班 classId 進來 → 空清單', async () => {
+      const prisma = emptyPrisma();
+      prisma.teacherAssignment.findMany.mockResolvedValue([{ classId: 'class-sun' }]);
+      prisma.student.findMany.mockResolvedValue([]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser(
+        'u-teacher',
+        [role('TEACHER', 'class-sun')],
+        'class-tulip',
+        'TEACHING',
+      );
+
+      expect(list).toEqual([]);
+      expect(prisma.student.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { classId: { in: [] } } }),
+      );
+    });
+  });
 });
 
 const owner: StudentActor = { id: 'u-owner', roles: [role('OWNER')] };

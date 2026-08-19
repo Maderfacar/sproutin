@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UsersService, UserActor } from './users.service';
 import { AuditService } from '../core/audit/audit.service';
 import type { AuthUser } from '@sproutin/shared';
@@ -176,6 +176,36 @@ describe('UsersService.grantRole', () => {
     const entry = prisma.tx.auditLog.create.mock.calls[0][0].data;
     expect(JSON.stringify(entry.metadata)).not.toContain('林老師');
     expect(entry.metadata).toMatchObject({ role: 'PARENT' });
+  });
+
+  // Human Owner 2026-08-20 回報：已停用的帳號仍可分配導師身分。
+  // 幽靈權限比沒有權限更危險 —— 他登不進來，但帳號一旦重新啟用就默默帶著這個身分回來。
+  it('停用的帳號不能再拿到新身分 → 409', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique = jest.fn(async () => userRow({ status: 'INACTIVE' }));
+
+    await expect(makeService(prisma).grantRole(owner, 'u-1', 'PARENT')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(prisma.tx.userRole.create).not.toHaveBeenCalled();
+  });
+
+  // **移除**不受此限 —— 那正是清理停用帳號要做的事。
+  it('停用的帳號身上的身分仍然移除得掉', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique = jest.fn(async () =>
+      userRow({
+        status: 'INACTIVE',
+        roles: [
+          { role: 'TEACHER', scopeType: 'SCHOOL', scopeId: null },
+          { role: 'PARENT', scopeType: 'SCHOOL', scopeId: null },
+        ],
+      }),
+    );
+
+    await makeService(prisma).revokeRole(owner, 'u-1', 'TEACHER');
+
+    expect(prisma.tx.userRole.deleteMany).toHaveBeenCalled();
   });
 });
 

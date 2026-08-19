@@ -23,8 +23,8 @@ vi.mock('../classes/hooks', () => ({
     isError: false,
   }),
 }));
-vi.mock('../../lib/queries', () => ({
-  useMyStudents: () => ({ data: [{ id: 's1', name: '陳小宇', classId: 'c1' }] }),
+vi.mock('../students/useSelectedStudent', () => ({
+  useVisibleStudents: () => ({ data: [{ id: 's1', name: '陳小宇', classId: 'c1' }] }),
 }));
 vi.mock('./hooks', () => ({
   useClassPendingLeaves: () => ({

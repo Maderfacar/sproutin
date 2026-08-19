@@ -127,6 +127,22 @@ export function AdminHome() {
         </section>
       )}
 
+      {/* 園長也會需要直接開點名與聯絡簿（代課、老師請假時），而底部只有四格放不下
+          —— 所以入口放在這裡（Human Owner 2026-08-20 回報：園長身分找不到聯絡簿）。 */}
+      <section>
+        <SectionHead title="每天的事" description="老師請假或代課時你也用得到" weight="review" />
+        <div className="flex flex-col gap-2">
+          <Tile icon="check" title="點名" detail="選一個班，補今天的出缺勤" href="/liff/attendance" />
+          <Tile
+            icon="book"
+            title="聯絡簿"
+            detail="選一個班，填今天的聯絡簿"
+            tone="wait"
+            href="/liff/communication-book"
+          />
+        </div>
+      </section>
+
       {perClass.length > 0 && (
         <section>
           <SectionHead title="各班今天" description="點進去看那一班的點名" weight="review" />

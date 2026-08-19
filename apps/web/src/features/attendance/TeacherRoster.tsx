@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSelectedClass } from '../classes/hooks';
-import { useMyStudents } from '../../lib/queries';
+import { useVisibleStudents } from '../students/useSelectedStudent';
 import { useBulkMarkAttendance, useClassAttendance, useMarkAttendance } from './hooks';
 import { ATTENDANCE_STATUS_LABEL, ATTENDANCE_STATUS_TONE } from './labels';
 import { apiErrorMessage } from '../../lib/api';
@@ -51,7 +51,7 @@ export function TeacherRoster() {
   const [classSheet, setClassSheet] = useState(false);
 
   const dateIso = new Date(`${date}T00:00:00.000Z`).toISOString();
-  const { data: students } = useMyStudents();
+  const { data: students } = useVisibleStudents();
   const { data: existing, isLoading, isError, error, refetch } = useClassAttendance(classId, dateIso);
   const { mark, update } = useMarkAttendance(classId, dateIso);
   const bulk = useBulkMarkAttendance(classId, dateIso);

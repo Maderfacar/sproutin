@@ -36,8 +36,27 @@ export class ClassesService {
     private readonly audit: AuditService,
   ) {}
 
-  async listForUser(userId: string, roles: AuthUser['roles']): Promise<ClassView[]> {
+  // scope='TEACHING' ＝「**只要我實際帶的班**」，不取角色聯集（Human Owner 2026-08-20 回報）。
+  // 前端一次只用一種身分之後，園長兼導師的人切到導師身分仍拿到全校班級，
+  // 於是點名頁與聯絡簿頁的班級選擇器列出別人的班。
+  // 這是資料範圍的問題不是版面問題 —— **一定要在後端切開**，前端過濾等於名單仍然送到瀏覽器。
+  // 同理它也**不放寬**任何權限：沒有帶班就回空陣列，就算他是園長。
+  async listForUser(
+    userId: string,
+    roles: AuthUser['roles'],
+    scope?: 'TEACHING',
+  ): Promise<ClassView[]> {
     const roleNames = new Set(roles.map((r) => r.role));
+
+    if (scope === 'TEACHING') {
+      const assignments = await this.prisma.teacherAssignment.findMany({
+        where: { userId },
+        select: { class: { select: CLASS_SELECT } },
+      });
+      const byId = new Map<string, ClassView>();
+      for (const a of assignments) byId.set(a.class.id, toView(a.class));
+      return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     if (roleNames.has('OWNER') || roleNames.has('ADMIN')) {
       const rows = await this.prisma.class.findMany({ select: CLASS_SELECT, orderBy: { name: 'asc' } });

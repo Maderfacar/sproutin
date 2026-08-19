@@ -2,30 +2,43 @@
 
 import { useEffect, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { useMyStudents, useMyGuardianStudents } from '../../lib/queries';
+import { useMyStudents, useMyGuardianStudents, useMyTeachingStudents } from '../../lib/queries';
 import { useActivePersona } from '../../lib/usePersona';
 import type { StudentView } from '../../lib/auth';
 
-// 現在這個身分「看得到哪些學生」。
+// 現在這個身分「看得到哪些學生」。**全站只有這一個地方決定學生的資料範圍。**
 //
-// **名單依身分而不同**（Human Owner 2026-08-20 回報）：
-// 家長身分只給「我監護的小孩」，其餘身分給角色聯集（老師自班 / 園長全校）。
+// 這是踩過兩次同一個坑之後的結論（Human Owner 2026-08-20）：
+//   ① 園長兼家長切到家長身分 → 「選擇孩子」列出全校 125 位
+//   ② 只帶一班的導師（同時也是園長）→ 點名與聯絡簿看得到別班的孩子
 //
-// 原本一律用聯集版，於是園長兼家長的人切到家長身分之後，「選擇孩子」列出全校 125 位，
-// 首頁還把排序第一個陌生小孩當成他的孩子 —— 那不是版面問題，是**資料範圍**問題。
-// 所以縮小是在後端做的（`GET /me/students?relation=GUARDIAN`）；
-// 只在前端過濾等於整份名單仍然送到了瀏覽器。
+// 兩次的根因一樣：`GET /me/students` 回的是**角色聯集**，而畫面已經切成一次只用一種身分。
+// UI 切開了但資料沒切開，比不切更危險 —— 使用者以為自己在一個受限的世界裡。
 //
-// 授權沒有被放寬：這條路只縮小不放大，沒有監護關係就是空的，就算他是園長。
+//   家長 → 只有我監護的小孩（relation=GUARDIAN）
+//   導師 → 只有我實際帶的班上的孩子（relation=TEACHING）
+//   園長／行政 → 角色聯集（本來就該看全校）
+//   隨車老師 → 角色聯集（他的範圍由路線決定，不是班級）
 //
-// 兩個 hook 都無條件呼叫（Rules of Hooks），用 enabled 決定誰真的去抓 ——
-// 否則家長身分還是會在背景把全校名單抓下來。
+// 縮小一律在**後端**做：只在前端過濾等於整份名單仍然送到了瀏覽器。
+// 而且只縮小不放大 —— 沒有那層關係就是空的，就算他是園長。
+//
+// **新頁面請一律用這個 hook，不要直接呼叫 useMyStudents()**，
+// 否則就會再犯一次同樣的錯。
 export function useVisibleStudents(): UseQueryResult<StudentView[]> {
   const { persona } = useActivePersona();
-  const isParentView = persona === 'parent';
-  const union = useMyStudents(!isParentView);
-  const mine = useMyGuardianStudents(isParentView);
-  return isParentView ? mine : union;
+  const isParent = persona === 'parent';
+  const isTeacher = persona === 'teacher';
+
+  // 三個 hook 都要無條件呼叫（Rules of Hooks），用 enabled 決定誰真的去抓 ——
+  // 否則家長身分還是會在背景把全校名單抓下來。
+  const union = useMyStudents(!isParent && !isTeacher);
+  const mine = useMyGuardianStudents(isParent);
+  const teaching = useMyTeachingStudents(isTeacher);
+
+  if (isParent) return mine;
+  if (isTeacher) return teaching;
+  return union;
 }
 
 interface SelectedStudent {
@@ -36,7 +49,7 @@ interface SelectedStudent {
   isError: boolean;
 }
 
-// 共用：載入可查看的學生 + 預設選第一位（見上面 useVisibleStudents 的範圍說明）。
+// 共用：載入可查看的學生 + 預設選第一位（範圍見上面 useVisibleStudents）。
 export function useSelectedStudent(): SelectedStudent {
   const { data: students, isLoading, isError } = useVisibleStudents();
   const [studentId, setStudentId] = useState<string | undefined>(undefined);

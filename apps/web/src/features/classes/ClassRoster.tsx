@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSelectedClass } from './hooks';
-import { useMyStudents } from '../../lib/queries';
+import { useVisibleStudents } from '../students/useSelectedStudent';
 import { useClassAttendance } from '../attendance/hooks';
 import { useClassBook, hasContent } from '../communication-book/hooks';
 import { ATTENDANCE_STATUS_LABEL, ATTENDANCE_STATUS_TONE } from '../attendance/labels';
@@ -19,7 +19,7 @@ export function ClassRoster() {
   const { classes, classId, setClassId, isLoading: classesLoading } = useSelectedClass();
   const todayIso = `${schoolToday()}T00:00:00.000Z`;
 
-  const { data: students, isLoading } = useMyStudents();
+  const { data: students, isLoading } = useVisibleStudents();
   const { data: attendance } = useClassAttendance(classId, todayIso);
   const { data: book } = useClassBook(classId, todayIso);
 

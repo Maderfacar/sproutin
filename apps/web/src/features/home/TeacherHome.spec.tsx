@@ -27,7 +27,9 @@ vi.mock('../../lib/session', () => ({
 }));
 vi.mock('../../lib/queries', () => ({
   usePublicConfig: () => ({ data: { featureFlags: state.flags, cardOrder: [] } }),
-  useMyStudents: () => ({ data: state.students }),
+}));
+vi.mock('../students/useSelectedStudent', () => ({
+  useVisibleStudents: () => ({ data: state.students }),
 }));
 vi.mock('../classes/hooks', () => ({
   useSelectedClass: () => ({

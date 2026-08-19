@@ -156,6 +156,8 @@ export function peopleErrorMessage(error: unknown, fallback: string): string {
       return '找不到這個學生。';
     case 'class_not_found':
       return '找不到這個班級。';
+    case 'user_disabled':
+      return '這個帳號已經停用了。要指派身分、班級或綁定小孩，請先把它重新啟用。';
     case 'user_not_found':
       return '找不到這個帳號。';
     case 'user_already_bound':

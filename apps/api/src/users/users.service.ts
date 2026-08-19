@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -190,6 +191,13 @@ export class UsersService {
 
     // 園長身分只有現任園長能給 —— 否則行政可以自行升級，權限矩陣形同虛設。
     this.assertMayChangeOwnerRole(actor, role);
+
+    // 停用的帳號不能再拿到新身分（Human Owner 2026-08-20 回報）。
+    // 幽靈權限比沒有權限更危險：他登不進來，但帳號一旦重新啟用就默默帶著這個身分回來。
+    // **移除**身分不受此限 —— 那正是清理停用帳號要做的事。
+    if (target.status !== 'ACTIVE') {
+      throw new ConflictException('user_disabled');
+    }
 
     if (target.roles.some((r) => r.role === role)) {
       throw new BadRequestException('role_already_granted');
