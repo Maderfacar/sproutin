@@ -99,12 +99,29 @@ export class StudentsService {
   // Step 4 讀取切片：後端依角色/scope 回「這個使用者能看到的學生」（docs/05 §2-3）。
   // 授權在後端（Rule 5/6）;前端只顯示回傳結果。多角色取聯集、去重。
   // classId 為選填篩選（階段2 刀2 管理介面用）——**篩選不放寬授權**，只在可見範圍內再縮小。
+  //
+  // relation='GUARDIAN' 表示「**只要我監護的小孩**」，不取聯集（Human Owner 2026-08-20 回報）：
+  // 前端改成一次只用一種身分之後，園長兼家長的人切到家長身分，這支端點仍回全校 125 位，
+  // 於是「選擇孩子」列出全校名單、首頁還把第一個陌生小孩當成他的孩子。
+  // 這是資料範圍的問題不是版面問題 —— **一定要在後端切開**，前端過濾等於名單仍然送到瀏覽器。
+  // 同理它也**不放寬**任何權限：沒有監護關係就回空陣列，就算他是園長。
   async listForUser(
     userId: string,
     roles: AuthUser['roles'],
     classId?: string,
+    relation?: 'GUARDIAN',
   ): Promise<StudentView[]> {
     const roleNames = new Set(roles.map((r) => r.role));
+
+    if (relation === 'GUARDIAN') {
+      const guardianships = await this.prisma.guardianship.findMany({
+        where: { userId },
+        select: { student: { select: STUDENT_VIEW } },
+      });
+      const mine = guardianships.map((g) => g.student);
+      const scoped = classId ? mine.filter((s) => s.classId === classId) : mine;
+      return scoped.sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     // OWNER / ADMIN：全校。
     if (roleNames.has('OWNER') || roleNames.has('ADMIN')) {

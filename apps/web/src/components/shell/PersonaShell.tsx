@@ -11,11 +11,12 @@ import { PageTransition } from '../PageTransition';
 import { PersonaSwitcher } from './PersonaSwitcher';
 import { PERSONA_TABS } from './tabs';
 
-// 三套殼。同一份元件、同一套 token、同一組 API，差別只有底部四格與頁首左邊那一塊。
+// 三套殼。同一份元件、同一套 token、同一組 API，差別只有底部四格。
 //
-// 家長的頁首放園所 logo 與名字 —— 他要的是「這是我孩子的學校」。
-// 校方的頁首放身分鈕 —— 他要的是「我現在以什麼身分在看」（只有多重身分的人有）。
-// 隨車老師沒有底部頁籤：一條路線點完就關掉，四個頁籤對他是負擔。
+// 頁首的形狀對每一種身分都一樣：**左邊園所識別、右邊身分鈕 + 通知鈴**。
+// 早先的版本讓左邊隨身分變形（校方是身分鈕、家長是 logo），結果切到家長之後
+// 那顆鈕就消失了 —— 等於把人關在家長身分裡出不來（Human Owner 2026-08-20 回報）。
+// 切換是雙向的，出口不能只有一半；固定位置也讓人知道去哪裡找它。
 
 // 只有家長首頁有封面圖（HomeHero）。其他頁一進來頁首就必須是實色，
 // 否則會出現「白字浮在米白底上」看不見的頁首。
@@ -24,18 +25,11 @@ const HERO_PATH = '/liff';
 // 捲多少才算「離開最頂端」。給一點餘裕，避免手指輕碰就閃色。
 const SCROLL_THRESHOLD_PX = 8;
 
-function todayLabel(): string {
-  const d = new Date();
-  const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-  return `${d.getMonth() + 1}/${d.getDate()} 週${week}`;
-}
-
 export function PersonaShell({ children }: { children: ReactNode }) {
   const branding = useBranding();
   const pathname = usePathname();
   const { persona } = useActivePersona();
   const tabs = PERSONA_TABS[persona];
-  const isStaffSide = persona !== 'parent';
 
   // 封面圖只在家長首頁 —— 校方的首頁是待辦清單，沒有圖可以疊。
   const hasHero = persona === 'parent' && pathname === HERO_PATH;
@@ -62,58 +56,46 @@ export function PersonaShell({ children }: { children: ReactNode }) {
           overlay ? 'border-transparent bg-transparent' : 'border-line bg-surface/85 backdrop-blur'
         }`}
       >
-        <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-4">
-          {isStaffSide ? (
-            <div className="flex min-w-0 items-center gap-3">
-              <PersonaSwitcher />
-              <span className="truncate font-serif text-lg font-semibold tracking-tight text-ink">
-                {branding.brandName}
-              </span>
-            </div>
-          ) : (
-            // min-w-0 + truncate：園名是園所自己填的，放大字級後長園名會把通知鈴擠出畫面。
-            <Link href="/liff" className="flex min-w-0 items-center gap-3">
-              {branding.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={branding.logoUrl}
-                  alt={branding.brandName}
-                  className={`h-10 w-10 rounded-full border object-contain transition-colors ${
-                    overlay ? 'border-white/60 bg-white/10' : 'border-brand-primary/40 bg-surface'
-                  }`}
-                />
-              ) : (
-                <span
-                  aria-hidden
-                  className="flex h-10 w-10 items-center justify-center rounded-full border-[1.5px] text-lg font-bold transition-colors"
-                  style={{
-                    borderColor: overlay ? 'rgba(255,255,255,0.7)' : 'var(--brand-primary)',
-                    color: overlay ? '#fff' : 'var(--brand-primary)',
-                  }}
-                >
-                  {branding.brandName.charAt(0)}
-                </span>
-              )}
-              <span
-                className={`truncate font-serif text-xl font-semibold tracking-tight transition-colors ${
-                  overlay ? 'text-white' : 'text-ink'
+        <div className="mx-auto flex max-w-2xl items-center gap-2 px-5 py-4">
+          {/* min-w-0 + truncate：園名是園所自己填的，放大字級後長園名會把右邊擠出畫面。 */}
+          <Link href="/liff" className="flex min-w-0 flex-1 items-center gap-3">
+            {branding.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={branding.logoUrl}
+                alt={branding.brandName}
+                className={`h-10 w-10 shrink-0 rounded-full border object-contain transition-colors ${
+                  overlay ? 'border-white/60 bg-white/10' : 'border-brand-primary/40 bg-surface'
                 }`}
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] text-lg font-bold transition-colors"
+                style={{
+                  borderColor: overlay ? 'rgba(255,255,255,0.7)' : 'var(--brand-primary)',
+                  color: overlay ? '#fff' : 'var(--brand-primary)',
+                }}
               >
-                {branding.brandName}
+                {branding.brandName.charAt(0)}
               </span>
-            </Link>
-          )}
+            )}
+            <span
+              className={`truncate font-serif text-xl font-semibold tracking-tight transition-colors ${
+                overlay ? 'text-white' : 'text-ink'
+              }`}
+            >
+              {branding.brandName}
+            </span>
+          </Link>
 
-          {isStaffSide && (
-            <span className="ml-auto shrink-0 text-2xs text-ink-soft">{todayLabel()}</span>
-          )}
+          {/* 多重身分的人在每一種身分下都看得到這顆鈕，位置固定不變。 */}
+          <PersonaSwitcher overlay={overlay} />
 
           <Link
             href="/liff/notification"
             aria-label="通知"
             className={`tappable flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
-              isStaffSide ? '' : 'ml-auto'
-            } ${
               overlay
                 ? 'border-white/50 text-white hover:border-white'
                 : 'border-line text-ink-soft hover:border-brand-primary hover:text-brand-primary'

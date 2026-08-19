@@ -6,6 +6,13 @@ interface HomeHeroProps {
   greeting: string;
   displayName: string;
   dateLabel: string;
+  /**
+   * 問候底下那一行。**多重身分的人一定要傳**（例：「王小明 的家長」）——
+   * 園長切到家長身分之後，hero 只寫他自己的名字，讀起來像還在跟園長打招呼
+   * （Human Owner 2026-08-20 回報）。寫出是「誰的家長」才看得出自己站在哪一邊。
+   * 沒傳就退回園所名稱。
+   */
+  context?: string;
 }
 
 // 首頁 hero：園所的門面只講一次、講得夠大（Human Owner 決策 2026-08-17）。
@@ -14,7 +21,7 @@ interface HomeHeroProps {
 //
 // 圖往上延伸到頁首後面（Human Owner 2026-08-18）：負的 margin 與補回來的高度都寫在
 // globals.css 的 .home-hero / .home-hero-media，靠 --shell-header-h 對齊 PersonaShell（唯一的量測值來源）。
-export function HomeHero({ greeting, displayName, dateLabel }: HomeHeroProps) {
+export function HomeHero({ greeting, displayName, dateLabel, context }: HomeHeroProps) {
   const branding = useBranding();
   const hasImage = Boolean(branding.bannerUrl);
 
@@ -58,7 +65,7 @@ export function HomeHero({ greeting, displayName, dateLabel }: HomeHeroProps) {
           <h1 className="mt-1.5 font-serif text-3xl font-semibold leading-tight tracking-tight text-white">
             {greeting}，{displayName}
           </h1>
-          <p className="mt-1 text-sm text-white/80">{branding.brandName}</p>
+          <p className="mt-1 text-sm text-white/80">{context ?? branding.brandName}</p>
         </div>
       </div>
     </section>

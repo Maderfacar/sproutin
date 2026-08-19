@@ -95,6 +95,37 @@ describe('PersonaShell 的三套殼', () => {
     expect(tabLabels()).toEqual(['今天', '聯絡簿', '請假', '我的']);
   });
 
+  // 早先的版本只在校方那一側畫切換鈕，於是切到家長之後就找不到路回去
+  // —— 等於把人關在家長身分裡出不來（Human Owner 2026-08-20 回報）。
+  it('切到家長身分之後那顆鈕還在，而且切得回去', () => {
+    session.roles = r('OWNER', 'TEACHER', 'PARENT');
+    render(<PersonaShell>內容</PersonaShell>);
+
+    fireEvent.click(screen.getByRole('button', { name: /園長/ }));
+    fireEvent.click(screen.getByRole('button', { name: /以家長身分/ }));
+    expect(tabLabels()).toEqual(['今天', '聯絡簿', '請假', '我的']);
+
+    // 出口必須還在
+    const back = screen.getByRole('button', { name: /目前以家長身分/ });
+    expect(back).toBeTruthy();
+
+    fireEvent.click(back);
+    fireEvent.click(screen.getByRole('button', { name: /以園長身分/ }));
+    expect(tabLabels()).toEqual(['總覽', '名單', '訊息', '我的']);
+  });
+
+  it('四種身分都齊的人，四個選項都切得到', () => {
+    session.roles = r('OWNER', 'ADMIN', 'TEACHER', 'PARENT');
+    render(<PersonaShell>內容</PersonaShell>);
+
+    fireEvent.click(screen.getByRole('button', { name: /目前以園長身分/ }));
+    // 面板裡的選項以「以…身分」開頭；頁首那顆鈕是「目前以…身分」，用開頭錨點分得開。
+    // 園長與行政是同一種「看事情的形狀」，所以是三個選項不是四個。
+    expect(screen.getByRole('button', { name: /^以園長身分/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^以老師身分/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^以家長身分/ })).toBeTruthy();
+  });
+
   // 記住的身分必須對照現有角色重驗，否則角色被拔掉後會卡在點什麼都 403 的殼裡。
   it('記著的身分已經失去角色 → 退回這個人還有的身分', () => {
     window.localStorage.setItem('sproutin.persona', 'staff');

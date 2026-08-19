@@ -142,6 +142,72 @@ describe('StudentsService.listForUser', () => {
 
     expect(list).toEqual([]); // 別班 → 篩掉，不會回傳他人小孩
   });
+
+  // relation='GUARDIAN'（Human Owner 2026-08-20 回報）：前端一次只用一種身分之後，
+  // 園長兼家長的人切到家長身分仍拿到全校名單 —— 「選擇孩子」列出全校 125 位。
+  // 這一條的重點是：**它只縮小，永遠不放大。**
+  describe("relation='GUARDIAN'（家長身分專用）", () => {
+    it('園長兼家長：只回他監護的小孩，不回全校', async () => {
+      const prisma = emptyPrisma();
+      prisma.guardianship.findMany.mockResolvedValue([
+        { student: { id: 'stu-sun-1', name: '范小星', classId: 'class-sun' } },
+      ]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser(
+        'u-owner-parent',
+        [role('OWNER'), role('PARENT')],
+        undefined,
+        'GUARDIAN',
+      );
+
+      expect(list.map((s) => s.id)).toEqual(['stu-sun-1']);
+      // 全校那條路完全沒有被走到 —— 名單根本沒有離開資料庫。
+      expect(prisma.student.findMany).not.toHaveBeenCalled();
+    });
+
+    it('導師兼家長：不會混進自己班上的其他學生', async () => {
+      const prisma = emptyPrisma();
+      prisma.guardianship.findMany.mockResolvedValue([
+        { student: { id: 'stu-tul-1', name: '范小鬱', classId: 'class-tulip' } },
+      ]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser(
+        'u-teacher-parent',
+        [role('TEACHER', 'class-sun'), role('PARENT')],
+        undefined,
+        'GUARDIAN',
+      );
+
+      expect(list.map((s) => s.id)).toEqual(['stu-tul-1']);
+      expect(prisma.teacherAssignment.findMany).not.toHaveBeenCalled();
+    });
+
+    it('沒有監護關係的園長：回空清單，不因為他是園長就放行', async () => {
+      const prisma = emptyPrisma();
+      prisma.guardianship.findMany.mockResolvedValue([]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser('u-owner', [role('OWNER')], undefined, 'GUARDIAN');
+
+      expect(list).toEqual([]);
+      expect(prisma.student.findMany).not.toHaveBeenCalled();
+    });
+
+    it('多個小孩依姓名排序，跨班也一起回', async () => {
+      const prisma = emptyPrisma();
+      prisma.guardianship.findMany.mockResolvedValue([
+        { student: { id: 'b', name: '范小鬱', classId: 'class-tulip' } },
+        { student: { id: 'a', name: '范小星', classId: 'class-sun' } },
+      ]);
+      const service = makeService(prisma);
+
+      const list = await service.listForUser('u-parent', [role('PARENT')], undefined, 'GUARDIAN');
+
+      expect(list.map((s) => s.name)).toEqual(['范小星', '范小鬱']);
+    });
+  });
 });
 
 const owner: StudentActor = { id: 'u-owner', roles: [role('OWNER')] };

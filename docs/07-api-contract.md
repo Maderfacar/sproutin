@@ -36,6 +36,7 @@ POST /auth/line/login
 | **DELETE** | **`/users/:id/roles/:role`** | 移除身分 + 附帶關聯 | OWNER/ADMIN | ✔ |
 | GET | `/me` | 目前使用者 + 角色 | auth | – |
 | GET | `/me/dashboard` | 動態 card 清單（後端過濾） | auth | – |
+| **GET** | **`/me/students[?relation=GUARDIAN]`** | 我看得到的學生（角色聯集）；`relation=GUARDIAN` **只回我監護的小孩、不取聯集**（家長身分專用，只縮小不放寬） | auth | – |
 | GET | `/students?classId=` | 學生清單（scope 過濾；classId 只縮小不放寬） | Roles | – |
 | GET | `/students/:id` | 學生詳情 | Roles+Scope | ✔(讀敏感) |
 | **GET** | **`/students/:id/detail`** | 學生整合視圖（+ 班名 + 監護人清單） | Roles+Scope | ✔(讀敏感) |

@@ -101,7 +101,13 @@ export function ParentHome() {
 
   return (
     <div className="flex flex-col gap-7">
-      <HomeHero greeting={greeting()} displayName={user.displayName} dateLabel={todayLabel()} />
+      <HomeHero
+        greeting={greeting()}
+        displayName={user.displayName}
+        dateLabel={todayLabel()}
+        // 兼校方身分的人切過來時，這一行是他唯一看得出「我現在是誰的家長」的地方。
+        context={student ? `${student.name} 的家長` : undefined}
+      />
 
       {/* 兩個以上的孩子才需要選。原生下拉已退役 —— 名字直接攤開，一眼看得到有誰。 */}
       {students && students.length > 1 && (
