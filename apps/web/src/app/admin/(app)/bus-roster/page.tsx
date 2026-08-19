@@ -1,8 +1,8 @@
 'use client';
 
-import { BusView } from '../../../../features/bus/BusView';
+import { BusBoardingPanel } from '../../../../features/bus/BusBoardingPanel';
 
-// 桌面版娃娃車點名。與手機版 /liff/bus 共用 BusView（docs/04 §3b）。
+// 桌面版娃娃車點名。與手機版 /liff/bus 共用 BusBoardingPanel（docs/04 §3b）。
 //
 // 網址刻意不放在 /admin/bus 之下：那是「設定」，這是「今天車上發生的事」，
 // 兩者放在一起會讓左側導覽同時亮兩條。
@@ -18,7 +18,7 @@ export default function AdminBusRosterPage() {
           請假的孩子會自動從名單移出，並另外標示人數。
         </p>
       </header>
-      <BusView />
+      <BusBoardingPanel />
     </div>
   );
 }
