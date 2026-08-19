@@ -2,7 +2,7 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**修好「LINE 圖文選單點進去永遠停在載入中」** —— 8/17 那次修正留下的兩個坑：
+> Last updated: 2026-08-19（**「LINE 圖文選單點進去永遠停在載入中」修好並 ✅ ACCEPTED**（Human Owner「驗收過」）—— 8/17 那次修正留下的兩個坑：
 > 「轉址中」的旗標只設不清、轉址時把 LINE 登入導回的 code/state 一起丟掉。
 > 兩者都只在圖文選單那條路上才踩得到，直接開網址驗不出來。無 migration、無新端點。測試 585 → **590**。
 >
@@ -278,7 +278,7 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
 測試  web 196 → 207（錯誤頁 5、找不到頁面 2、請假樂觀更新 4）。
 ```
 
-**LINE 圖文選單點進去永遠停在載入中 — FIXED（2026-08-19）。**
+**LINE 圖文選單點進去永遠停在載入中 — ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」，圖文選單線上實測每一格都開得到）。**
 四項全綠：lint / typecheck / **測試 590（api 366 + shared 12 + web 212）** / build。
 **無 migration、無新後端端點**（純前端，改 `/liff` 外框處理 `liff.state` 的那一段）。
 
