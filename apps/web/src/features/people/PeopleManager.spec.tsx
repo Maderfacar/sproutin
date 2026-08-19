@@ -73,7 +73,7 @@ describe('人員管理的編輯面板', () => {
   it('點編輯會打開那個人的面板', () => {
     render(<PeopleManager />);
     fireEvent.click(screen.getByRole('button', { name: '編輯 林老師' }));
-    expect(screen.getByText('編輯：林老師')).toBeTruthy();
+    expect(screen.getByText('編輯 林老師')).toBeTruthy();
     expect(nameField().value).toBe('林老師');
   });
 
@@ -85,7 +85,7 @@ describe('人員管理的編輯面板', () => {
     expect(nameField().value).toBe('林老師');
 
     fireEvent.click(screen.getByRole('button', { name: '編輯 張老師' }));
-    expect(screen.getByText('編輯：張老師')).toBeTruthy();
+    expect(screen.getByText('編輯 張老師')).toBeTruthy();
     expect(nameField().value).toBe('張老師');
   });
 
@@ -103,6 +103,6 @@ describe('人員管理的編輯面板', () => {
     render(<PeopleManager />);
     fireEvent.click(screen.getByRole('button', { name: '編輯 林老師' }));
     fireEvent.click(screen.getByRole('button', { name: '編輯 林老師' }));
-    expect(screen.queryByText('編輯：林老師')).toBeNull();
+    expect(screen.queryByText('編輯 林老師')).toBeNull();
   });
 });

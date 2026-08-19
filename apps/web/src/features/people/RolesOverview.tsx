@@ -11,8 +11,7 @@ import { usePeople } from './hooks';
 import { PersonEditor } from './PersonEditor';
 import { useMyClasses } from '../classes/hooks';
 import { useAdminStudents } from '../students/adminHooks';
-import { EmptyState, ErrorNotice, SkeletonRows } from '../../components/ui';
-import { Band } from '../../components/Band';
+import { Badge, EmptyState, ErrorNotice, SectionHead, SkeletonRows } from '../../components/ui';
 
 const COLUMNS: UserRoleName[] = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'];
 
@@ -47,12 +46,13 @@ export function RolesOverview() {
   const inactive = people.filter((p) => p.status !== 'ACTIVE');
 
   return (
-    <div>
-      <Band
-        kind="review"
-        title="誰有什麼身分"
-        description="一列一個人，圓點就是他有的身分。橫向可以捲，右邊的「調整」可以改"
-      >
+    <div className="flex flex-col gap-7">
+      <section>
+        <SectionHead
+          title="誰有什麼身分"
+          description="一列一個人，圓點就是他有的身分。橫向可以捲，右邊的「調整」可以改"
+          weight="review"
+        />
         {people.length === 0 ? (
           <EmptyState title="還沒有任何人員帳號" hint="先到「人員與綁定」建立帳號" />
         ) : (
@@ -77,9 +77,15 @@ export function RolesOverview() {
                   <tr key={person.id} className="border-b border-line">
                     <td className={`py-2.5 pr-3 ${isActive ? 'text-ink' : 'text-ink-soft'}`}>
                       {person.displayName}
-                      {!isActive && <span className="ml-2 text-xs">已停用</span>}
+                      {!isActive && (
+                        <span className="ml-2">
+                          <Badge tone="neutral">已停用</Badge>
+                        </span>
+                      )}
                       {!person.hasLineLinked && isActive && (
-                        <span className="ml-2 text-xs text-ink-soft">未綁定</span>
+                        <span className="ml-2">
+                          <Badge tone="wait">未綁定</Badge>
+                        </span>
                       )}
                     </td>
                     {COLUMNS.map((role) => (
@@ -87,8 +93,7 @@ export function RolesOverview() {
                         {held.has(role) ? (
                           <span
                             aria-label={`有${ROLE_LABEL[role] ?? role}身分`}
-                            className="inline-block h-2 w-2 rounded-full"
-                            style={{ background: 'var(--brand-primary)' }}
+                            className="inline-block h-2.5 w-2.5 rounded-full bg-brand-primary"
                           />
                         ) : (
                           <span className="text-ink-soft/40" aria-hidden>
@@ -114,10 +119,10 @@ export function RolesOverview() {
           </table>
         </div>
         )}
-      </Band>
+      </section>
 
       {editing && (
-        <div className="mb-7">
+        <div>
           {/* key 帶 person.id：沒關掉面板就改點另一個人時，姓名欄等本地狀態會留在前一位
               （與 PeopleManager 同一個坑，Human Owner 2026-08-20 回報）。 */}
           <PersonEditor
