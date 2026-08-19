@@ -106,13 +106,17 @@ export function SessionProvider({
   }
 
   if (state.status !== 'authed' || !state.user) {
+    // 'authed'（缺 user）與 'needs-binding'（缺 idToken）都是不該發生的中間態，
+    // 一律退回 loading 而不是讓畫面崩掉。
+    const status =
+      state.status === 'authed' || state.status === 'needs-binding' ? 'loading' : state.status;
     return (
       <StatusScreen
         fullScreen
-        // 'authed'（缺 user）與 'needs-binding'（缺 idToken）都是不該發生的中間態，
-        // 一律退回 loading 而不是讓畫面崩掉。
-        status={state.status === 'authed' || state.status === 'needs-binding' ? 'loading' : state.status}
-        message={state.message}
+        status={status}
+        // 每一段等待講清楚自己在等什麼。手機端只能靠 Human Owner 回報畫面上的字，
+        // 三個階段都寫「載入中…」的話，卡住時根本分不出是卡在哪一段。
+        message={state.message ?? (status === 'loading' ? '確認登入狀態…' : undefined)}
         sub={state.sub}
       />
     );

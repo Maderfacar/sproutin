@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePublicConfig } from '../../lib/queries';
 import { BrandingProvider } from '../../lib/branding';
 import { SessionProvider } from '../../lib/session';
-import { resolveLiffStatePath } from '../../lib/liffState';
+import { liffRedirectFor } from '../../lib/liffState';
 import { AppShell } from '../../components/AppShell';
 import { StatusScreen } from '../../components/StatusScreen';
 import { DocumentTitle } from '../../components/DocumentTitle';
@@ -21,16 +21,19 @@ export default function LiffLayout({ children }: { children: ReactNode }) {
 
   // 從 LINE 圖文選單點進來時，目的頁放在 liff.state。已登入者不會跑 liff.init()，
   // 沒人處理這個參數 → 每一格都只會停在首頁。這裡自己接手（見 lib/liffState）。
+  //
+  // **到站之後一定要把旗標關掉**：這個 layout 不會因為換頁而重掛，只設不清的話
+  // 從圖文選單點進來會永遠停在轉圈圈（2026-08-19 Human Owner 回報：LINE 裡打不開）。
   useEffect(() => {
-    const target = resolveLiffStatePath(window.location.search);
-    if (target && target !== pathname) {
-      setRedirecting(true);
-      router.replace(target);
+    const href = liffRedirectFor(window.location.search, pathname);
+    setRedirecting(href !== null);
+    if (href) {
+      router.replace(href);
     }
   }, [router, pathname]);
 
   if (redirecting) {
-    return <StatusScreen fullScreen status="loading" />;
+    return <StatusScreen fullScreen status="loading" message="前往指定頁面…" />;
   }
   if (isLoading) {
     return <StatusScreen fullScreen status="loading" message="載入園所設定中…" />;

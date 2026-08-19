@@ -38,3 +38,40 @@ export function resolveLiffStatePath(search: string): string | null {
   }
   return `${LIFF_BASE}${path}`;
 }
+
+// 依目前網址決定要不要轉址；null = 不用轉（沒指定目的頁，或已經到站了）。
+//
+// 這一層存在的兩個理由（都是實際踩過的坑）：
+//
+// 1) 「轉址中」的旗標要有人關掉。/liff 的 layout 不會因為換頁而重掛，
+//    設了旗標卻沒有人清 → 從圖文選單點進來就永遠停在轉圈圈的畫面。
+//    改成每次都回一個明確的答案（要轉／不用轉），呼叫端照著設就不會卡住。
+//
+// 2) 網址上其餘的 query 要一起帶過去。LINE 登入導回時會帶 code / state，
+//    那是 liff.init() 完成登入要用的；我們順手把它丟掉 → 登入永遠換不到 session
+//    → 一直重新登入，畫面同樣停在載入中。
+export function liffRedirectFor(search: string, pathname: string): string | null {
+  const target = resolveLiffStatePath(search);
+  if (!target) {
+    return null;
+  }
+  const [path, targetSearch = ''] = target.split('?');
+  if (path === pathname) {
+    return null; // 已經在目的頁，再轉一次只會多閃一下
+  }
+  return `${path}${mergeSearch(search, targetSearch)}`;
+}
+
+// liff.state 自己帶的 query 優先；其餘沿用原網址的（liff.state 本身不留）。
+function mergeSearch(original: string, targetSearch: string): string {
+  const params = new URLSearchParams(targetSearch);
+  const rest = new URLSearchParams(original);
+  rest.delete('liff.state');
+  rest.forEach((value, key) => {
+    if (!params.has(key)) {
+      params.append(key, value);
+    }
+  });
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}

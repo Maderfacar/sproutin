@@ -2,7 +2,11 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**打磨收尾：自己的錯誤頁 + 三頁分頁標題 + 請假樂觀更新 ✅ ACCEPTED**（Human Owner「驗收過」）——
+> Last updated: 2026-08-19（**修好「LINE 圖文選單點進去永遠停在載入中」** —— 8/17 那次修正留下的兩個坑：
+> 「轉址中」的旗標只設不清、轉址時把 LINE 登入導回的 code/state 一起丟掉。
+> 兩者都只在圖文選單那條路上才踩得到，直接開網址驗不出來。無 migration、無新端點。測試 585 → **590**。
+>
+> （前次）2026-08-19（**打磨收尾：自己的錯誤頁 + 三頁分頁標題 + 請假樂觀更新 ✅ ACCEPTED**（Human Owner「驗收過」）——
 > 打磨第一批留下的兩條尾巴補完，B1 當初刻意沒做的請假樂觀更新補上。
 > 無 migration、無新端點。測試 574 → **585**。
 > **LINE 綁定碼線上驗收 ✅ ACCEPTED（Human Owner「驗收過」）；綁定碼 QR 定案不做並取消。**
@@ -273,6 +277,35 @@ Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起�
      送不出去就把清單復原，不留下一列不存在的假資料。
 測試  web 196 → 207（錯誤頁 5、找不到頁面 2、請假樂觀更新 4）。
 ```
+
+**LINE 圖文選單點進去永遠停在載入中 — FIXED（2026-08-19）。**
+四項全綠：lint / typecheck / **測試 590（api 366 + shared 12 + web 212）** / build。
+**無 migration、無新後端端點**（純前端，改 `/liff` 外框處理 `liff.state` 的那一段）。
+
+Human Owner 回報：「現在用瀏覽器開得起來，但透過 OA 帳號的圖文選單會開不起來，一直顯示載入中」。
+
+病灶在 2026-08-17 那次「圖文選單點進來會到指定頁面」的修正裡（commit 5534051），
+**兩個都只在圖文選單那條路上才會踩到**，所以直接開網址驗不出來：
+
+```text
+① 「轉址中」的旗標設了沒人關。/liff 的 layout 不會因為換頁而重掛 ——
+   setRedirecting(true) 之後 router.replace 過去，pathname 變了、旗標還是 true
+   → 永遠停在轉圈圈的畫面。直接開 /liff/leave 沒有 liff.state，旗標從頭到尾是 false，
+   所以瀏覽器一切正常，只有從選單點進來才卡死。
+② 轉址時把網址上其餘的 query 一起丟掉了。LINE 登入導回時網址是
+   /liff?code=…&state=…&liff.state=/leave，code/state 是 liff.init() 完成登入要用的；
+   被丟掉就換不到 session → 再登入一次 → 又被丟掉，無限迴圈（畫面同樣停在載入中）。
+```
+
+作法：把「要不要轉址」抽成 `liffRedirectFor(search, pathname)` 一支純函式（可測），
+**每次都回一個明確的答案**（要轉／不用轉），呼叫端照著設旗標就不可能只設不清；
+轉址時保留 liff.state 以外的 query。
+
+順帶：三段等待的畫面本來都寫「載入中…」，手機端只能靠 Human Owner 回報畫面上的字，
+卡住時分不出是哪一段。改成「前往指定頁面…」→「載入園所設定中…」→「確認登入狀態…」。
+
+測試 web 207 → 212（`liffRedirectFor` 五條：轉過去、已到站回 null、保留 code/state、
+liff.state 自帶 query、站外轉址不轉）。
 
 **LINE 綁定碼 — ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」）。** 從 2026-08-17 掛到現在的線上驗收完成。
 **綁定碼 QR — Human Owner 定案「不做並取消」（2026-08-19）**，不再列為待辦（原本要新套件，§D 提案也一併取消）。
