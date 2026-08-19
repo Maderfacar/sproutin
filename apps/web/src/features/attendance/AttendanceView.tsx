@@ -48,7 +48,7 @@ export function AttendanceView() {
         <Band kind="review" title={reviewTitle} description={reviewDescription}>
           <div className="flex flex-col gap-3">
             {isLoading && <SkeletonLines lines={1} />}
-            {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
+            {isError && <p className="text-sm text-stop-text">無法載入學生清單。</p>}
             {students && students.length === 0 && (
               <p className="text-sm text-ink-soft">目前沒有可查看的學生。</p>
             )}

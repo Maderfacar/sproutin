@@ -374,15 +374,15 @@ return persona === 'parent' ? <ParentLeave /> : <LeaveView />;
 /liff/communication-book  家長＝我小孩那一本      導師＝今天整班要填的    行政＝共用 CommunicationBookView
 /liff/announcement        家長＝只讀列表          校方＝多一塊發布面板
 /liff/class               導師專屬：班級名單 + 每人今天的狀態
+/liff（園長）             全園今天的數字 + 需要你處理的 + 各班一覽 + 管理入口
 ```
 
 **校方那一半在第三、四批才改版**，現在仍指向原本的共用元件（`LeaveView`／
 `AttendanceView`／`CommunicationBookView`，與桌面 `/admin/*` 同一份）——
 所以 §3b 的功能對等原則沒有被破壞，桌面版一行都沒動。
 
-`features/home/StaffHome.tsx` 是導師與行政首頁的**過渡版**（依身分列入口的磚塊）。
-真正的待辦清單（「今天還有 3 人沒點名」）需要新的後端查詢，排在第三、四批；
-那時 StaffHome 會被 TeacherHome / AdminHome 取代並刪除。
+四種身分各有自己的首頁元件：`ParentHome`（今天的答案）、`TeacherHome`（今天還有幾件事）、
+`AdminHome`（全園今天）、`BusHome`（只有一格）。過渡用的 `StaffHome` 已刪除。
 
 ### 家長 6 頁的具體決定（第二批）
 
@@ -452,6 +452,53 @@ return persona === 'parent' ? <ParentLeave /> : <LeaveView />;
 >
 > 未來若班級規模變大（單班 40 人以上），值得補一個後端批次端點；
 > 現在刻意維持純前端，不為了省幾個請求就動後端。
+
+### 園長首頁與全站色彩收斂（第四批之一）
+
+`features/home/AdminHome.tsx`。版面順序刻意是：一句話 → 三個數字 → 需要我處理的
+→ 各班今天 → 管理。**管理放最後** —— 園所設定是設好就不太動的東西，
+天天擺在最上面只是佔位置。
+
+`features/home/useSchoolToday.ts` 算出全園今天的數字。**沒有新增後端端點**：
+後端的出缺勤查詢一次只收一個班，所以對每個班各發一次、在前端加總；
+查詢 key 與 `useClassAttendance` 完全一致，所以老師剛點完的資料園長立刻看得到，
+不會出現兩邊數字對不上。
+
+> 一間幼兒園通常 3–8 個班，這個數量的並行查詢比為了省幾個請求就動後端划算得多。
+> 班級數變多（20 班以上）時值得補 `GET /attendance?date=` 的全校版；
+> 那時只要改這個 hook，首頁一行都不用動 —— 這正是把它抽出來的理由。
+
+`features/home/BusHome.tsx`：隨車老師的首頁**只有一格**。他的一天就是
+「這條路線今天的上下車」，做完就關掉 App。
+
+#### `Band` 變成薄殼（一改，十五個呼叫端一起生效）
+
+`components/Band` 內部改成 `section + SectionHead`，**分類籤與身分籤直接消失**，
+呼叫端一行都不用改。線的粗細（要動手 vs 只是看）是它唯一有效、因此保留下來的東西。
+
+同樣一改全站生效的還有 `ATTENDANCE_STATUS_LABEL` 與 `LEAVE_STATUS_LABEL` 的
+`className`：從 Tailwind 預設色（`bg-green-100 text-green-800`）換成狀態色三件組。
+全站已無 `text-red-600` / `bg-amber-*` / `bg-green-100` / `bg-orange-*`。
+
+> 這是刻意的順序：**先改「所有頁面共用的那一個地方」，再逐頁重做。**
+> 反過來的話，每一頁都要各自處理一次同樣的顏色與斷句。
+
+#### 第四批還沒做完的（下一個視窗）
+
+```text
+學生 / 班級 / 人員與綁定 / 權限     StudentsManager、ClassesManager、
+                                    PeopleManager+PersonEditor+BindingSection+RolesSection、
+                                    RolesOverview
+發送訊息                            MessageComposer、PushCampaignPanel、CardPreview、CampaignHistory
+園所外觀                            AppearanceEditor、BrandSection、CardsSection、RichMenuSection
+娃娃車設定                          BusSettingsPanel、RouteEditor、StudentBusSection
+稽核 / 全校請假 / 公告發布 / 學生詳細  AuditPanel、SchoolLeaveOverviewPanel、
+                                    TeacherAnnouncePanel、StudentDetail
+```
+
+這些頁面的**功能對等已經完成**（§3b），色彩與斷句也已隨上面兩個共用點一起換掉；
+還沒做的是版面本身：原生 `<select>`、空狀態文案、觸控目標、
+以及把 `btn-primary` / `.card` 換成 `components/ui` 的元件。
 
 ### 手感規範（每一頁交付前都要對一次）
 

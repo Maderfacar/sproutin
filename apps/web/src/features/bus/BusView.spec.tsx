@@ -52,12 +52,11 @@ describe('娃娃車頁的斷句', () => {
     expect(headings(container)).toEqual(['今天的點名', '查看單一學生', '娃娃車設定']);
   });
 
-  it('兼家長的隨車老師：點名標「以老師身分」，查看那段不貼籤', () => {
+  it('兼家長的隨車老師不再看到身分籤，清單混著誰仍用文案講明', () => {
     state.roles = [{ role: 'BUS_TEACHER' }, { role: 'PARENT' }];
     render(<BusView />);
-    expect(screen.getAllByText(/以.*身分/)).toHaveLength(1);
-    expect(screen.getByText('以老師身分')).toBeTruthy();
-    // 清單裡自己的小孩與車上的孩子混在一起，session 沒帶監護關係 —— 貼了就有貼錯的一半。
+    expect(screen.queryByText(/以.*身分/)).toBeNull();
+    // 清單裡自己的小孩與車上的孩子混在一起，session 沒帶監護關係 —— 只能用文案講。
     expect(screen.getByText('你車上的孩子和你自己的小孩都在這個清單裡')).toBeTruthy();
   });
 

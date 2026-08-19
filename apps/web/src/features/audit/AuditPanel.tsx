@@ -135,7 +135,7 @@ export function AuditPanel() {
       >
         <div className="flex flex-col gap-4">
           {isLoading && <SkeletonRows rows={5} />}
-          {isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
+          {isError && <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>}
           {data && data.data.length === 0 && (
             <p className="text-sm text-ink-soft">沒有符合條件的稽核紀錄。</p>
           )}

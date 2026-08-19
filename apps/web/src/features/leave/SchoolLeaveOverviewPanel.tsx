@@ -28,7 +28,7 @@ export function SchoolLeaveOverviewPanel() {
   return (
     <section className="card flex flex-col gap-3 p-5">
       {isLoading && <SkeletonRows rows={4} />}
-      {isError && <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>}
+      {isError && <p className="text-sm text-stop-text">{leaveErrorMessage(error)}</p>}
       {pending && pending.length === 0 && (
         <p className="text-sm text-ink-soft">目前全校沒有待審核的請假。</p>
       )}
@@ -66,7 +66,7 @@ export function SchoolLeaveOverviewPanel() {
         </ul>
       )}
 
-      {setStatus.isError && <p className="text-sm text-red-600">{leaveErrorMessage(setStatus.error)}</p>}
+      {setStatus.isError && <p className="text-sm text-stop-text">{leaveErrorMessage(setStatus.error)}</p>}
     </section>
   );
 }

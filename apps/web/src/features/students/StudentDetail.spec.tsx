@@ -68,10 +68,9 @@ describe('學生整合視圖的斷句', () => {
     expect(screen.getByText(/目前收不到任何通知/)).toBeTruthy();
   });
 
-  it('兼家長的園長：只有娃娃車那段標身分（校方獨有才貼得準）', () => {
+  it('兼家長的園長不再看到身分籤', () => {
     state.roles = [{ role: 'OWNER' }, { role: 'PARENT' }];
     render(<StudentDetail studentId="s1" />);
-    expect(screen.getAllByText(/以.*身分/)).toHaveLength(1);
-    expect(screen.getByText('以老師身分')).toBeTruthy();
+    expect(screen.queryByText(/以.*身分/)).toBeNull();
   });
 });

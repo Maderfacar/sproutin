@@ -79,7 +79,7 @@ export function TeacherAnnouncePanel() {
         className="field"
       />
 
-      {create.isError && <p className="text-sm text-red-600">{apiErrorMessage(create.error)}</p>}
+      {create.isError && <p className="text-sm text-stop-text">{apiErrorMessage(create.error)}</p>}
       {done && <p className="text-sm font-medium text-brand-primary">公告已發布 🎉</p>}
 
       <button

@@ -19,7 +19,7 @@ export function LeaveList({ studentId }: { studentId: string }) {
     return <SkeletonRows rows={4} />;
   }
   if (isError) {
-    return <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>;
+    return <p className="text-sm text-stop-text">{leaveErrorMessage(error)}</p>;
   }
   if (!leaves || leaves.length === 0) {
     return <p className="text-sm text-ink-soft">目前沒有請假紀錄。</p>;
@@ -62,7 +62,7 @@ export function LeaveList({ studentId }: { studentId: string }) {
         );
       })}
       {cancelLeave.isError && (
-        <li className="text-sm text-red-600">{leaveErrorMessage(cancelLeave.error)}</li>
+        <li className="text-sm text-stop-text">{leaveErrorMessage(cancelLeave.error)}</li>
       )}
     </ul>
   );

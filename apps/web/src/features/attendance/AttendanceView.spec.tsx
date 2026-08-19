@@ -55,10 +55,11 @@ describe('出缺勤頁的斷句', () => {
     expect(headings(container)).toEqual(['今天的點名', '查看單一學生']);
   });
 
-  it('老師兼家長：點名標「以老師身分」，查看那段只用文案講清楚', () => {
+  // 身分籤已退役；混在一起的清單改用文案講清楚就好。
+  it('老師兼家長不再看到身分籤，清單混著誰仍用文案講明', () => {
     state.roles = [{ role: 'TEACHER' }, { role: 'PARENT' }];
     render(<AttendanceView />);
-    expect(screen.getAllByText(/以.*身分/)).toHaveLength(1);
+    expect(screen.queryByText(/以.*身分/)).toBeNull();
     expect(screen.getByText('你帶的班級和你自己的小孩都在這個清單裡')).toBeTruthy();
   });
 });

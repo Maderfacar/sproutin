@@ -40,9 +40,10 @@ describe('公告頁的斷句', () => {
     expect(screen.getByText('可以發給全校，也可以指定單一班級')).toBeTruthy();
   });
 
-  it('老師兼家長：發布那段標「以老師身分」，列表不貼籤', () => {
+  // 身分籤已退役：身分改由整個殼區分，一次只給一種（Human Owner 2026-08-20）。
+  it('老師兼家長也不再看到身分籤', () => {
     state.roles = [{ role: 'TEACHER' }, { role: 'PARENT' }];
     render(<AnnouncementView />);
-    expect(screen.getAllByText(/以.*身分/)).toHaveLength(1);
+    expect(screen.queryByText(/以.*身分/)).toBeNull();
   });
 });

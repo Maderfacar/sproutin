@@ -62,11 +62,10 @@ describe('請假頁的斷句', () => {
     expect(screen.getByText('全校送上來的申請都在這裡')).toBeTruthy();
   });
 
-  // 待審是校方獨有的一段，貼身分籤是安全的；申請那段的清單混著自己的小孩，不貼。
-  it('老師兼家長：只有待審那段標身分', () => {
+  // 身分籤已退役 —— 老師與家長各自有自己的殼，這一頁不再需要標。
+  it('老師兼家長不再看到身分籤', () => {
     state.roles = [{ role: 'TEACHER' }, { role: 'PARENT' }];
     render(<LeaveView />);
-    expect(screen.getAllByText(/以.*身分/)).toHaveLength(1);
-    expect(screen.getByText('以老師身分')).toBeTruthy();
+    expect(screen.queryByText(/以.*身分/)).toBeNull();
   });
 });

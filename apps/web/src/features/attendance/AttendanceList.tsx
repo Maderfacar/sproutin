@@ -18,7 +18,7 @@ export function AttendanceList({ studentId }: { studentId: string }) {
     return <SkeletonRows rows={5} />;
   }
   if (isError) {
-    return <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>;
+    return <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>;
   }
   if (!data || data.length === 0) {
     return <p className="text-sm text-ink-soft">目前沒有出缺勤紀錄。</p>;

@@ -55,8 +55,8 @@ export function BindingSection({ person }: { person: UserView }) {
             已完成綁定，本人可以正常登入
           </p>
           {confirmUnbind ? (
-            <div className="mt-3 rounded-md2 border border-amber-300 bg-amber-50 p-3">
-              <p className="text-sm leading-relaxed text-amber-900">
+            <div className="mt-3 rounded-md2 border border-note-edge bg-note-wash p-3">
+              <p className="text-sm leading-relaxed text-note-text">
                 解除後這個人就無法登入，需要重新發一組綁定碼給他。確定要解除嗎？
               </p>
               <div className="mt-2 flex gap-2">

@@ -54,7 +54,7 @@ export function TeacherRosterPanel() {
       </label>
 
       {classId && isLoading && <p className="text-sm text-ink-soft">載入點名資料中…</p>}
-      {classId && isError && <p className="text-sm text-red-600">{apiErrorMessage(error)}</p>}
+      {classId && isError && <p className="text-sm text-stop-text">{apiErrorMessage(error)}</p>}
       {classId && roster.length === 0 && <p className="text-sm text-ink-soft">此班沒有學生。</p>}
 
       {roster.length > 0 && (
@@ -91,7 +91,7 @@ export function TeacherRosterPanel() {
       )}
 
       {(mark.isError || update.isError) && (
-        <p className="text-sm text-red-600">{apiErrorMessage(mark.error ?? update.error)}</p>
+        <p className="text-sm text-stop-text">{apiErrorMessage(mark.error ?? update.error)}</p>
       )}
     </section>
   );

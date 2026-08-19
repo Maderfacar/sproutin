@@ -52,7 +52,7 @@ export function LeaveView() {
       <Band kind="action" title="申請請假" description="選孩子與日期，送出後老師會收到">
         <div className="flex flex-col gap-3">
           {isLoading && <SkeletonLines lines={1} />}
-          {isError && <p className="text-sm text-red-600">無法載入學生清單。</p>}
+          {isError && <p className="text-sm text-stop-text">無法載入學生清單。</p>}
           {students && students.length === 0 && (
             <p className="text-sm text-ink-soft">目前沒有可申請請假的學生。</p>
           )}

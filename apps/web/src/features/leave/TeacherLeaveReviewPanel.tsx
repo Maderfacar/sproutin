@@ -32,7 +32,7 @@ export function TeacherLeaveReviewPanel() {
       <ClassSelect classes={classes} value={classId} onChange={setClassId} />
 
       {classId && isLoading && <p className="text-sm text-ink-soft">載入待審請假中…</p>}
-      {classId && isError && <p className="text-sm text-red-600">{leaveErrorMessage(error)}</p>}
+      {classId && isError && <p className="text-sm text-stop-text">{leaveErrorMessage(error)}</p>}
       {classId && pending && pending.length === 0 && (
         <p className="text-sm text-ink-soft">目前沒有待審核的請假。</p>
       )}
@@ -68,7 +68,7 @@ export function TeacherLeaveReviewPanel() {
         </ul>
       )}
 
-      {setStatus.isError && <p className="text-sm text-red-600">{leaveErrorMessage(setStatus.error)}</p>}
+      {setStatus.isError && <p className="text-sm text-stop-text">{leaveErrorMessage(setStatus.error)}</p>}
     </section>
   );
 }

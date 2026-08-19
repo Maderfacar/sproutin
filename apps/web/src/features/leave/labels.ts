@@ -3,10 +3,10 @@ import { ApiError } from '../../lib/api';
 import type { Tone } from '../../components/ui';
 
 export const LEAVE_STATUS_LABEL: Record<LeaveStatus, { label: string; className: string }> = {
-  PENDING: { label: '待審核', className: 'bg-amber-100 text-amber-800' },
-  APPROVED: { label: '已核准', className: 'bg-green-100 text-green-800' },
-  REJECTED: { label: '已駁回', className: 'bg-red-100 text-red-800' },
-  CANCELLED: { label: '已取消', className: 'bg-gray-100 text-gray-600' },
+  PENDING: { label: '待審核', className: 'border border-wait-edge bg-wait-wash text-wait-text' },
+  APPROVED: { label: '已核准', className: 'border border-good-edge bg-good-wash text-good-text' },
+  REJECTED: { label: '已駁回', className: 'border border-stop-edge bg-stop-wash text-stop-text' },
+  CANCELLED: { label: '已取消', className: 'border border-line bg-surface-sunk text-ink-soft' },
 };
 
 // 可取消的狀態（對齊後端狀態機：僅 PENDING / APPROVED 可取消）。

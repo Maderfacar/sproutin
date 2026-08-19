@@ -127,7 +127,7 @@ export function LeaveForm({ studentId }: { studentId: string }) {
         />
       </div>
 
-      {errorText && <p className="text-sm font-medium text-red-600">{errorText}</p>}
+      {errorText && <p className="text-sm font-medium text-stop-text">{errorText}</p>}
       {done && <p className="text-sm font-medium text-brand-primary">已送出請假申請 🎉</p>}
 
       <div>
