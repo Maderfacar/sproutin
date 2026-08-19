@@ -11,7 +11,7 @@ import { usePeople } from './hooks';
 import { PersonEditor } from './PersonEditor';
 import { useMyClasses } from '../classes/hooks';
 import { useAdminStudents } from '../students/adminHooks';
-import { SkeletonRows } from '../../components/Skeleton';
+import { EmptyState, ErrorNotice, SkeletonRows } from '../../components/ui';
 import { Band } from '../../components/Band';
 
 const COLUMNS: UserRoleName[] = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PARENT', 'GUARDIAN'];
@@ -27,7 +27,7 @@ const COLUMNS: UserRoleName[] = ['OWNER', 'ADMIN', 'TEACHER', 'BUS_TEACHER', 'PA
 export function RolesOverview() {
   const { user } = useSession();
   const flags = roleFlags(user.roles);
-  const { data: people, isLoading, isError, error } = usePeople();
+  const { data: people, isLoading, isError, error, refetch } = usePeople();
   const { data: classes } = useMyClasses();
   const { data: students } = useAdminStudents();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function RolesOverview() {
     return <SkeletonRows rows={5} />;
   }
   if (isError || !people) {
-    return <StatusScreen status="error" message={apiErrorMessage(error)} />;
+    return <ErrorNotice message={apiErrorMessage(error)} onRetry={() => void refetch()} />;
   }
 
   const editing = people.find((p) => p.id === editingId) ?? null;
@@ -53,6 +53,9 @@ export function RolesOverview() {
         title="誰有什麼身分"
         description="一列一個人，圓點就是他有的身分。橫向可以捲，右邊的「調整」可以改"
       >
+        {people.length === 0 ? (
+          <EmptyState title="還沒有任何人員帳號" hint="先到「人員與綁定」建立帳號" />
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] border-collapse text-sm">
             <thead>
@@ -97,8 +100,9 @@ export function RolesOverview() {
                     <td className="py-2.5 pl-3 text-right">
                       <button
                         type="button"
+                        aria-label={`調整 ${person.displayName} 的身分`}
                         onClick={() => setEditingId(person.id === editingId ? null : person.id)}
-                        className="btn-secondary text-xs"
+                        className="tappable min-h-touch rounded-md2 border border-line-strong px-3 text-2xs font-semibold text-ink"
                       >
                         調整
                       </button>
@@ -109,11 +113,15 @@ export function RolesOverview() {
             </tbody>
           </table>
         </div>
+        )}
       </Band>
 
       {editing && (
         <div className="mb-7">
+          {/* key 帶 person.id：沒關掉面板就改點另一個人時，姓名欄等本地狀態會留在前一位
+              （與 PeopleManager 同一個坑，Human Owner 2026-08-20 回報）。 */}
           <PersonEditor
+            key={editing.id}
             person={editing}
             classes={classes ?? []}
             students={students ?? []}
@@ -122,7 +130,7 @@ export function RolesOverview() {
         </div>
       )}
 
-      <p className="border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
+      <p className="border-t border-line pt-5 text-2xs leading-relaxed text-ink-soft">
         移除身分會連帶解除該身分附帶的關聯（不再是老師就不會留在班上），避免留下沒有意義的權限。
         每個人至少要保留一個身分；離職或退園請用「停用帳號」，帳號與歷史紀錄都會留著。
       </p>

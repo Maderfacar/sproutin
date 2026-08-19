@@ -55,11 +55,14 @@ const person = (id: string, displayName: string): UserView => ({
   guardianOf: [],
 });
 
+// 編輯面板的「顯示名稱」欄。新增表單的那個輸入框在 <dialog> 裡（關著的面板），
+// 用「不在 dialog 內」把它排除掉，比數索引穩。
 function nameField(): HTMLInputElement {
-  const el = document.querySelector<HTMLInputElement>('input[maxlength="40"][value]');
-  // 編輯面板裡的「顯示名稱」是第二個 maxlength=40 的輸入框（第一個是最上面的新增姓名）。
-  const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[maxlength="40"]'));
-  return inputs[1] ?? (el as HTMLInputElement);
+  const el = Array.from(document.querySelectorAll<HTMLInputElement>('input[maxlength="40"]')).find(
+    (i) => !i.closest('dialog'),
+  );
+  if (!el) throw new Error('找不到編輯面板的姓名欄');
+  return el;
 }
 
 describe('人員管理的編輯面板', () => {
