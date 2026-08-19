@@ -284,6 +284,23 @@ body {
   }
 }
 
+/* 開場畫面的進度（components/SplashScreen）。**來回跑，不假裝在讀百分比** ——
+   我們真的不知道 LIFF SDK 還要多久，畫一條會停在 80% 的假進度只會讓人更焦躁。 */
+.splash-bar {
+  animation: splashSweep 1.1s var(--ease-out) infinite;
+}
+@keyframes splashSweep {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(320%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
 /* 換頁的方向感（components/PageTransition）：進去從右邊滑進來，返回從左邊滑回去。
    位移只有 14px —— 方向講清楚就好，滑太多會讓每一次點擊都變慢。 */
 @keyframes pageInForward {

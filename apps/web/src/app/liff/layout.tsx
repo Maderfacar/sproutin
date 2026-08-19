@@ -8,6 +8,7 @@ import { SessionProvider } from '../../lib/session';
 import { liffRedirectFor } from '../../lib/liffState';
 import { PersonaShell } from '../../components/shell/PersonaShell';
 import { StatusScreen } from '../../components/StatusScreen';
+import { SplashScreen } from '../../components/SplashScreen';
 import { DocumentTitle } from '../../components/DocumentTitle';
 
 // /liff/* 的共用外框：先處理 LINE 指定的目的頁 → 取 runtime config（品牌 + liffId）
@@ -32,11 +33,14 @@ export default function LiffLayout({ children }: { children: ReactNode }) {
     }
   }, [router, pathname]);
 
+  // 冷啟動的前兩段都是開場畫面，不是一行「載入中…」（手感規範：不准白屏）。
+  // 這兩段還沒拿到園所設定，所以 SplashScreen 會退回產品自己的識別 ——
+  // 它們通常只有一兩百毫秒，但沒有它就會閃一下白。
   if (redirecting) {
-    return <StatusScreen fullScreen status="loading" message="前往指定頁面…" />;
+    return <SplashScreen message="前往指定頁面…" />;
   }
   if (isLoading) {
-    return <StatusScreen fullScreen status="loading" message="載入園所設定中…" />;
+    return <SplashScreen message="連線園所…" />;
   }
   if (isError || !config) {
     return (

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { apiGet, apiSend } from '../../lib/api';
 import type { AttendanceView, MarkAttendanceBody, AttendanceStatus } from '../../lib/types';
 import { runBatched } from './bulk';
+import { tapFeedback } from '../../lib/haptics';
 
 // 授權走 httpOnly cookie，前端不需傳 token。
 
@@ -37,15 +38,22 @@ export function useMarkAttendance(classId: string | undefined, dateIso: string) 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ['attendance', 'class', classId, dateIso] });
 
+  // 成功才震。點名時老師的眼睛多半在孩子身上不在螢幕上，
+  // 手上那一下才是他真正收到的「存好了」（見 lib/haptics）。
+  const done = (): void => {
+    tapFeedback();
+    void invalidate();
+  };
+
   const mark = useMutation({
     mutationFn: (body: MarkAttendanceBody) => apiSend<AttendanceView>('/api/attendance', 'POST', body),
-    onSuccess: () => void invalidate(),
+    onSuccess: done,
   });
 
   const update = useMutation({
     mutationFn: ({ id, status }: { id: string; status: AttendanceStatus }) =>
       apiSend<AttendanceView>(`/api/attendance/${encodeURIComponent(id)}`, 'PATCH', { status }),
-    onSuccess: () => void invalidate(),
+    onSuccess: done,
   });
 
   return { mark, update };
@@ -72,6 +80,11 @@ export function useBulkMarkAttendance(classId: string | undefined, dateIso: stri
           status: input.status,
         }),
       ),
+    // 整批全部成功才震。有人沒成功的時候畫面會要老師補點，
+    // 這時給一個「成功」的手感是在說謊。
+    onSuccess: (result) => {
+      if (result.failed.length === 0) tapFeedback();
+    },
     onSettled: () => {
       // 成功或失敗都要重取：失敗時畫面必須回到「伺服器真正的樣子」，
       // 否則老師會以為某幾個人已經點到了。

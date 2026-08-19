@@ -662,6 +662,32 @@ features/classes/hooks.ts                useVisibleClasses()（useSelectedClass 
 **做不到的先講清楚**：iOS 沒有震動回饋、沒有系統級側滑返回、LINE 頂欄佔一條。
 這些是平台限制，不是技術選擇的問題。
 
+#### 這十條的實作狀態（2026-08-20）
+
+```text
+按壓 / 樂觀更新 / 骨架屏 / 觸控 44px / 短任務用面板 / 減少動態   ✅ 隨各批一起做完
+冷啟動開場畫面   ✅ components/SplashScreen。三段等待各自一句話，底色用品牌色所以不閃白。
+                    進度條刻意來回跑不讀百分比 —— 我們真的不知道 LIFF SDK 還要多久。
+震動             ✅ lib/haptics。只有一種：成功了震 10ms（「碰一下」不是通知）。
+                    點名成功、上下車成功才震；「今日未搭」「取消」不震（那是修正不是完成），
+                    批次點名要**整批都成功**才震（有人沒點到卻給成功的手感是在說謊）。
+                    iOS 沒有 Vibration API，**刻意不做替代品** —— 唯一的路是拿隱藏元件
+                    去騙 Taptic Engine，會隨系統版本壞掉而且壞了沒人發現。
+預先載入         ✅ lib/useIdlePrefetch。閒下來預載底部四格的**路由**。
+                    **刻意不預載資料**：資料的查詢參數跟身分綁在一起（哪一班、哪個孩子），
+                    猜錯就是替使用者發一支沒有權限的請求，在後端留一筆 403 的稽核紀錄。
+                    資料本身有 30 秒 staleTime，真正重複去的頁面本來就不會每次重抓。
+換頁交叉淡入     ❌ 還沒做。現在是 components/PageTransition 的自製位移動畫。
+```
+
+**為什麼換頁交叉淡入還沒做（不是忘記，是評估後緩下來）**：真正的交叉淡入要
+`document.startViewTransition` 在**舊畫面還在 DOM 上的時候**呼叫，而 App Router 是先 commit
+新的樹再跑 effect —— 等我們拿到 pathname 變化時，舊畫面早就不見了，沒有東西可以淡出。
+所以只能包住「導覽」本身（攔截連結點擊或包 `router.push`），而那條路一旦寫錯，
+**壞掉的是全站每一個連結**。Next 14 沒有內建（`experimental.viewTransition` 是 15.2 之後），
+可靠的作法是引入 `next-view-transitions` —— 那是一個要 Human Owner 決定的相依套件。
+在沒有真機、沒有 LINE 內建瀏覽器可以驗的情況下，不該把導覽押上去。
+
 ### 深色模式（2026-08-20）
 
 **跟隨系統設定（`prefers-color-scheme`），不做 App 內的開關。** LINE 的深色模式本來就跟著系統，

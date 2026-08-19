@@ -8,7 +8,11 @@ const session = vi.hoisted(() => ({
   roles: [] as AuthUser['roles'],
 }));
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/liff' }));
+// useRouter：PersonaShell 會在閒下來時預先載入底部四格的路由（lib/useIdlePrefetch）。
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/liff',
+  useRouter: () => ({ prefetch: () => {} }),
+}));
 vi.mock('next/link', () => ({
   default: ({
     children,

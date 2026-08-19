@@ -5,6 +5,8 @@ import type { AuthUser } from '@sproutin/shared';
 import { ensureLiffLogin } from './liff';
 import { AuthError, lineLogin, fetchMe } from './auth';
 import { StatusScreen, type StatusKind } from '../components/StatusScreen';
+import { SplashScreen } from '../components/SplashScreen';
+import { useBranding } from './branding';
 import { BindScreen } from '../features/binding/BindScreen';
 
 // 登入 session（httpOnly cookie 持久化）：
@@ -51,6 +53,7 @@ export function SessionProvider({
   liffId: string | null;
   children: ReactNode;
 }) {
+  const branding = useBranding();
   const [state, setState] = useState<SessionState>({ status: 'loading' });
 
   useEffect(() => {
@@ -110,14 +113,19 @@ export function SessionProvider({
     // 一律退回 loading 而不是讓畫面崩掉。
     const status =
       state.status === 'authed' || state.status === 'needs-binding' ? 'loading' : state.status;
+    // 每一段等待講清楚自己在等什麼。手機端只能靠 Human Owner 回報畫面上的字，
+    // 三個階段都寫「載入中…」的話，卡住時根本分不出是卡在哪一段。
+    //
+    // 還在等的時候給開場畫面（這時園所識別已經有了，家長看到的是自己那間幼兒園）；
+    // 出錯了才換成 StatusScreen —— 錯誤要能重試、要看得到 sub，那是另一種畫面。
+    if (status === 'error') {
+      return <StatusScreen fullScreen status="error" message={state.message} sub={state.sub} />;
+    }
     return (
-      <StatusScreen
-        fullScreen
-        status={status}
-        // 每一段等待講清楚自己在等什麼。手機端只能靠 Human Owner 回報畫面上的字，
-        // 三個階段都寫「載入中…」的話，卡住時根本分不出是卡在哪一段。
-        message={state.message ?? (status === 'loading' ? '確認登入狀態…' : undefined)}
-        sub={state.sub}
+      <SplashScreen
+        brandName={branding.brandName}
+        logoUrl={branding.logoUrl}
+        message={state.message ?? (status === 'redirecting' ? '前往 LINE 登入…' : '確認登入狀態…')}
       />
     );
   }

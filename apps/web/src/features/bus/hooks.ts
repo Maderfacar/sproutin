@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { apiGet, apiSend } from '../../lib/api';
+import { tapFeedback } from '../../lib/haptics';
 import type {
   BusAssignmentView,
   BusDirection,
@@ -125,8 +126,16 @@ export function useBusRideMutations() {
   const send = (action: string) => (body: BusMarkBody) =>
     apiSend<BusRideView[]>(`/api/bus/rides/${action}`, 'POST', body);
 
-  const board = useMutation({ mutationFn: send('board'), onSuccess: invalidate });
-  const alight = useMutation({ mutationFn: send('alight'), onSuccess: invalidate });
+  // 上下車成功震一下。隨車老師是一手扶車一手點，眼睛不一定在螢幕上 ——
+  // 手上那一下才是他真正收到的回饋（見 lib/haptics）。
+  // 「今日未搭」與「取消」不震：那兩個是修正動作，不是完成一件事。
+  const done = (): void => {
+    tapFeedback();
+    invalidate();
+  };
+
+  const board = useMutation({ mutationFn: send('board'), onSuccess: done });
+  const alight = useMutation({ mutationFn: send('alight'), onSuccess: done });
   const absent = useMutation({ mutationFn: send('absent'), onSuccess: invalidate });
   const undo = useMutation({ mutationFn: send('undo'), onSuccess: invalidate });
 

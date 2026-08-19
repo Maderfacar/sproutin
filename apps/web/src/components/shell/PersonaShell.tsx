@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useBranding } from '../../lib/branding';
 import { useActivePersona } from '../../lib/usePersona';
+import { useIdlePrefetch } from '../../lib/useIdlePrefetch';
 import { TabBar } from '../ui/TabBar';
 import { Icon } from '../Icon';
 import { PageTransition } from '../PageTransition';
@@ -30,6 +31,10 @@ export function PersonaShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { persona } = useActivePersona();
   const tabs = PERSONA_TABS[persona];
+
+  // 閒下來就把底部四格那幾頁的程式先抓好 —— 在 LINE 的內建瀏覽器裡，
+  // 換頁最慢的一段不是 API，是那一頁的 JS 還沒下載（見 lib/useIdlePrefetch）。
+  useIdlePrefetch(tabs.map((t) => t.href));
 
   // 封面圖只在家長首頁 —— 校方的首頁是待辦清單，沒有圖可以疊。
   const hasHero = persona === 'parent' && pathname === HERO_PATH;
