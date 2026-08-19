@@ -1,6 +1,12 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { AuthUser } from '@sproutin/shared';
-import type { GuardianRelation, MessageCategory, Prisma, Role } from '@sproutin/db';
+import type {
+  GuardianRelation,
+  MessageCategory,
+  MessageSenderAs,
+  Prisma,
+  Role,
+} from '@sproutin/db';
 import { PrismaService } from '../core/prisma/prisma.service';
 import { ScopeResolver } from '../auth/scope-resolver.service';
 import { AuditService } from '../core/audit/audit.service';
@@ -17,6 +23,14 @@ export interface SendMessageInput {
   studentId: string;
   category?: MessageCategory;
   body: string;
+  /**
+   * 發話當下戴的是哪頂帽子（前端的身分：parent → GUARDIAN，其餘 → STAFF）。
+   *
+   * **不信任前端**：下面會驗證他真的持有所宣稱的身分，宣稱不成立就退回真實的那一個
+   *（而不是回 400）—— 這只是顯示用的標籤，不該讓一個標籤把訊息擋下來。
+   * 沒帶就依實際關係推導，與這一欄上線前的行為一致。
+   */
+  senderAs?: MessageSenderAs;
 }
 
 // 發話者的顯示資訊。前端只拿得到 senderId（一串 cuid），無法在對話泡泡上標出是誰講的；
@@ -24,8 +38,16 @@ export interface SendMessageInput {
 // **翻成中文是前端的事**（RELATION_LABEL / ROLE_LABEL 已存在），這裡只給「事實」。
 export interface MessageSenderInfo {
   senderName: string;
-  senderRelation: GuardianRelation | null; // 對「這個學生」的關係；非家長為 null
-  senderRole: Role | null; // 校方身分；家長為 null
+  senderRelation: GuardianRelation | null; // 對「這個學生」的關係；以校方身分發話時為 null
+  senderRole: Role | null; // 校方身分；以家長身分發話時為 null
+}
+
+// 這個人**兩種身分都查出來**的樣子。哪一個要顯示，由那一句話的 senderAs 決定
+// —— 同一個人在同一串裡可能兩種身分都講過。
+interface SenderIdentities {
+  senderName: string;
+  relation: GuardianRelation | null;
+  role: Role | null;
 }
 
 export interface MessageView extends MessageSenderInfo {
@@ -44,6 +66,7 @@ const MESSAGE_SELECT = {
   studentId: true,
   classId: true,
   senderId: true,
+  senderAs: true,
   category: true,
   body: true,
   createdAt: true,
@@ -85,9 +108,12 @@ export class MessagesService {
       throw new NotFoundException('student_not_found');
     }
     const category: MessageCategory = input.category ?? 'GENERAL';
+    // 前端宣稱的身分要先對照事實。宣稱不成立就退回他真正有的那一個 ——
+    // 這是顯示用的標籤，不是權限，不該因為標籤對不上就把訊息擋下來。
+    const senderAs = await this.resolveSenderAs(input.studentId, actor, input.senderAs);
     // 發話者資訊在交易外先查好 —— 交易進行中再對主連線發查詢會佔用兩條連線，
     // 而這筆資料與這次寫入無關，沒有理由讓它待在交易裡。
-    const sender = await this.describeSender(input.studentId, actor.id);
+    const sender = await this.describeSender(input.studentId, actor.id, senderAs);
 
     return this.prisma.$transaction(async (tx) => {
       const message = await tx.message.create({
@@ -95,6 +121,7 @@ export class MessagesService {
           studentId: input.studentId,
           classId: student.classId,
           senderId: actor.id,
+          senderAs,
           category,
           body: input.body,
         },
@@ -148,21 +175,56 @@ export class MessagesService {
     });
     const readIds = new Set(reads.map((r) => r.messageId));
     const senders = await this.describeSenders(studentId, [...new Set(messages.map((m) => m.senderId))]);
+    // 身分是**逐筆**決定的：同一個人在同一串裡可能兩種身分都講過。
     return messages.map((m) => ({
       ...m,
       isRead: readIds.has(m.id) || m.senderId === actor.id,
-      ...(senders.get(m.senderId) ?? UNKNOWN_SENDER),
+      ...this.describeAs(senders.get(m.senderId), m.senderAs),
     }));
   }
 
-  // 發話者是誰（姓名 + 對這個學生的身分）。兩次查詢涵蓋整串訊息，不隨訊息數成長。
+  /**
+   * 前端宣稱的身分 vs 事實。**只縮小不放大**：
+   *   宣稱 GUARDIAN 但不是這個孩子的監護人 → 退回 STAFF
+   *   宣稱 STAFF   但沒有任何校方角色       → 退回 GUARDIAN
+   *   沒宣稱                                → 依實際關係推導（是家長就 GUARDIAN）
+   *
+   * 退回而不是丟 400：這是顯示用的標籤，不是權限（能不能發言由 canAccessStudent 判斷）。
+   * 讓一個標籤把訊息擋下來，對正在打字的人是莫名其妙的失敗。
+   */
+  private async resolveSenderAs(
+    studentId: string,
+    actor: MessageActor,
+    claimed: MessageSenderAs | undefined,
+  ): Promise<MessageSenderAs> {
+    const guardianship = await this.prisma.guardianship.findFirst({
+      where: { studentId, userId: actor.id },
+      select: { id: true },
+    });
+    const isGuardian = guardianship !== null;
+    const isStaff = actor.roles.some((r) => STAFF_ROLE_PRIORITY.includes(r.role));
+
+    if (claimed === 'GUARDIAN') {
+      return isGuardian ? 'GUARDIAN' : 'STAFF';
+    }
+    if (claimed === 'STAFF') {
+      return isStaff ? 'STAFF' : 'GUARDIAN';
+    }
+    return isGuardian ? 'GUARDIAN' : 'STAFF';
+  }
+
+  // 發話者是誰（姓名 + 那一句話當下的身分）。兩次查詢涵蓋整串訊息，不隨訊息數成長。
   //
-  // **同時是校方又是這個孩子的家長時，顯示家長身分**（例如老師自己的小孩也在園裡）：
-  // 在這個孩子的對話串裡，他是以家人的身分在講話。
+  // **身分以那一筆訊息記下的 senderAs 為準**（Human Owner 2026-08-20 回報：
+  // 同時是班導與某位學生的家長時，兩種身分講的話長得一模一樣）。
+  //
+  // `senderAs` 為 null ＝這一欄上線前的舊訊息 → 退回原本的推導規則：
+  // **同時是校方又是這個孩子的家長時顯示家長身分**（在這個孩子的對話串裡，
+  // 他多半是以家人的身分在講話）。不回填舊資料 —— 我們並不知道當時他戴的是哪一頂。
   private async describeSenders(
     studentId: string,
     senderIds: string[],
-  ): Promise<Map<string, MessageSenderInfo>> {
+  ): Promise<Map<string, SenderIdentities>> {
     if (senderIds.length === 0) {
       return new Map();
     }
@@ -177,25 +239,47 @@ export class MessagesService {
       }),
     ]);
     const relationOf = new Map(guardianships.map((g) => [g.userId, g.relation]));
-    return new Map(
+    const roleOf = new Map(
       users.map((u) => {
-        const relation = relationOf.get(u.id) ?? null;
         const held = new Set(u.roles.map((r) => r.role));
-        return [
-          u.id,
-          {
-            senderName: u.displayName,
-            senderRelation: relation,
-            senderRole: relation ? null : (STAFF_ROLE_PRIORITY.find((r) => held.has(r)) ?? null),
-          },
-        ];
+        return [u.id, STAFF_ROLE_PRIORITY.find((r) => held.has(r)) ?? null];
       }),
+    );
+    return new Map(
+      users.map((u) => [
+        u.id,
+        {
+          senderName: u.displayName,
+          relation: relationOf.get(u.id) ?? null,
+          role: roleOf.get(u.id) ?? null,
+        },
+      ]),
     );
   }
 
-  private async describeSender(studentId: string, senderId: string): Promise<MessageSenderInfo> {
+  /** 把「這個人的兩種身分」與「那一句話當下的身分」組成要顯示的那一個。 */
+  private describeAs(
+    who: SenderIdentities | undefined,
+    senderAs: MessageSenderAs | null,
+  ): MessageSenderInfo {
+    if (!who) {
+      return UNKNOWN_SENDER;
+    }
+    // 舊訊息（senderAs 為 null）沿用原規則：是這個孩子的家長就顯示家長。
+    const as: MessageSenderAs = senderAs ?? (who.relation ? 'GUARDIAN' : 'STAFF');
+    if (as === 'GUARDIAN' && who.relation) {
+      return { senderName: who.senderName, senderRelation: who.relation, senderRole: null };
+    }
+    return { senderName: who.senderName, senderRelation: null, senderRole: who.role };
+  }
+
+  private async describeSender(
+    studentId: string,
+    senderId: string,
+    senderAs: MessageSenderAs | null,
+  ): Promise<MessageSenderInfo> {
     const senders = await this.describeSenders(studentId, [senderId]);
-    return senders.get(senderId) ?? UNKNOWN_SENDER;
+    return this.describeAs(senders.get(senderId), senderAs);
   }
 
   // PATCH /messages/:id/read — 標記已讀（MessageRead upsert;idempotent）。

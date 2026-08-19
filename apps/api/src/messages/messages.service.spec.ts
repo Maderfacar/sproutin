@@ -15,7 +15,7 @@ type PrismaMock = {
   message: { findUnique: jest.Mock; findMany: jest.Mock };
   messageRead: { findMany: jest.Mock; upsert: jest.Mock };
   user: { findMany: jest.Mock };
-  guardianship: { findMany: jest.Mock };
+  guardianship: { findMany: jest.Mock; findFirst: jest.Mock };
   $transaction: jest.Mock;
 };
 type ScopeMock = { canAccessStudent: jest.Mock; canManageStudentClass: jest.Mock };
@@ -52,6 +52,8 @@ function makePrisma(tx: TxMock): PrismaMock {
     },
     guardianship: {
       findMany: jest.fn(async () => [{ userId: 'u-parent', relation: 'MOTHER' }]),
+      // 發話時對照「宣稱的身分」用的那一查（見 resolveSenderAs）。
+      findFirst: jest.fn(async () => null),
     },
     $transaction: jest.fn(async (cb: (t: TxMock) => Promise<unknown>) => cb(tx)),
   };
@@ -152,8 +154,8 @@ describe('MessagesService.listForStudent', () => {
     });
   });
 
-  // 老師自己的小孩也在園裡：在那個孩子的對話串裡，他是以家人的身分在講話。
-  it('同時是校方又是這個孩子的家長 → 顯示家長身分', async () => {
+  // 這一欄上線前的舊訊息（senderAs 為 null）沿用原本的推導規則。
+  it('舊訊息沒有記下身分 → 同時是校方又是這個孩子的家長時顯示家長身分', async () => {
     const prisma = makePrisma(makeTx());
     prisma.message.findMany.mockResolvedValue([
       { id: 'm1', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-both', category: 'GENERAL', body: 'a', createdAt: new Date() },
@@ -203,5 +205,102 @@ describe('MessagesService.markRead', () => {
     const prisma = makePrisma(makeTx());
     prisma.message.findUnique.mockResolvedValue(null);
     await expect(makeService(prisma, makeScope()).markRead(parent, 'missing')).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+// 發話當下戴的是哪頂帽子（Human Owner 2026-08-20 回報：同時是班導與某位學生的家長時，
+// 兩種身分講的話長得一模一樣）。**身分是逐筆記下來的，不是整串推導出來的。**
+describe('MessagesService 的發話身分（senderAs）', () => {
+  const both = {
+    id: 'u-both',
+    roles: [
+      { role: 'TEACHER' as const, scopeType: 'SCHOOL' as const, scopeId: null },
+      { role: 'PARENT' as const, scopeType: 'SCHOOL' as const, scopeId: null },
+    ],
+  };
+
+  function dualPrisma() {
+    const prisma = makePrisma(makeTx());
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'u-both', displayName: '林曉萱', roles: [{ role: 'TEACHER' }, { role: 'PARENT' }] },
+    ]);
+    prisma.guardianship.findMany.mockResolvedValue([{ userId: 'u-both', relation: 'MOTHER' }]);
+    prisma.guardianship.findFirst.mockResolvedValue({ id: 'g1' });
+    return prisma;
+  }
+
+  it('身分真的寫進那一筆訊息，不是只在畫面上算出來的', async () => {
+    const tx = makeTx();
+    const prisma = dualPrisma();
+    prisma.$transaction = jest.fn(async (cb: (t: TxMock) => Promise<unknown>) => cb(tx));
+
+    await makeService(prisma, makeScope()).send(both, {
+      studentId: 'stu-sun-1',
+      body: '下週三請假',
+      senderAs: 'GUARDIAN',
+    });
+
+    expect(tx.message.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ senderAs: 'GUARDIAN' }) }),
+    );
+  });
+
+  it('以老師身分送出 → 顯示的是老師，不是母親', async () => {
+    const prisma = dualPrisma();
+    const view = await makeService(prisma, makeScope()).send(both, {
+      studentId: 'stu-sun-1',
+      body: '我會多留意',
+      senderAs: 'STAFF',
+    });
+    expect(view).toMatchObject({ senderRole: 'TEACHER', senderRelation: null });
+  });
+
+  it('以家長身分送出 → 顯示的是母親', async () => {
+    const prisma = dualPrisma();
+    const view = await makeService(prisma, makeScope()).send(both, {
+      studentId: 'stu-sun-1',
+      body: '下週三請假',
+      senderAs: 'GUARDIAN',
+    });
+    expect(view).toMatchObject({ senderRelation: 'MOTHER', senderRole: null });
+  });
+
+  // 不信任前端：宣稱不成立就退回真實的那一個，而不是把訊息擋下來
+  //（這是顯示用的標籤，不是權限）。
+  it('宣稱家長但不是這個孩子的監護人 → 退回校方身分', async () => {
+    const prisma = dualPrisma();
+    prisma.guardianship.findFirst.mockResolvedValue(null);
+    prisma.guardianship.findMany.mockResolvedValue([]);
+    const view = await makeService(prisma, makeScope()).send(both, {
+      studentId: 'stu-sun-1',
+      body: '假冒',
+      senderAs: 'GUARDIAN',
+    });
+    expect(view).toMatchObject({ senderRole: 'TEACHER', senderRelation: null });
+  });
+
+  it('宣稱校方但沒有任何校方角色 → 退回家長身分', async () => {
+    const prisma = dualPrisma();
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'u-parent-only', displayName: '陳美玲', roles: [{ role: 'PARENT' }] },
+    ]);
+    prisma.guardianship.findMany.mockResolvedValue([{ userId: 'u-parent-only', relation: 'MOTHER' }]);
+    const view = await makeService(prisma, makeScope()).send(
+      { id: 'u-parent-only', roles: [{ role: 'PARENT', scopeType: 'SCHOOL', scopeId: null }] },
+      { studentId: 'stu-sun-1', body: '假冒老師', senderAs: 'STAFF' },
+    );
+    expect(view).toMatchObject({ senderRelation: 'MOTHER', senderRole: null });
+  });
+
+  // 同一個人在同一串裡兩種身分都講過 —— 這正是要修的那件事。
+  it('同一串裡同一個人的兩種身分各自顯示', async () => {
+    const prisma = dualPrisma();
+    prisma.message.findMany.mockResolvedValue([
+      { id: 'm1', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-both', senderAs: 'STAFF', category: 'GENERAL', body: '我會多留意', createdAt: new Date() },
+      { id: 'm2', studentId: 'stu-sun-1', classId: 'class-sun', senderId: 'u-both', senderAs: 'GUARDIAN', category: 'GENERAL', body: '下週三請假', createdAt: new Date() },
+    ]);
+    const list = await makeService(prisma, makeScope()).listForStudent(both, 'stu-sun-1');
+    expect(list[0]).toMatchObject({ senderRole: 'TEACHER', senderRelation: null });
+    expect(list[1]).toMatchObject({ senderRelation: 'MOTHER', senderRole: null });
   });
 });

@@ -275,6 +275,16 @@ model Message {
   student   Student         @relation(fields: [studentId], references: [id])
   classId   String
   senderId  String // userId
+  // 發話當下戴的是哪頂帽子。**一人可能同時是這個孩子的家長與這一班的導師**
+  // （老師自己的小孩也在園裡是幼兒園常態），而「這句話是導師的指示還是某位媽媽的請求」
+  // 對讀的人是兩件事（Human Owner 2026-08-20 回報）。
+  //
+  // 這**不是權限**：能不能對這個學生發言仍然由 canAccessStudent 判斷；
+  // 這一欄只記錄顯示用的身分，而且後端會驗證他真的有那個身分才寫進來。
+  //
+  // null ＝這一欄上線前的舊訊息。讀取時退回原本的推導規則（在這個孩子的對話串裡，
+  // 同時是校方又是家長就顯示家長），不做資料回填 —— 我們並不知道當時他戴的是哪一頂。
+  senderAs  MessageSenderAs?
   category  MessageCategory @default(GENERAL)
   body      String
   reads     MessageRead[]
@@ -568,6 +578,15 @@ enum MessageCategory {
   HEALTH
   BEHAVIOR
   ADMIN
+}
+
+// 發話當下的身分。**只有兩種**：對這個孩子而言，你要嘛是家人、要嘛是園所的人。
+// 與前端的 persona 對應：parent → GUARDIAN，其餘（staff / teacher / bus）→ STAFF。
+// 不細分導師或園長 —— 那是「哪一種校方」的問題，讀取時查得到（senderRole），
+// 而且對家長來說「園所的人」與「這位老師」的差別由名字與角色標籤講就夠了。
+enum MessageSenderAs {
+  GUARDIAN
+  STAFF
 }
 
 enum AnnouncementScope {

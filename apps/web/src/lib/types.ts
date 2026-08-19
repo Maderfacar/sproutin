@@ -45,8 +45,10 @@ export interface MessageView {
   studentId: string;
   classId: string;
   senderId: string;
-  // 發話者是誰。後端只保證給「事實」（姓名 + 對這個學生的身分），中文由前端的
-  // RELATION_LABEL / ROLE_LABEL 決定。同時是校方又是這個孩子的家長時，後端給的是家長身分。
+  // 發話者是誰，以及**那一句話當下戴的是哪頂帽子**。後端只保證給「事實」
+  //（姓名 + 那一筆的身分），中文由前端的 RELATION_LABEL / ROLE_LABEL 決定。
+  // 一個人可能同時是這個孩子的家長與這一班的導師，所以同一串裡他的訊息
+  // 可能一半是 senderRelation、一半是 senderRole。
   senderName: string;
   senderRelation: GuardianRelation | null; // 家長／監護人才有
   senderRole: UserRoleName | null; // 校方身分；家長為 null
@@ -60,6 +62,11 @@ export interface SendMessageBody {
   studentId: string;
   category?: MessageCategory;
   body: string;
+  /**
+   * 發話當下戴的是哪頂帽子。由目前的身分決定（parent → GUARDIAN，其餘 → STAFF）。
+   * **後端會對照事實**，宣稱不成立就退回真實的那一個 —— 這是顯示用的標籤不是權限。
+   */
+  senderAs?: 'GUARDIAN' | 'STAFF';
 }
 
 export interface NotificationView {

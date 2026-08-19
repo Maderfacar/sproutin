@@ -15,16 +15,36 @@ function byCreatedAsc(a: MessageView, b: MessageView): number {
   return a.createdAt.localeCompare(b.createdAt);
 }
 
+// 那一句話當下的身分（「母親」「導師」）。翻不出來時回 null，不硬掰一個稱呼
+// —— 後端保證兩者至少有一個有值，這是保險。
+function identityOf(msg: MessageView | null | undefined): string | null {
+  if (!msg) return null;
+  // ROLE_LABEL 沒有那個角色時回 undefined —— 那和「沒有身分」是同一件事，一起收成 null。
+  if (msg.senderRelation) return RELATION_LABEL[msg.senderRelation] ?? null;
+  if (msg.senderRole) return ROLE_LABEL[msg.senderRole] ?? null;
+  return null;
+}
+
 // 「陳美玲 · 母親」。一個學生的對話串裡可能同時有父、母、導師、園長 ——
 // 只有時間的話，三個人講的話長得一模一樣。
-// 身分翻不出來時只顯示名字，不硬掰一個稱呼（後端保證兩者至少有一個有值，這是保險）。
 function senderLabel(msg: MessageView): string {
-  const role = msg.senderRelation
-    ? RELATION_LABEL[msg.senderRelation]
-    : msg.senderRole
-      ? ROLE_LABEL[msg.senderRole]
-      : null;
-  return role ? `${msg.senderName} · ${role}` : msg.senderName;
+  const identity = identityOf(msg);
+  return identity ? `${msg.senderName} · ${identity}` : msg.senderName;
+}
+
+// 我在這一串裡用過幾種身分。**同時是班導與這個孩子的家長的人會是兩種**
+//（Human Owner 2026-08-20 回報：兩種身分講的話長得一模一樣）。
+//
+// 只有兩種以上才在自己的泡泡上標身分：一般家長每一句都掛「· 母親」是廢話，
+// 而他本來就知道那是自己講的。有兩種的時候那句話是「以誰的立場說的」才成為資訊。
+function myIdentities(messages: readonly MessageView[], userId: string): Set<string> {
+  const seen = new Set<string>();
+  for (const msg of messages) {
+    if (msg.senderId !== userId) continue;
+    const identity = identityOf(msg);
+    if (identity) seen.add(identity);
+  }
+  return seen;
 }
 
 function dayLabel(iso: string): string {
@@ -58,6 +78,8 @@ export function MessageThread({ studentId }: { studentId: string }) {
   }
 
   const sorted = data ? [...data].sort(byCreatedAsc) : [];
+  // 我自己在這一串裡用過不只一種身分時，我的泡泡也要標出來是以誰的立場說的。
+  const mixedIdentity = myIdentities(sorted, user.id).size > 1;
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,6 +101,12 @@ export function MessageThread({ studentId }: { studentId: string }) {
             // 同一個人連著講好幾句時只在第一句標名字 —— 每句都標，一來一往幾輪就滿版都是名字。
             // 換日期就重新標（隔了一天再看，記得上一句是誰講的才怪）。
             const showSender = !mine && (showDay || prev?.senderId !== msg.senderId);
+            // 自己的身分標籤：只有「這一串裡我用過兩種身分」時才畫，而且與對方一樣
+            // 連著同一種身分講好幾句時只標第一句。
+            const showMyIdentity =
+              mixedIdentity &&
+              identityOf(msg) !== null &&
+              (showDay || prev?.senderId !== msg.senderId || identityOf(prev) !== identityOf(msg));
             return (
               <Fragment key={msg.id}>
                 {showDay && (
@@ -89,6 +117,14 @@ export function MessageThread({ studentId }: { studentId: string }) {
                   </div>
                 )}
                 <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+                  {mine && showMyIdentity && (
+                    // **自己的訊息仍然靠右**：「右邊＝我寫的」是最基本的約定，
+                    // 把自己剛打的字丟到左邊會看起來像有人冒用你的名字。
+                    // 換的是標籤不是位置。
+                    <p className="mb-1.5 px-1 text-2xs font-semibold text-ink-soft">
+                      我 · {identityOf(msg)}
+                    </p>
+                  )}
                   {showSender && (
                     <div className="mb-1.5 flex items-center gap-1.5">
                       {/* 校方實心、家長外框。刻意不給家長另一個顏色 ——

@@ -519,6 +519,31 @@ GET /notifications  回應新增
 改既有端點的回應，姓名與標題一律**讀取時 join**，不寫回 `Notification.payload`
 （不把 PII 複製到第二張表）。
 
+## 4k. 訊息記下「發話當下是哪個身分」（`Message.senderAs`，2026-08-20）
+
+Human Owner 回報：**同時是班導與其中一位學生的家長，在那個孩子的聯絡簿裡兩種身分講的話長得一模一樣。**
+
+原本發話者身分是**讀取時推導**的，規則寫死成「同時是校方又是這個孩子的家長 → 顯示家長」。
+於是他以老師身分回的那句，其他家長看到的是「○○○ · 母親」說的 —— 而「這是導師的指示」
+與「這是某位媽媽的請求」對讀的人是兩件事。
+
+```text
+Message.senderAs   GUARDIAN | STAFF | null
+POST /messages     body 多一個 senderAs（前端的身分：parent → GUARDIAN，其餘 → STAFF）
+GET  /messages     senderRelation / senderRole 改成**逐筆**依 senderAs 決定
+```
+
+**不信任前端，但也不因此擋下訊息**：後端對照事實 —— 宣稱 GUARDIAN 但不是這個孩子的監護人
+就退回 STAFF，宣稱 STAFF 但沒有任何校方角色就退回 GUARDIAN。這是顯示用的標籤不是權限
+（能不能發言仍然由 `canAccessStudent` 判斷），讓一個標籤把訊息擋下來，
+對正在打字的人是莫名其妙的失敗。
+
+**不回填舊資料**：`senderAs` 為 null 的舊訊息沿用原本的推導規則。
+我們並不知道當時他戴的是哪一頂，猜一個填進去比留白更糟。
+
+Expand-only（ADR-003）：一個 enum + 一個 nullable 欄位，不觸碰既有資料；回滾＝DROP。
+畫面上的決定見 docs/04（位置不動、換的是標籤）。
+
 ### `?relation=GUARDIAN`（2026-08-20）
 
 Human Owner 回報：**家長身分點開訊息中心，看得到其他小朋友的聯絡簿。**

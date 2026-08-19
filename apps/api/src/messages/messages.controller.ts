@@ -21,6 +21,9 @@ const sendMessageSchema = z.object({
   studentId: z.string().min(1),
   category: z.enum(['GENERAL', 'HEALTH', 'BEHAVIOR', 'ADMIN']).optional(),
   body: z.string().min(1).max(2000),
+  // 發話當下戴的是哪頂帽子（前端的身分）。**不是權限** —— service 會對照事實，
+  // 宣稱不成立就退回真實的那一個，不會因此把訊息擋下來。
+  senderAs: z.enum(['GUARDIAN', 'STAFF']).optional(),
 });
 
 // 訊息端點（Student-centered，雙向）。授權鏈：JwtAuthGuard → RolesGuard（粗粒度）;
