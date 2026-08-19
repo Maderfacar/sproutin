@@ -25,7 +25,13 @@ const config: Config = {
           primary: 'var(--brand-primary)',
           secondary: 'var(--brand-secondary)',
           wash: 'var(--brand-wash)',
+          // 實心品牌底上面的字。深色模式把品牌色調亮之後，白字就看不見了。
+          contrast: 'var(--brand-contrast)',
         },
+        // 疊在任何底色上的極淡層與髮絲線。深色模式下黑色疊上去等於什麼都沒發生，
+        // 所以這兩個是 token 不是 bg-black/[0.03]。
+        overlay: 'var(--overlay)',
+        hairline: 'var(--hairline)',
         bg: 'var(--bg)',
         surface: {
           DEFAULT: 'var(--surface)',

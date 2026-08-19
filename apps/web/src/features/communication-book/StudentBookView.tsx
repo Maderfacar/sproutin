@@ -109,7 +109,7 @@ export function StudentBookView({ studentId, canEdit }: StudentBookViewProps) {
                 aria-current={active ? 'date' : undefined}
                 onClick={() => setSelected(iso)}
                 className={`tappable flex min-h-touch flex-1 flex-col items-center justify-center rounded-md2 py-1.5 text-2xs transition ${
-                  active ? 'bg-brand-primary font-bold text-white' : 'text-ink-soft'
+                  active ? 'bg-brand-primary font-bold text-brand-contrast' : 'text-ink-soft'
                 }`}
               >
                 <span>{['日', '一', '二', '三', '四', '五', '六'][new Date(iso).getUTCDay()]}</span>
@@ -117,7 +117,7 @@ export function StudentBookView({ studentId, canEdit }: StudentBookViewProps) {
                 <span
                   aria-hidden
                   className={`mt-0.5 h-1 w-1 rounded-full ${
-                    filled ? (active ? 'bg-white' : 'bg-brand-primary') : 'bg-transparent'
+                    filled ? (active ? 'bg-brand-contrast' : 'bg-brand-primary') : 'bg-transparent'
                   }`}
                 />
               </button>
@@ -175,7 +175,7 @@ function BookEntryDetail({ entry }: { entry: BookEntryView }) {
   return (
     <>
       {rows.length > 0 && (
-        <dl className="grid grid-cols-2 gap-x-4 border-t border-black/10 pt-3">
+        <dl className="grid grid-cols-2 gap-x-4 border-t border-hairline pt-3">
           {rows.map((r) => (
             <div key={r.label} className="flex items-baseline gap-2 py-1.5">
               <dt className="text-2xs opacity-70">{r.label}</dt>
@@ -188,7 +188,7 @@ function BookEntryDetail({ entry }: { entry: BookEntryView }) {
       <HealthSummary entry={entry} />
 
       {entry.teacherNote && (
-        <div className="mt-3 border-t border-black/10 pt-3">
+        <div className="mt-3 border-t border-hairline pt-3">
           <p className="text-2xs font-semibold opacity-70">老師今天寫的</p>
           <p className="mt-1.5 whitespace-pre-wrap text-base leading-relaxed">{entry.teacherNote}</p>
         </div>
@@ -203,7 +203,7 @@ function HealthSummary({ entry }: { entry: BookEntryView }) {
   if (!hasHealth) return null;
 
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-black/10 pt-3">
+    <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
       <span className="text-2xs opacity-70">健康</span>
       {entry.temperature !== null && (
         <Badge tone="note">{entry.temperature.toFixed(1)}°C</Badge>

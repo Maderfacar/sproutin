@@ -662,10 +662,66 @@ features/classes/hooks.ts                useVisibleClasses()（useSelectedClass 
 **做不到的先講清楚**：iOS 沒有震動回饋、沒有系統級側滑返回、LINE 頂欄佔一條。
 這些是平台限制，不是技術選擇的問題。
 
+### 深色模式（2026-08-20）
+
+**跟隨系統設定（`prefers-color-scheme`），不做 App 內的開關。** LINE 的深色模式本來就跟著系統，
+App 內再給一顆獨立開關，只會做出「LINE 是深的、裡面那頁是淺的」這種對不起來的狀態。
+
+只重新定義 token，元件一行都沒改 —— 這正是先蓋底層的回報。三個刻意的決定：
+
+```text
+不是把淺色反轉    反轉會讓森綠變螢光綠、米白變純黑，兩個都不是清葉。
+                  底色是「森林夜色」（帶綠的深灰），不是純黑。
+狀態色整組重配    淺色那組是「淡底 + 深字」，深色必須是「深底 + 淡字」；
+                  直接調暗會變成深底配深字。
+品牌色要調亮      園所選的主色多半偏深（那是給白紙用的），放在深底上會糊掉。
+                  所以 runtime 只寫 --brand-base（原色），--brand-primary 由 CSS
+                  依明暗推導；實心品牌底上的字改用 --brand-contrast（淺色白 / 深色深）。
+```
+
+`color-scheme: light dark` 一定要宣告：原生控制項（date / time / select / color）才會跟著換，
+而且 Android 的「強制深色」不會再自己去反轉一整頁 —— 它反轉出來的顏色沒有人設計過。
+
+新增的中性 token：`--overlay`（疊在任何底色上的極淡層，取代 `bg-black/[0.03]` ——
+黑色疊在深底上等於什麼都沒發生）、`--hairline`、`--scrim`（底部面板背後那層）。
+
+> **`lib/theme.ts` 同時修掉一個一直在生效的 bug。** 它原本讓每套主題各帶一份中性色的副本，
+> 由 `BrandingProvider` 在 runtime 用 inline style 寫到 `<html>`。inline style 贏過 `:root`，
+> 於是**那份副本才是真正生效的值** —— 而它停在「清葉加厚」之前：`--ink-soft` 還是 `#8a9188`
+> （加厚時已加深成 `#6e7770`，理由正是「長輩在戶外看得見才算數」）、`--radius-card` 還是 18px。
+> globals.css 改了半天，跑起來的其實是舊的。同一個機制也會讓深色模式整組被靜靜蓋掉。
+> 現在主題只給一個名字（`<html data-theme>`），**顏色一律由 CSS 決定**。
+
+hero 的品牌色退路（沒有封面圖時）刻意仍用 `--brand-base`：那一塊上面壓的是白字，
+底色一調亮白字就沒了。hero 是一張「照片」，不跟著頁面換明暗。
+
+`app/global-error.tsx` 維持寫死的淺色 —— 那一頁在 CSS 都可能沒載到的情況下要能顯示，
+不能依賴任何 token。
+
+### 設計系統的守門（`eslint.config.mjs` 的 `design-system/no-retired-styles`）
+
+規則寫在文件裡不會自己執行。下一個人（或下一個視窗的我）加新頁面時，
+最省事的作法永遠是複製一段舊的 class。這條規則擋三件事：
+
+```text
+已退役的全域 class   card / btn-primary / btn-secondary / field-label
+                     / section-title / eyebrow / chip
+                     → globals.css 的 @layer components 現在只剩 .field 與 .tappable
+Tailwind 預設色      bg-red-100 那一類。狀態走 good/wait/note/stop、品牌走 brand-*、
+                     中性走 ink/line/surface
+已移除的字級         text-3xs / text-4xs（最小停在 11px）
+```
+
+**寫成 plugin 而不是 `no-restricted-syntax` 的選擇器**：選擇器字串裡的 `\s`
+會先被 JS 字串跳脫吃掉一層變成 `s`，規則看起來設好了、實際上從來沒擋住任何東西。
+第一版就是這樣寫的；換成 plugin 之後立刻抓到 5 處人工 grep 漏掉的
+（其中一處是 `features/audit/labels.ts` 裡三組 Tailwind 預設色，而本文件當時宣稱「全站已無」）。
+**一個永遠不會亮的守門比沒有守門更危險。**
+
 ### 尚未決定
 
-深色模式。目前全站只有淺色。token 層已經備好（要加只需在 `globals.css` 重新定義變數，
-元件一行都不用改），但那是另一批的工作量，等頁面重做完再談。
+`prefers-reduced-motion` 之外的無障礙檢查（色彩對比掃描、完整鍵盤導覽）尚未自動化；
+Lighthouse 也還沒接進 CI。
 
 ## 4. Card-based Dashboard (§25，config-driven)
 

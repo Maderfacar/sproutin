@@ -79,7 +79,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                         className={`flex items-center gap-2.5 whitespace-nowrap rounded-md2 px-2.5 py-2 text-sm transition ${
                           active
                             ? 'bg-brand-primary/10 font-semibold text-brand-primary'
-                            : 'text-ink-soft hover:bg-black/[0.03] hover:text-ink'
+                            : 'text-ink-soft hover:bg-overlay hover:text-ink'
                         }`}
                       >
                         <Icon name={item.icon} className="h-[1.125rem] w-[1.125rem] shrink-0" />

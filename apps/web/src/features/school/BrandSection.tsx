@@ -181,7 +181,7 @@ export function BrandSection({ draft, onChange }: BrandSectionProps) {
               >
                 <span
                   aria-hidden
-                  className="h-5 w-5 rounded-full border border-black/10"
+                  className="h-5 w-5 rounded-full border border-hairline"
                   style={{ background: preset.primary }}
                 />
                 {preset.label}

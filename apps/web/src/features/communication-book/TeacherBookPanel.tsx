@@ -252,7 +252,7 @@ export function TeacherBookPanel() {
                     onClick={() => setColumn(c.id)}
                     className={`tappable min-h-touch shrink-0 rounded-md2 px-4 text-sm transition ${
                       on
-                        ? 'bg-brand-primary font-bold text-white'
+                        ? 'bg-brand-primary font-bold text-brand-contrast'
                         : 'border border-line font-semibold text-ink-soft'
                     }`}
                   >

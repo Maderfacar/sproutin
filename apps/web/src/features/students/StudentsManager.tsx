@@ -113,7 +113,7 @@ export function StudentsManager() {
           action={
             <SurfaceLink
               href="/liff/admin/classes"
-              className="tappable inline-flex min-h-touch items-center rounded-md2 bg-brand-primary px-5 font-semibold text-white shadow-soft"
+              className="tappable inline-flex min-h-touch items-center rounded-md2 bg-brand-primary px-5 font-semibold text-brand-contrast shadow-soft"
             >
               先去建立班級
             </SurfaceLink>

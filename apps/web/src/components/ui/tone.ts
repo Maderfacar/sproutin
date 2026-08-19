@@ -42,7 +42,7 @@ export const TONE: Record<Tone, ToneClasses> = {
   brand: {
     block: 'bg-brand-wash border-brand-primary text-brand-primary',
     text: 'text-brand-primary',
-    solid: 'bg-brand-primary text-white',
+    solid: 'bg-brand-primary text-brand-contrast',
   },
   neutral: {
     block: 'bg-surface-sunk border-line text-ink-soft',

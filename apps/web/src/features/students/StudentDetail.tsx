@@ -68,7 +68,7 @@ export function StudentDetail({ studentId }: { studentId: string }) {
       <section className="flex items-center gap-4">
         <span
           aria-hidden
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-primary font-serif text-2xl font-bold text-white shadow-soft"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-primary font-serif text-2xl font-bold text-brand-contrast shadow-soft"
         >
           {student.name.charAt(0)}
         </span>

@@ -233,7 +233,7 @@ export function RichMenuSection() {
                 aria-hidden
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md2 text-sm font-bold ${
                   currentTarget(index)
-                    ? 'bg-brand-primary text-white'
+                    ? 'bg-brand-primary text-brand-contrast'
                     : 'border border-line text-ink-mute'
                 }`}
               >

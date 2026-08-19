@@ -41,11 +41,14 @@ export function HomeHero({ greeting, displayName, dateLabel, context }: HomeHero
             />
           </>
         ) : (
+          // 沒有封面圖時的退路。**用 --brand-base（園所設定的原色）不是 --brand-primary**：
+          // 深色模式會把 primary 往亮的方向調（要在深底上看得見），而這一塊上面壓的是白字，
+          // 底色一亮白字就沒了。hero 是一張「照片」，不跟著頁面換明暗。
           <div
             className="h-full w-full"
             style={{
               background:
-                'linear-gradient(160deg, color-mix(in srgb, var(--brand-primary) 92%, black) 0%, var(--brand-primary) 55%, color-mix(in srgb, var(--brand-secondary) 70%, var(--brand-primary)) 100%)',
+                'linear-gradient(160deg, color-mix(in srgb, var(--brand-base) 92%, black) 0%, var(--brand-base) 55%, color-mix(in srgb, var(--brand-secondary) 70%, var(--brand-base)) 100%)',
             }}
           />
         )}

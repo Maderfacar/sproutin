@@ -8,12 +8,29 @@
    細線改實線、白底改色塊、字級距離拉開，讓答案自己跳出來，使用者不必逐行讀。
    （Human Owner 2026-08-20 全站改版定案，方向 B「清葉加厚」。） */
 :root {
-  /* 品牌（per-school fallback；森綠） */
-  --brand-primary: #2f6b4f;
+  /* 淺色與深色都支援。宣告出來，原生控制項（date / time / select / color）
+     才會跟著換色 —— 不宣告的話，Android 的「強制深色」會自己去反轉整頁，
+     反轉出來的顏色沒有人設計過。 */
+  color-scheme: light dark;
+
+  /* 品牌（per-school）。BrandingProvider 在 runtime 只寫 --brand-base（園所設定的原色），
+     真正拿來用的 --brand-primary 由這裡從 base 推導 —— 深色模式要的是同一個色相、
+     但在深底上看得見的那一階，那件事只有 CSS 知道現在是哪一種模式。 */
+  --brand-base: #2f6b4f;
+  --brand-primary: var(--brand-base);
   --brand-secondary: #74b48a;
+  /* 實心品牌底上面的字。淺色是白字；深色時品牌色被調亮，白字就看不見了。 */
+  --brand-contrast: #ffffff;
   /* 品牌淡底。用 color-mix 而非寫死，園所換色時它會自己跟著換 —— 這正是
      舊版 bg-green-100 那種 Tailwind 預設色做不到的事。 */
   --brand-wash: color-mix(in srgb, var(--brand-primary) 12%, var(--surface));
+
+  /* 疊在任何底色上的極淡層（hover、假的 LINE 卡面）與髮絲線。
+     寫成變數而不是 bg-black/[0.03]：黑色疊在深色底上等於什麼都沒發生。 */
+  --overlay: rgba(35, 48, 42, 0.04);
+  --hairline: rgba(35, 48, 42, 0.1);
+  /* 底部面板後面那層。深色時要更黑一點，否則深底配深罩＝看不出面板浮起來了。 */
+  --scrim: rgba(35, 48, 42, 0.34);
 
   /* 清葉中性 */
   --bg: #f4f2ea; /* 米白 parchment */
@@ -69,6 +86,56 @@
   --font-serif: 'Iowan Old Style', 'Palatino Linotype', 'Songti TC', 'Noto Serif TC', Georgia, serif;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Noto Sans TC',
     'Microsoft JhengHei', system-ui, sans-serif;
+}
+
+/* ===== 深色模式 =====
+   只重新定義 token，元件一行都不用改（這正是先蓋底層的回報）。
+   跟隨系統設定（prefers-color-scheme）而不是自己做一顆開關：LINE 的深色模式本來就跟著系統，
+   App 內再給一個獨立開關，只會出現「LINE 是深的、裡面那頁是淺的」這種對不起來的狀態。
+
+   幾個刻意的決定：
+   · 深色不是把淺色反轉。反轉會讓森綠變成螢光綠、米白變成純黑，兩個都不是清葉。
+     底色走的是「森林夜色」——帶綠的深灰，不是純黑。
+   · 狀態色四組全部重配，不是把淺色調暗：淺色那組是「淡底 + 深字」，
+     深色必須是「深底 + 淡字」，直接調暗會變成深底配深字。
+   · 品牌色從園所設定的原色往亮的方向混。園所選的多半是深色（適合印在白紙上），
+     直接放在深底上會糊成一團。 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-primary: color-mix(in srgb, var(--brand-base) 55%, #e6efe8);
+    --brand-contrast: #14201b;
+
+    --bg: #151b18;
+    --bg-deep: #101512;
+    --surface: #1e2622;
+    --surface-sunk: #171e1a;
+    --ink: #e9efea;
+    --ink-soft: #a7b2ab; /* 與淺色同一條原則：次要字要看得見，不是淡到剩影子 */
+    --ink-mute: #7c877f;
+    --line: #2b352f;
+    --line-strong: #46524a;
+
+    --good-wash: #1d3125;
+    --good-edge: #3f6b4a;
+    --good-text: #9ed6ac;
+    --wait-wash: #322819;
+    --wait-edge: #6d5a2f;
+    --wait-text: #e3c88b;
+    --note-wash: #35291e;
+    --note-edge: #7a5a3a;
+    --note-text: #e9bc93;
+    --stop-wash: #392220;
+    --stop-edge: #7d4a41;
+    --stop-text: #eea79a;
+
+    --overlay: rgba(255, 255, 255, 0.06);
+    --hairline: rgba(255, 255, 255, 0.12);
+    --scrim: rgba(0, 0, 0, 0.62);
+
+    /* 深色底上的陰影幾乎看不見，改用更深更擴散的一層撐出層次。 */
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 34px -22px rgba(0, 0, 0, 0.75);
+    --shadow-lift: 0 16px 34px -18px rgba(0, 0, 0, 0.85);
+  }
 }
 
 html,
@@ -144,7 +211,7 @@ body {
   overscroll-behavior: contain;
 }
 .sheet::backdrop {
-  background: rgba(35, 48, 42, 0.34);
+  background: var(--scrim);
 }
 .sheet[open] .sheet-panel {
   animation: sheetUp var(--dur-base) var(--ease-out) both;

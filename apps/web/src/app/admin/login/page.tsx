@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
         {/* 真的要離開本站再回來（伺服器端產生 state 後轉往 LINE），所以是 <a> 不是 <Link>。 */}
         <a
           href="/api/admin/oauth/start"
-          className="tappable inline-flex min-h-touch w-full items-center justify-center rounded-md2 bg-brand-primary px-5 py-3 font-semibold text-white shadow-soft transition hover:opacity-90"
+          className="tappable inline-flex min-h-touch w-full items-center justify-center rounded-md2 bg-brand-primary px-5 py-3 font-semibold text-brand-contrast shadow-soft transition hover:opacity-90"
         >
           用 LINE 登入
         </a>

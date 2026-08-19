@@ -68,14 +68,16 @@ export function AppearanceEditor({ viewerRoles }: AppearanceEditorProps) {
   }, [config]);
 
   // 即時預覽：草稿顏色直接套到 CSS 變數；離開頁面時還原成該校已儲存的值。
+  // 寫的是 --brand-base（原始色）而不是 --brand-primary，與 BrandingProvider 一致 ——
+  // 深色模式從 base 調出在深底上看得見的那一階，直接寫 primary 會把那一層蓋掉。
   useEffect(() => {
     if (!draft) return;
     const root = document.documentElement;
-    root.style.setProperty('--brand-primary', draft.primaryColor);
+    root.style.setProperty('--brand-base', draft.primaryColor);
     root.style.setProperty('--brand-secondary', draft.secondaryColor);
     return () => {
       if (!config) return;
-      root.style.setProperty('--brand-primary', config.primaryColor);
+      root.style.setProperty('--brand-base', config.primaryColor);
       root.style.setProperty('--brand-secondary', config.secondaryColor);
     };
   }, [draft, config]);
@@ -144,11 +146,11 @@ export function AppearanceEditor({ viewerRoles }: AppearanceEditorProps) {
           </div>
           <span aria-hidden className="flex shrink-0 gap-1 pt-3">
             <span
-              className="h-6 w-6 rounded-full border border-black/10"
+              className="h-6 w-6 rounded-full border border-hairline"
               style={{ background: draft.primaryColor }}
             />
             <span
-              className="h-6 w-6 rounded-full border border-black/10"
+              className="h-6 w-6 rounded-full border border-hairline"
               style={{ background: draft.secondaryColor }}
             />
           </span>

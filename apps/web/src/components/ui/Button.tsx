@@ -20,8 +20,8 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 type Variant = 'primary' | 'secondary' | 'danger' | 'text';
 
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-brand-primary text-white shadow-soft hover:opacity-90',
-  secondary: 'border border-line-strong bg-surface text-ink hover:bg-black/[0.02]',
+  primary: 'bg-brand-primary text-brand-contrast shadow-soft hover:opacity-90',
+  secondary: 'border border-line-strong bg-surface text-ink hover:bg-overlay',
   danger: 'border border-stop-edge bg-stop-wash text-stop-text hover:opacity-90',
   text: 'text-brand-primary hover:opacity-80',
 };

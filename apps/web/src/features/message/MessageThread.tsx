@@ -98,7 +98,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
                         className={`flex h-[1.375rem] w-[1.375rem] items-center justify-center rounded-full text-2xs font-bold ${
                           msg.senderRelation
                             ? 'border border-line bg-surface text-ink-soft'
-                            : 'text-white'
+                            : 'text-brand-contrast'
                         }`}
                         style={
                           msg.senderRelation ? undefined : { background: 'var(--brand-primary)' }
@@ -114,7 +114,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
                   <div
                     className={`max-w-[82%] px-4 py-2.5 text-sm leading-relaxed ${
                       mine
-                        ? 'rounded-[18px_4px_18px_18px] bg-brand-primary text-white'
+                        ? 'rounded-[18px_4px_18px_18px] bg-brand-primary text-brand-contrast'
                         : 'rounded-[4px_18px_18px_18px] text-ink'
                     }`}
                     style={
@@ -149,9 +149,9 @@ export function MessageThread({ studentId }: { studentId: string }) {
           這裡畫的是「這則正在送」這個事實本身，成功後重取就會換成真的那一則。 */}
       {sendMessage.isPending && sendMessage.variables && (
         <div className="flex justify-end">
-          <div className="max-w-[78%] rounded-[18px_4px_18px_18px] bg-brand-primary px-3.5 py-2 text-sm text-white opacity-70">
+          <div className="max-w-[78%] rounded-[18px_4px_18px_18px] bg-brand-primary px-3.5 py-2 text-sm text-brand-contrast opacity-70">
             <p className="whitespace-pre-wrap">{sendMessage.variables.body}</p>
-            <p className="mt-1 text-2xs text-white/80">送出中…</p>
+            <p className="mt-1 text-2xs text-brand-contrast opacity-80">送出中…</p>
           </div>
         </div>
       )}
@@ -177,7 +177,7 @@ export function MessageThread({ studentId }: { studentId: string }) {
           type="submit"
           aria-label="送出"
           disabled={sendMessage.isPending || !body.trim()}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition hover:opacity-90 disabled:opacity-40"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary text-brand-contrast transition hover:opacity-90 disabled:opacity-40"
         >
           <Icon name="send" className="h-5 w-5" />
         </button>

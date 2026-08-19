@@ -68,7 +68,7 @@ export default function MePage() {
       <section className="rise-in flex items-center gap-4">
         <span
           aria-hidden
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-primary text-2xl font-bold text-white"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-primary text-2xl font-bold text-brand-contrast"
         >
           {user.displayName.charAt(0)}
         </span>

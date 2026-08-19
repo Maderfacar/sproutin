@@ -65,7 +65,7 @@ function Steps({
       : ride?.status === 'ALIGHTED';
 
   return (
-    <ul className="border-t border-black/10 pt-2 text-sm">
+    <ul className="border-t border-hairline pt-2 text-sm">
       <li className="flex items-center gap-3 py-1.5">
         <Icon name={done('board') ? 'check' : 'chev'} className="h-4 w-4 shrink-0 opacity-70" />
         <span className="flex-1">
