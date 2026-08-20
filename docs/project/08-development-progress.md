@@ -2,7 +2,16 @@
 
 > **這份是 Human Owner 的主要「持續跟讀」文件。** 只回答：現在在哪裡？完成什麼？還缺什麼？誰要做什麼？下一步是什麼？
 > 它是**導航**，不是 Source of Truth。真正的真相在：Architecture → `docs/00-09` + `docs/adr/`；Project Control → `docs/project/`。
-> Last updated: 2026-08-19（**「LINE 圖文選單點進去永遠停在載入中」修好並 ✅ ACCEPTED**（Human Owner「驗收過」）—— 8/17 那次修正留下的兩個坑：
+> Last updated: 2026-08-20（**全站介面改版「清葉加厚」五批 + 收尾全數完成並 ✅ ACCEPTED**（Human Owner 分批驗證）——
+> 37 頁重做（19 個 `/liff` + 18 個 `/admin`），不動架構、API 與權限。
+> 底層＝token + 15 個元件 + 三套殼 + 四種版型；三個聯集視圖與 `components/Band` 全部退役。
+> 加做：深色模式、冷啟動開場畫面、震動回饋、頁籤預載、**兩道會亮的守門**
+>（eslint `design-system/no-retired-styles` + 色彩對比測試 —— 兩道都在裝上去的當下就抓到既有缺陷）。
+> **「一次只用一種身分」共踩十個坑**，收斂成三個 hook + 一條路由規則（見 docs/04 §3c）。
+> migration **0010_message_sender_as**（expand-only，訊息記下發話當下的身分）。
+> 測試 590 → **784**（web 382 + api 390 + shared 12）。
+>
+> （前次）2026-08-19（**「LINE 圖文選單點進去永遠停在載入中」修好並 ✅ ACCEPTED**（Human Owner「驗收過」）—— 8/17 那次修正留下的兩個坑：
 > 「轉址中」的旗標只設不清、轉址時把 LINE 登入導回的 code/state 一起丟掉。
 > 兩者都只在圖文選單那條路上才踩得到，直接開網址驗不出來。無 migration、無新端點。測試 585 → **590**。
 >
@@ -122,341 +131,46 @@ Phase 8 已上線：#1 ESLint flat config + CI lint gate、#2 全域 exception f
 
 ## Current Task
 
-**Phase 9 階段3 ① 骨架 + ②b 權限設定 + ② 管理首頁 + ④ 園所外觀設計（含 LINE 圖文選單套用）— 全數 ✅ ACCEPTED（2026-08-17）。**
-**③ CSV 批次匯入由 Human Owner 暫停**（欄位需等功能完善才明確）。
-
-**⑦ 娃娃車 / 接送 刀1 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
-四項全綠：lint / typecheck / **測試 412（api 338 + shared 12 + web 62）** / build。migration **0009_bus**（expand-only）。
-Human Owner 更正：door-to-door →「站點」改稱**接送點**（`BusPoint`）。
-
-**下一步（Human Owner 2026-08-18 指定）：① 補齊電腦版與手機版的功能對等 → ② 打磨。**
-新原則見 docs/04 §3b；待補清單見下方 Recent Work Log。
-
-**功能對等 批1（學生整合視圖 + 學生管理 + 班級管理）— ✅ ACCEPTED（2026-08-18, Human Owner）。**
-桌面的娃娃車設定流程（排路線 → 指派每個孩子的接送點）已接回來。
-Human Owner 兩題定案：家長維持只能用手機；首頁與「我的」列為對等原則的明文例外（docs/04 §3b）。
-
-**功能對等 批2（權限設定 + 發送訊息 + 稽核紀錄）— ✅ ACCEPTED（2026-08-18, Human Owner）。**
-**功能對等 批3（聯絡簿／出缺勤／請假／公告／娃娃車點名／通知）— ✅ ACCEPTED（2026-08-18, Human Owner）。**
-四項全綠：lint / typecheck / **測試 425（api 338 + shared 12 + web 75）** / build。**無 migration、無新後端端點。**
-
-✅ **電腦版與手機版功能對等已全數補齊**（三類明文例外見 docs/04 §3b 的對照表）。
-
-**親師對話標出發話者 — ✅ ACCEPTED（2026-08-18, Human Owner）。**
-四項全綠：lint / typecheck / **測試 428（api 341 + shared 12 + web 75）** / build。
-**無 migration、無新端點**（改既有 `/messages` 的回應）。詳見 docs/07「親師對話的發話者」。
-Human Owner 定案：顯示「名字 + 身分」；**對話圖片先不做**（需私有儲存 + 簽名網址，屆時另提 §D）。
-
-**② 打磨 第一批 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
-四項全綠：lint / typecheck / **測試 445（api 346 + shared 12 + web 87）** / build。
-**無 migration、無新後端端點**（改既有 `/audit-logs` 與 `/rich-menus` 的行為）。
-
-範圍由 Human Owner 走查後四題定案：① A 組四項全做 ② 稽核顯示「姓名 + 身分」
-③ 圖文選單的娃娃車那一格**只給老師**（家長首頁本來就有卡片，不另做家長版頁面）
-④ `onlyMobile` 欄位**刪掉**。
+**全站介面改版「清葉加厚」— 全數完成（2026-08-20）。** Human Owner 分批線上驗證，逐項「驗證過關」。
 
 ```text
-A1 載入／沒權限畫面在桌面外框裡撐出一整個螢幕高的空白   → StatusScreen 加 fullScreen（預設 false）
-   順帶修好巢狀 <main>（外框已經有一個，HTML 不合法）
-A2 打錯網址跳出系統預設的英文 404                       → app/not-found.tsx（清葉版，給得出下一步）
-A3 分頁永遠寫「Sproutin」、沒有分頁小圖示               → lib/pageTitle + components/DocumentTitle + app/icon.svg
-A4 圖文選單不能指到娃娃車                               → TARGET_PATHS 加 bus；STAFF_ONLY_TARGETS 後端再擋一次
-B1 桌面每日類頁面在寬螢幕上只用左半邊                   → components/SplitColumns（出缺勤／請假／公告）
-B2 稽核紀錄的「操作者」是一串看不懂的 ID                → /audit-logs 多回 actorName；另加「只看這個人」
-B3 lib/adminNav.ts 的 onlyMobile 沒有任何一條在用       → 刪除（含 AdminShell 的「手機版」標籤與那條測試）
+底層     token（globals.css 唯一來源 + tailwind 對照表）+ 15 個元件 + 三套殼 + 四種版型
+第二批   家長 6 頁          第三批   導師 5 頁          第四批   行政 18 頁（六段）
+退役     三個聯集視圖（LeaveView / AttendanceView / CommunicationBookView）+ BusView
+         + components/Band + StudentSelect / ClassSelect
+收尾     漏掉的 13 個檔案 + 通知/訊息中心、深色模式、手感三項、兩道守門
 ```
 
-**插隊三件（A1 字體大小 / A2 公告位置 / A3 頁首與封面圖）— ✅ ACCEPTED（2026-08-18, Human Owner 線上驗證完畢）。**
-四項全綠：lint / typecheck / **測試 464（api 346 + shared 12 + web 106）** / build。
-**無 migration、無新後端端點**（純前端）。
-
-Human Owner 四題定案：① 字體大小**存在這支瀏覽器上**（localStorage，不進資料庫）
-② 開關**只給家長的手機**（放 `/liff/me`） ③ A3 **直接做**，不必先畫圖 ④ 批2／批3 驗收通過。
+**「一次只用一種身分」共踩十個坑**（前六個是切換的出入口與資料範圍，⑦–⑨ 是入口與位置，
+⑩ 方向相反 —— 該講的沒講）。收斂成**三個 hook + 一條路由規則**，新頁面一律用它們：
 
 ```text
-A1 全站字體大小 標準 / 中 / 大        → lib/fontScale.ts + components/FontScaleControl.tsx
-   100% / 112.5% / 125%，改的是 html 的 font-size。Tailwind 字級與間距都是 rem，
-   所以整頁等比放大，卡片、留白、圖示、行高一起長大 —— 版面比例不會跑掉。
-   用 % 不用 px：已在系統設定裡放大過字的人不會被壓回 16px。
-   首次繪製前就套（root layout 內嵌開機腳本），不會先閃一下小字。
-   存不進去（無痕模式）時**明講「重開會回到標準」**，不假裝記住了。
-A1' 放大後才會現形的三處破版（先掃出來才動手，不是事後補）：
-   · 全站 19 處寫死的 px 字級（text-[10px] 等）不會跟著放大 → tailwind 補 2xs/3xs/4xs
-     三級（rem），全部換掉。LINE 卡片預覽的外框寬高也一併改 rem，否則字大了框沒大。
-   · 首頁「快速功能」：icon + 4 字標題 + 「即將推出」在 375px 手機上搶不到同一行，
-     標題會被折成「收費繳／費」→ 徽章改放標題底下，與寬度脫鉤。
-   · 稽核列：動作代碼 + 結果 + 時間三個搶一行 → 改 flex-wrap，讓時間整段掉下一行。
-   · 另外把頁首園名加上 truncate（長園名會把通知鈴擠出畫面）、
-     後台側欄 232px → 14.5rem（字放大時 whitespace-nowrap 會撐爆側欄）。
-A2 最新公告移到「快速功能」之上   → 公告是「今天有沒有新的事」，快速功能是常駐入口；
-   會變的東西要先看到。rise-in 的 animationDelay 一起對調。
-A3 封面圖延伸到頁首後面           → AppShell 頁首改 sticky top-0；在 `/liff` 最頂端時
-   透明疊在圖上（白字、看不見的底線），往下捲 8px 換回實色底 + backdrop-blur。
-   **只有 `/liff` 有 hero**，其他頁一進來就是實色。
-   hero 靠 globals.css 的 --shell-header-h 往上鑽（唯一量測值來源），並把同樣高度長回來
-   —— 頁首下方看得到的 hero 與其下所有內容位置與改動前完全相同，只是圖多延伸到頁首後面。
-   底線兩種狀態都保留（透明時看不見），否則捲動時頁首矮 1px、整頁會跳。
-   hero 頂端加一層暗紗：封面圖是園所自己傳的，可能上半部很亮；品牌色也可能挑到淺色。
+useVisibleStudents() / useVisibleClasses()   這個身分看得到哪些資料
+useCapabilities()                            這個身分看得到哪些入口
+isRouteForPersona()                          這個身分站不站得住這一頁
 ```
 
-**打磨第二階段 —— 版面斷句 + 多重身分標示（Band 元件 + 6 頁）
-— ✅ ACCEPTED（2026-08-18, Human Owner 線上驗證完畢）。**
-四項全綠：lint / typecheck / **測試 545（api 362 + shared 12 + web 171）** / build。
-無 migration、無新後端端點（純前端）。
+三者共用 `useScopedPersona()`：**桌面 `/admin/*` 一律不套身分**（身分記在 localStorage 跨外框共用，
+否則園長在手機切成家長，隔天打開電腦後台會整片空白）。
 
-Human Owner 走查提出兩個症狀：① 一頁把功能區塊全排在一起「像一篇沒有標點符號的文章」
-② 多重身分的人分不出哪一段是給哪個身分看的。全站盤點結果：**6 頁有身分分歧、
-約 8 頁只缺斷句、4 頁不用改**。
-
-三題定案：① 加全站共用的「區塊」元件 ② 身分籤**只有多重身分的人看得到**
-③ 這一輪做元件 + 6 個有身分分歧的頁。
+**兩道守門是這一輪最有價值的產出** —— 都在裝上去的當下就抓到既有缺陷：
 
 ```text
-元件    components/Band（kind=action/review/manage + title + description + audience）
-        roleFlags 新增 hasDualIdentity（校方 ∧ 家長）—— 仍是唯一的顯示判斷來源
-聯絡簿  範本頁：老師的記錄區在上（粗線 + 以老師身分）、翻閱區在下（細線收斂）
-娃娃車  點名（以老師身分）→ 查看單一學生 → 娃娃車設定（manage，排最後，偶爾才動一次）
-出缺勤  點名（以老師身分）｜查看單一學生 —— Band 放在 SplitColumns 的兩欄各自裡面
-請假    待審核（以老師身分；全校或班級）｜申請請假 → 請假紀錄（選到學生才長出來）
-公告    發一則公告（以老師身分）｜公告列表；說明會依「能不能發全校」換句話
-學生視圖 孩子的名字留成頁面標題（不進 Band）；本月出缺勤／家長／最近請假是翻閱，
-        娃娃車是唯一動得了東西的一段（manage + 以老師身分，只有園長／行政看得到）
-順帶    面板進 Band 之後拿掉自己那顆 <h2 className="section-title">（同一段不會有兩個標題）：
-        點名（老師）／發公告／待審核請假（老師）／全校待審請假
-測試    web 148 → 171（5 支新的 view spec：哪幾段出現、誰排前面、身分籤貼在哪裡）
-下一輪  約 8 個「只缺斷句」的管理頁（人員/權限/班級/學生管理/園所外觀/發送訊息/娃娃車設定）
+eslint design-system/no-retired-styles   抓到 5 處 grep 漏掉的（含 audit/labels.ts 的 Tailwind 預設色，
+                                         而文件當時宣稱「全站已無」）
+色彩對比測試（lib/contrast.spec）        抓到 4 個不合格的值：--ink-soft 4.43、--ink-mute 2.51、
+                                         --line-strong 1.57、深色 --ink-mute 4.15
+                                         —— 正是 Human Owner 最早說的「長輩在戶外看不見」
 ```
 
-**做的過程中發現、需要 Human Owner 知道的一件事**：身分籤只能貼在**結構上必然**的區塊。
-聯絡簿的「翻閱單一學生」清單裡同時有老師帶的班級與他自己的小孩，而 session 的 `AuthUser`
-**沒有帶 `guardianOf`** —— 前端判斷不出選到的是不是自己的小孩。所以那一區改用文案講清楚，
-不貼可能貼錯一半的籤。要貼得準必須讓 `/me` 多回監護關係，那是後端改動（§D 提案，尚未提）。
-這一輪的 5 頁沿用同一條規則：**只有校方獨有的區塊才貼籤**（點名／審核／發布／娃娃車設定），
-凡是「選一個學生來看」的清單一律不貼，改用文案講清楚（例如「你帶的班級和你自己的小孩都在這個清單裡」）。
+> **寫守門一定要驗它會亮。** 第一版 eslint 規則用 `no-restricted-syntax` 的選擇器寫，
+> 裡面的 `\s` 被 JS 字串跳脫吃掉變成 `s`，規則設好了但從來沒擋住任何東西。
+> 改寫成真正的 plugin 才會亮。**一個永遠不會亮的守門比沒有守門更危險。**
 
-**B1 手機體感 前三件 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
-四項全綠：lint / typecheck / **測試 509（api 362 + shared 12 + web 135）** / build。
-**無 migration、無新後端端點**（純前端）。Human Owner 定案：只做前三件，PWA 不做。
-
-```text
-① 骨架屏取代「載入中…」   components/Skeleton（Rows / Cards / Lines 三種形狀）
-   全站 27 個檔案的載入文字全部換掉。形狀要像「等一下真的會出現的東西」，
-   否則資料到位時會整頁跳動 —— 所以是逐處配形狀，不是全部套同一個。
-   例外：/liff/message 的「訊息已併入聯絡簿，正在前往…」保留 StatusScreen
-   （那是轉址提示，不是在等資料）。
-② 按下去立刻有反應       .tappable（active 縮放 + 淡化）用在底部頁籤、首頁快速功能、
-   公告與聯絡簿卡片、訊息中心每一列;.btn-primary/.btn-secondary 的 active 加重。
-   親師對話：按下送出那一刻先畫出「送出中…」的泡泡，不等伺服器回來;
-   送不出去時明講並把字留在輸入框（不安靜吞掉）。
-   訊息中心的已讀是樂觀更新（小圓點立刻消失，失敗自動復原）。
-③ 換頁的方向感           components/PageTransition，進去從右滑進、返回從左滑回。
-   靠 popstate 分辨前進/返回;判斷不出來一律當前進（猜錯只是方向反了，不會壞）。
-   位移只有 14px —— 方向講清楚就好，滑太多會讓每次點擊都變慢。
-全部尊重 prefers-reduced-motion（與既有 .rise-in 同一個慣例）。
-```
-
-**刻意沒做的**：① PWA／加到主畫面（Human Owner 定案不做）② 下拉重新整理、頁籤微震動、
-數字補間（列為「可有可無」，未排入）③ 請假送出目前是按鈕轉「送出中…」，**沒有**在請假清單
-上先長出一列 pending —— 伺服器才知道那筆的 id 與審核狀態，塞假資料進清單得多一套復原邏輯;
-若 Human Owner 要，可另排。
-
-**打磨收尾（錯誤頁 + 分頁標題 + 請假樂觀更新）— ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」）。**
-四項全綠：lint / typecheck / **測試 585（api 366 + shared 12 + web 207）** / build。
-**無 migration、無新後端端點**（純前端）。
-
-```text
-① 程式在瀏覽器出錯 → app/error.tsx（人話 + 重新載入 + 回入口 + 只給回報代碼，不印技術細節）
-   另加 app/global-error.tsx —— 連根版面都壞掉時 error.tsx 接不到，這是最後一道網
-   （會取代整份文件，所以自己畫 html/body、樣式用 inline，這種時候 CSS 可能沒載進來）。
-② 根路徑 / 找不到頁面 / 錯誤頁的分頁標題還是靜態「Sproutin」
-   → components/DocumentTitle 加 StaticDocumentTitle（那三頁都拿不到 BrandingProvider，
-     所以標題由呼叫端給一句寫死的）。根路徑用「入口 · 園名」（園名是那一頁自己載的）。
-③ 請假送出後清單沒有立刻長出一列（B1 當初刻意沒做的那件）
-   → useCreateLeave 加 onMutate/onError 樂觀更新。那一列顯示「送出中…」而**不是**「待審核」
-     ——伺服器才知道真正的 id 與審核狀態；也不給取消按鈕（沒有 id，取消不了）。
-     送不出去就把清單復原，不留下一列不存在的假資料。
-測試  web 196 → 207（錯誤頁 5、找不到頁面 2、請假樂觀更新 4）。
-```
-
-**LINE 圖文選單點進去永遠停在載入中 — ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」，圖文選單線上實測每一格都開得到）。**
-四項全綠：lint / typecheck / **測試 590（api 366 + shared 12 + web 212）** / build。
-**無 migration、無新後端端點**（純前端，改 `/liff` 外框處理 `liff.state` 的那一段）。
-
-Human Owner 回報：「現在用瀏覽器開得起來，但透過 OA 帳號的圖文選單會開不起來，一直顯示載入中」。
-
-病灶在 2026-08-17 那次「圖文選單點進來會到指定頁面」的修正裡（commit 5534051），
-**兩個都只在圖文選單那條路上才會踩到**，所以直接開網址驗不出來：
-
-```text
-① 「轉址中」的旗標設了沒人關。/liff 的 layout 不會因為換頁而重掛 ——
-   setRedirecting(true) 之後 router.replace 過去，pathname 變了、旗標還是 true
-   → 永遠停在轉圈圈的畫面。直接開 /liff/leave 沒有 liff.state，旗標從頭到尾是 false，
-   所以瀏覽器一切正常，只有從選單點進來才卡死。
-② 轉址時把網址上其餘的 query 一起丟掉了。LINE 登入導回時網址是
-   /liff?code=…&state=…&liff.state=/leave，code/state 是 liff.init() 完成登入要用的；
-   被丟掉就換不到 session → 再登入一次 → 又被丟掉，無限迴圈（畫面同樣停在載入中）。
-```
-
-作法：把「要不要轉址」抽成 `liffRedirectFor(search, pathname)` 一支純函式（可測），
-**每次都回一個明確的答案**（要轉／不用轉），呼叫端照著設旗標就不可能只設不清；
-轉址時保留 liff.state 以外的 query。
-
-順帶：三段等待的畫面本來都寫「載入中…」，手機端只能靠 Human Owner 回報畫面上的字，
-卡住時分不出是哪一段。改成「前往指定頁面…」→「載入園所設定中…」→「確認登入狀態…」。
-
-測試 web 207 → 212（`liffRedirectFor` 五條：轉過去、已到站回 null、保留 code/state、
-liff.state 自帶 query、站外轉址不轉）。
-
-**LINE 綁定碼 — ✅ ACCEPTED（2026-08-19, Human Owner「驗收過」）。** 從 2026-08-17 掛到現在的線上驗收完成。
-**綁定碼 QR — Human Owner 定案「不做並取消」（2026-08-19）**，不再列為待辦（原本要新套件，§D 提案也一併取消）。
-
-**時間改用台灣時區 + 後台字體放大 — ✅ ACCEPTED（2026-08-19, Human Owner 線上驗證完畢）。**
-四項全綠：lint / typecheck / **測試 574（api 366 + shared 12 + web 196）** / build。
-**無 migration、無新後端端點**（改的是既有 service 裡「今天是哪一天」的算法 + 前端顯示）。
-
-Human Owner 回報：「系統的時間與台灣時間不符」。查出兩個病灶：
-
-```text
-① 「今天」= new Date().toISOString().slice(0,10) → 那是 UTC 的今天。
-   台灣 UTC+8，凌晨 0 點到早上 8 點之間，系統認定的今天是**昨天**。
-   老師七點到園點名、填聯絡簿正好落在這個區間 ——
-   後端「不能填未來」的檢查會把台灣的今天當成明天而擋下來（真的會擋，不是理論）。
-② 時間戳直接切 ISO 字串（createdAt.slice(11,16)）→ 印的是 UTC 時鐘，畫面慢 8 小時。
-   稽核紀錄、親師對話、群發紀錄、圖文選單套用時間都中招。
-```
-
-作法：**時間一律以園所所在時區（Asia/Taipei）呈現，不看使用者裝置的時區**
-—— 孩子的「今天」是園所的今天，家長出國時看到的也該是園所的日子。
-
-```text
-新增  apps/web/src/lib/datetime.ts —— schoolToday / schoolMonth / schoolHour /
-      formatDate / formatTime / formatDateTime / formatMonthDay / isSameSchoolDay /
-      schoolDayKeyIso。新程式碼不要再寫 toISOString().slice()、getHours()、toLocaleString()。
-新增  apps/api/src/events/day-key.ts 的 todayKey()（台灣的今天 → UTC 午夜 key）,
-      用在聯絡簿的填寫窗檢查與娃娃車「今日狀態」的預設日期。
-改到  首頁問候語與今天、出缺勤點名日期、請假可選最早日期、娃娃車點名日期與上下車時間、
-      聯絡簿老師端日期與到校時間、家長端的「今天」、親師對話的日期分隔與泡泡時間、
-      收件匣的相對時間、稽核紀錄、群發紀錄、圖文選單套用時間、學生整合視圖的本月與日期。
-不動  **儲存慣例**：日期型欄位仍是「該日曆日的 UTC 午夜」。動 dayKey() 的正規化會改到
-      既有資料的語意，那是另一件事（docs/04 已寫明）。
-順帶  既有的 relativeTime 測試原本依賴跑測試那台機器的時區（CI 是 UTC、開發機是台灣），
-      改成一律寫死 +08:00。
-測試  web 179 → 196、api 362 → 366。
-```
-
-**後台字體放大**：`FontScaleControl` 加 `compact` 版，掛在 AdminShell 左欄下方（登出上面）。
-放大的效果與家長端完全一樣（改 html 的 font-size，全站等比放大）——
-差別只有後台欄寬 14.5rem 塞不下每個選項的說明，所以只留三顆按鈕。
-**窄視窗時左欄會收成上方橫向導覽，這一塊跟「登出」一樣會收起來**（沿用既有版型，沒有另做）。
-
-**打磨第二階段 下一輪 —— 後台 8 頁的斷句 — ✅ ACCEPTED（2026-08-19, Human Owner「已驗收」）。**
-四項全綠：lint / typecheck / **測試 553（api 362 + shared 12 + web 179）** / build。
-**無 migration、無新後端端點**（純前端）。
-
-```text
-人員管理    新增人員（manage）→ 目前的人員（review）
-權限設定    誰有什麼身分（review）—— 原本那張表連個標題都沒有
-班級管理    新增班級（manage）→ 目前的班級（review）;班級數改成一行小字
-學生管理    新增學生（manage，沒有班級時的引導也收在同一段）→ 目前的學生（review）
-園所外觀    LINE 圖文選單 / 園所識別 / 功能卡片 / 請假流程，四段各自一個 manage
-發送訊息    做一張卡片發出去（action，「送出後收不回來」留在按鈕旁邊）→ 送出紀錄（review）
-娃娃車設定  新增路線（manage）→ 目前的路線（review）
-稽核紀錄    查詢條件（action）→ 查詢結果（review）
-順帶        面板原本自己那顆 section-title / eyebrow 一律拿掉（同一段不會有兩個標題）
-測試        web 171 → 179（班級管理、發送訊息兩支新的 spec）
-```
-
-**後台不貼身分籤**（這一輪的判斷，已寫進 docs/04 §3b）：那些頁整頁都只有校方進得來，
-每一段都掛一次「以老師身分」只是噪音。身分籤要解決的是「同一頁上同時有我要做的事
-與我孩子的狀況」——後台沒有這個問題。
-
-**B3（底部四格工具列可不可以由園所自訂）— Human Owner 定案「先不做」（2026-08-18）。**
-先前掛著等他回覆，2026-08-18 已回：**先不做**。查證過的結論留著，之後要做不必重查：
-① 那四格寫死在 `AppShell.tsx` 的 `TABS`；② 可挑的目的地與 LINE 圖文選單同一份清單，
-**娃娃車不能給家長挑**（那頁是隨車老師點名用的，家長按下去撞權限牆），家長可挑七個：
-首頁／聯絡簿／出缺勤／請假／公告／訊息／我的；③ 若要做成「園所統一決定」需要
-SchoolConfig **加一個欄位**（expand-only migration）+ `/school/config` 與 `/config/public`
-各多回一個欄位，**沒有新端點**；做成「每個家長自己挑」則是純前端，但那就不是園所客製。
-
-**B2 訊息中心（「通知」頁升級）— IMPLEMENTED / VERIFICATION_PENDING（2026-08-18）。**
-四項全綠：lint / typecheck / **測試 504（api 362 + shared 12 + web 130）** / build。
-**無 migration、無新後端端點**（改既有 `GET /notifications` 的回應，詳見 docs/07 §4j）。
-
-Human Owner 定案：**不做四合一，把通知頁做成訊息中心**（收件匣 + 深層頁面）。
-
-```text
-後端  GET /notifications 多回 title / subtitle   讀取時 join，不寫回 payload
-      一種資源查一次（studentId/announcementId/messageId/senderId 去重後各一發）
-      補不出來退回分類名稱，不回空字串
-前端  features/notification/target.ts            type+payload → 手機版網址（後端不管路由）
-      NotificationList 改寫成收件匣               圖示 + 標題 + 來源 + 相對時間 + 未讀點
-      點一則＝標已讀（樂觀更新）再跳頁
-      載入用骨架屏、空狀態給得出下一步、取不到資料明講錯誤（不回空收件匣）
-命名  「通知」→「訊息中心」（網址 /liff/notification 不動，圖文選單與既有連結不受影響）
-刻意不收進來：出缺勤與行事曆（是紀錄不是訊息，推了會天天洗版）；請假申請與表單（是動作）
-```
-
-**待線上驗收的重點面**：底部四格工具列、hero 上疊的白字與園名、首頁快速功能兩欄格線、
-聯絡簿直欄模式、稽核列、桌面雙欄（SplitColumns）—— 三種字級各看一次。
-
-**下一步：等 Human Owner 線上驗收，再排打磨第二批**（走查時留下但這一輪沒做的，見 Recent Work Log）。
-
-**Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）。**
-四項全綠：lint / typecheck / **測試 364（api 297 + shared 12 + web 55）** / build。migration **0008_push_campaign**（expand-only；已用 `prisma migrate diff --from-empty` 逐行核對與 schema 一致）。
-**§D 三題 Human Owner 定案**：① 提案核准（新 model + 三支端點）② 按鈕**可連外部網址**（我建議只給 App 內頁，他選外部 → 後端限 `https://`，前端明講風險由園所自負）③ **繳費提醒版型保留**（「不假裝自己是收費系統，就是提醒；欄位標籤寫清楚是顯示用文字」）。
-下一步 ⑤ 打磨（走查全站細節）。
-
-### 骨架定案（Human Owner 拍板 2026-08-17）
-
-| 決策 | 定案 |
-|------|------|
-| 登入方式 | **LINE Login 網頁版 OAuth**（非 LIFF）。同一個 Login channel → id_token 的 aud 相同 → 後端 `LineVerifier` 零改動，認出的是同一個 LineIdentity/User/RBAC。**不是另一套認證系統。** |
-| channel secret 放哪 | **web（Vercel）** 端做 code→token 交換。後端不新增端點、既有測試不受影響。代價：LINE 憑證多一個存放位置（仍為伺服器端）。 |
-| 網址 | `/admin/*` 桌面版與 `/liff/*` 手機版共存。同一份程式碼、同一套權限、同一個 DB；**差別只有外框**。 |
-| 手機版後台 | **保留**（`/liff/admin/*`）。桌面版是多一條路，不是換一條路。 |
-| 誰能進 `/admin` | 園長 / 行政 / 老師可進，各自只看得到有權限的東西；家長導向「請從手機的 LINE 選單使用」的引導頁，不給空白。 |
-| 桌面版綁定畫面 | **必做**。後台新建的行政第一次在電腦登入走的就是這條路，少了它會卡在登入頁出不去。 |
-
-### 這一刀的範圍（刻意不做的事）
-
-管理首頁的完整數字、班級/學生/園所外觀搬到桌面版、人員權限設定頁 —— **都不在這一刀**。
-骨架先把「進得來、認得出是誰、到得了下一頁、綁得了定」做對；總覽目前只放一個真實數字（尚未綁定人數）。
-
-### 刀 4 設計定案（Human Owner 逐項拍板，2026-08-17）
-
-| 決策 | 定案 |
-|------|------|
-| 聯絡簿的形式 | **一個孩子的頁面**：當日狀態在上、親師對話在下 |
-| 與訊息的關係 | **A：聯絡簿吃掉訊息**（入口收斂成一張卡；Message API 與 `/liff/message` 網址保留並導向） |
-| 健康 / 接送 | 放進當日狀態（**當日觀察**，非未來「幼兒健康 / 娃娃車」模組的長期資料） |
-| 回溯 | 家長可翻全部歷史；**老師只能填寫/修改近 7 天** |
-| 點名即到校 | **合併**——老師點一下同時完成點名與記錄到校時間（同一 transaction） |
-| 用餐 | 午餐、點心**分兩欄** |
-| 接送 | 只分 **家人接送 / 校車**，不必填哪一位家人 |
-| 送出 | 老師**一鍵送出全班**；單一學生可單獨進入處理 |
-| LINE 推播 | **老師選擇**：系統自動挑出健康需注意者並詢問是否即時通知；其餘只發站內通知（控費用） |
-
-### 導師減負的六個手段（逐生逐欄約 175 次點擊 → 約 25 次）
-
-1. **例外導向**——預設全班正常，只點不一樣的孩子
-2. **直欄模式**——一次一件事、全班一起，注意力不必在欄位間跳
-3. **點名即到校**——一個動作完成兩件事
-4. **沿用上次**——接送方式九成固定
-5. **常用短語**——留言不必從零打字，且**一律選填**
-6. **收尾提醒**——「X 位待送出」+ 一鍵送出，老師不用自己記漏了誰
-
-健康與留言**刻意不放進直欄模式**：那是例外情形，逐生處理反而正確也更快（兩種模式並存）。
-
-Phase 6 成果（全數 ACCEPTED）：
-```text
-Step 1  DB baseline migration 0001_init + synthetic demo seed
-Step 2  LINE/LIFF 登入 → Sproutin JWT（LINE ID 僅認證）
-Step 3  RBAC 骨架 RolesGuard + ScopeGuard（後端授權）
-Step 4  端到端讀取切片 GET /me/students + LIFF Dashboard（後端過濾）
-線上：Web(Vercel) + API/Worker(Render) + PostgreSQL + Redis;27 tests + db job CI 綠
-```
-
----
+**刻意緩下來的一項**：換頁交叉淡入（View Transitions）。要在舊畫面還在 DOM 上時呼叫
+`startViewTransition`，而 App Router 是先 commit 新的樹再跑 effect —— 只能包住導覽本身，
+寫錯就是全站每一個連結都壞掉。Next 14 沒有內建，可靠作法是引入 `next-view-transitions`
+（要 Human Owner 決定的相依套件），而且必須在真機／LINE 內建瀏覽器驗過。
 
 ## Completed
 
@@ -553,6 +267,16 @@ Required decision:
 
 7. ~~清葉改版後的殘留死碼（DashboardCard.tsx / lib/preview.tsx）~~ → ✅ 已不存在
    （2026-08-18 打磨走查對帳：兩個檔案早已刪除，這條是過期的文件）。
+
+11. 換頁交叉淡入（View Transitions）— DEFERRED（2026-08-20，評估後緩下來不是忘記）
+   - `startViewTransition` 必須在**舊畫面還在 DOM 上時**呼叫，而 App Router 是先 commit
+     新的樹再跑 effect —— 拿到 pathname 變化時舊畫面早就不見了，沒有東西可以淡出。
+   - 只能包住導覽本身（攔截連結點擊或包 `router.push`），**寫錯就是全站每一個連結都壞掉**。
+   - Next 14 沒有內建（`experimental.viewTransition` 是 15.2+），可靠作法是引入
+     `next-view-transitions` → **要 Human Owner 決定的相依套件**，且必須在真機／LINE 內建瀏覽器驗。
+
+12. Lighthouse / Core Web Vitals — 沒量過也沒接 CI（2026-08-20）。
+   色彩對比已自動化（`lib/contrast.spec`），但效能與完整鍵盤導覽測試仍缺。
 
 8. ~~LINE 帳號綁定機制~~ → ✅ RESOLVED（階段3, 2026-08-17）：綁定碼（8 碼、一次性、可作廢、可解綁）。
    殘留：QR 圖需新套件（§D 待核准）;綁定端點的暴力嘗試防護目前**倚賴碼本身的熵**，
@@ -823,7 +547,17 @@ Note:        僅前端 web；後端 API 部署於 Render（render.yaml），待�
 ## Latest Accepted Commit
 
 ```text
-Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）
+全站介面改版「清葉加厚」— ✅ ACCEPTED（2026-08-20, Human Owner 分批驗證）
+  第一批 262ffc8（底層）/ 第二批 2b41293（家長）/ 第三批 0d30e33（導師）
+  第四批 be59a25 · 73e0a3f · dfcfaa7 · 92713c6 · 7f4d2e5 · bdce552 · 50c7f5b · 77030e5（行政六段）
+  收尾   0819047（漏掉的頁 + eslint 守門）/ 62b41c5（深色模式）/ b2f1660（手感三項）
+         79d9104（色彩對比守門）
+  身分   63d0000 · d28478a · 990302d（前六個坑）/ 82fea91 · 4647f37 · 979914f（⑦–⑨）
+         e9192b7（⑩ Message.senderAs，migration 0010）
+  四項全綠：lint / typecheck / **測試 784（web 382 + api 390 + shared 12）** / build。
+Next: 見下方 Technical Debt 的上線前必做項（#3 最小權限 role / #4 CSP / #5 rate limiting）。
+
+（前一項）Flex Message 群發 — IMPLEMENTED / VERIFICATION_PENDING（2026-08-17）
   `/admin/messages`（版型填空 + 收件範圍 + 兩段式送出 + 送出紀錄）、公告推播升級為卡片、
   migration 0008_push_campaign。測試 364 全綠 + lint / typecheck / build 全綠。
   §D 三題已定案（核准 / 可連外部網址 / 繳費提醒保留）。
@@ -861,6 +595,36 @@ Next: append-only §D 提案 / Step 7（Dashboard·Branding·Feature Flag）—�
 ---
 
 ## Recent Work Log
+
+### 2026-08-20 — 🍃 **全站介面改版「清葉加厚」（✅ ACCEPTED，Human Owner 分批驗證）**
+
+Human Owner 打磨兩輪之後的判斷仍是「無論老師或家長，操作起來都要**讀一下**才懂」。
+三個根因：① 聯集視圖失敗（同一頁服務兩種人，靠標籤區分 —— 介面需要貼標籤解釋自己，
+就是版面已經失敗）② 入口用資料庫的名字不是使用者腦中的問題 ③ 每樣東西一樣重。
+
+定案：**全頁面重做前端介面**（37 頁），不動架構、API 與權限。視覺方向＝清葉加厚
+（保留氣質，改的是份量）。**先蓋底層再蓋頁面** —— 反過來的話任何一次調整要回頭改 37 次。
+
+設計上的決定全部記在 `docs/04 §3c`（那一節是這次改版的 source of truth）。
+
+**這一輪真正修掉的東西不只是版面：**
+
+| | 問題 | 為什麼重要 |
+|---|---|---|
+| 破壞性動作 | 移除身分／解除綁定／解除 LINE／停用帳號／刪路線，全都是「就地把按鈕展開成兩顆」 | 「確定移除」正好長在手指剛按過的位置上，連按兩下就沒了 |
+| 失焦就存 | 娃娃車路線名稱與發車時間 | 沒有任何「存好了」的訊號 |
+| token 被蓋掉 | `lib/theme.ts` 用 inline style 覆寫中性色，而那份副本停在加厚之前 | inline style 贏過 `:root`，**globals.css 改了半天，實機跑的一直是舊的** |
+| 色彩對比 | `--ink-soft` 4.43 / `--ink-mute` 2.51 / `--line-strong` 1.57 | 正是最早那句「長輩在戶外看不見」，只是先前沒有人量出來 |
+| §3b 破口 | LINE 圖文選單只有桌面版 | 停課、颱風最需要臨時改選單時，園長往往不在電腦前 |
+| 身分 | 十個坑（見 Current Task） | UI 切開了但資料或入口沒切開，比不切更危險 |
+
+**沒動的兩處**（Human Owner 已定案／已驗收，只換視覺）：群發的兩段式送出、
+娃娃車點名「一手扶車一手點」的互動。
+
+**唯一的 migration**：`0010_message_sender_as`（expand-only）。班導兼某位學生的家長，
+在那個孩子的聯絡簿裡兩種身分講的話長得一模一樣 —— 而系統原本**根本沒有記下**
+發話當下戴的是哪頂帽子。Human Owner 從三個 mockup 選 A 案：位置不動（右邊永遠是我寫的），
+換的是標籤，而且只有「這一串裡我用過兩種身分」時才標。
 
 ### 2026-08-18 — ✨ **打磨 第一批（IMPLEMENTED，待線上驗收）**
 
