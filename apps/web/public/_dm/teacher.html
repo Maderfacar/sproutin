@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>老師看到什麼 — Sproutin</title>
+<meta name="description" content="班導師的一天：待辦首頁、點名、聯絡簿直欄模式、請假審核、班級名單。" />
+<link rel="stylesheet" href="dm.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><defs>
+<g id="i-home"><path d="M4 11 12 4l8 7"/><path d="M6 10v9.6h12V10"/></g>
+<g id="i-book"><path d="M12 6.4C10.4 5 7.9 4.5 4.5 5v13.2C7.9 17.7 10.4 18.2 12 19.6 13.6 18.2 16.1 17.7 19.5 18.2V5C16.1 4.5 13.6 5 12 6.4Z"/><path d="M12 6.4v13.2"/></g>
+<g id="i-bell"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></g>
+<g id="i-user"><circle cx="12" cy="8.5" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></g>
+<g id="i-doc"><path d="M7 3.6h6l5 5V19.4A1.6 1.6 0 0 1 16.4 21H7.6A1.6 1.6 0 0 1 6 19.4V5.2A1.6 1.6 0 0 1 7 3.6Z"/><path d="M13 3.6V9h5"/><path d="M9 13.5h6M9 16.5h4"/></g>
+<g id="i-cal"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.2v3.4M16 3.2v3.4"/></g>
+<g id="i-chat"><path d="M4.5 6.6A2 2 0 0 1 6.5 4.6h11a2 2 0 0 1 2 2v6.8a2 2 0 0 1-2 2H9l-4.5 3.4Z"/></g>
+<g id="i-mega"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.2a4 4 0 0 1 0 5.6"/></g>
+<g id="i-shield"><path d="M12 3.5 5 6v5.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-2.5Z"/><path d="M9 12l2 2 4-4"/></g>
+<g id="i-bus"><rect x="4" y="5" width="16" height="12" rx="2.5"/><path d="M4 12h16M8 17v2M16 17v2"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1" fill="currentColor" stroke="none"/></g>
+<g id="i-wallet"><rect x="3.5" y="6.4" width="17" height="12.2" rx="2.6"/><path d="M15 12.5h4.5"/></g>
+<g id="i-cam"><path d="M4 8.6h3l1.4-2.1h7.2L18 8.6h2a1.6 1.6 0 0 1 1.6 1.6v7.6A1.6 1.6 0 0 1 20 19.4H4a1.6 1.6 0 0 1-1.6-1.6v-7.6A1.6 1.6 0 0 1 4 8.6Z"/><circle cx="12" cy="13.6" r="3.1"/></g>
+<g id="i-check"><path d="M5 12.6l4.4 4.4L19 7.4"/></g>
+<g id="i-chev"><path d="M9 6l6 6-6 6"/></g>
+<g id="i-send"><path d="M4.5 11.5 20 4.5l-7 15-2.3-6.2-6.2-1.8Z"/><path d="M10.7 13.3 20 4.5"/></g>
+<g id="i-heart"><path d="M12 19.5S4.5 15 4.5 9.9A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.5 1.9c0 5.1-7.5 9.6-7.5 9.6Z"/></g>
+<g id="i-cog"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.4M12 18.4v2.4M20.8 12h-2.4M5.6 12H3.2M18.2 5.8l-1.7 1.7M7.5 16.5l-1.7 1.7M18.2 18.2l-1.7-1.7M7.5 7.5 5.8 5.8"/></g>
+<g id="i-image"><rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.8-4.6 3.4 3.2 2.6-2.3 4.2 3.9"/></g>
+<g id="i-sparkle"><path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2L12 3.5Z"/><path d="M18.5 4v3M20 5.5h-3"/></g>
+</defs></svg>
+
+<div class="wrap">
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="mark" href="index.html">
+      <span class="mark-glyph"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sparkle"/></svg></span>
+      <span class="mark-name">Sproutin</span>
+      <span class="mark-sub">園所簡介</span>
+    </a>
+    <nav class="nav">
+      <a href="index.html"><i>01</i>總覽</a>
+      <a href="parent.html"><i>02</i>家長看到什麼</a>
+      <a href="teacher.html" aria-current="page"><i>03</i>老師看到什麼</a>
+      <a href="admin.html"><i>04</i>園長與行政</a>
+      <a href="platform.html"><i>05</i>功能與藍圖</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">03 — 班導師端</p>
+        <h1>一份<em>會變短</em>的<br />待辦清單。</h1>
+        <p class="lead">
+          老師不需要一個功能齊全的系統，他需要的是「今天還有什麼沒做」。
+          所以導師端的每一頁都只有兩種東西：還沒做完的（磚塊 + 數字），與已經做完的（一行灰字）。
+          全部做完時整頁會空掉 —— 那正是它該有的樣子。
+        </p>
+      </div>
+      <div class="hero-note">
+        <p><strong>底部四格</strong>　今天 · 點名 · 聯絡簿 · 我的</p>
+        <p><strong>做得到</strong>　點名、寫聯絡簿、審自己班的請假、發班級公告</p>
+        <p><strong>做不到</strong>　全校公告、LINE 群發、園所設定、稽核紀錄</p>
+        <p><strong>看得到的範圍</strong>　自己帶的班</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 1. 今天 ============ -->
+  <section class="showcase">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 01 ／ 今天</p>
+      <h3>一句話，加上一份會變短的待辦</h3>
+      <p class="lead">
+        數字全部由現有資料即時算出來：點名＝班級名單扣掉今天已有紀錄的人；
+        聯絡簿＝名單扣掉今天已經有內容的；請假＝這一班待審的件數。
+        老師不必自己去三個地方確認今天做完了沒。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>「今天還有 3 件事」指的是地方，不是筆數</strong><p>老師關心的是「我還要去幾個地方」，不是「總共還有 37 個小動作」。所以數的是類別數。</p></div></li>
+        <li><span class="n">2</span><div><strong>做完的磚塊會消失，不是變灰</strong><p>留在原位變灰只會讓清單越來越長。做完的收到下面「今天已完成」一行灰字。</p></div></li>
+        <li><span class="n">3</span><div><strong>右邊的實心數字在催人動手</strong><p>狀態徽章是淡底（在陳述事實），數字徽章是實心（在催你去做），兩者刻意長得不一樣。</p></div></li>
+        <li><span class="n">4</span><div><strong>兼隨車老師也在這裡</strong><p>同時帶班又跟車的老師不會拿到第二套介面，娃娃車點名直接出現在他自己的首頁。</p></div></li>
+        <li><span class="n">5</span><div><strong>不是每天要看的收在「其他」</strong><p>班級名單、班級公告在最下面。老師端沒有「發全校公告」——那不屬於導師這個身分。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                <span class="persona-btn">老師 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main">
+              <div class="app-stack">
+                <section class="state t-brand">
+                  <p class="eyeb">向日葵班 · 林老師</p>
+                  <p class="head">今天還有 3 件事</p>
+                  <p class="det">班上 25 位小朋友</p>
+                </section>
+
+                <section class="app-col">
+                  <div class="tile">
+                    <span class="tile-ico t-brand"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+                    <span class="tile-txt"><b>點名</b><span>還有 4 人沒點</span></span>
+                    <span class="badge solid s-stop">4</span>
+                  </div>
+                  <div class="tile">
+                    <span class="tile-ico t-wait"><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+                    <span class="tile-txt"><b>聯絡簿</b><span>12 本還沒寫</span></span>
+                    <span class="badge solid s-stop">12</span>
+                  </div>
+                  <div class="tile">
+                    <span class="tile-ico t-note"><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg></span>
+                    <span class="tile-txt"><b>請假審核</b><span>1 件等你決定</span></span>
+                    <span class="badge solid s-stop">1</span>
+                  </div>
+                  <div class="tile">
+                    <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bus"/></svg></span>
+                    <span class="tile-txt"><b>娃娃車</b><span>今天的上下車點名</span></span>
+                  </div>
+                </section>
+
+                <section>
+                  <div class="sh review"><div><h3>其他</h3><p>不是每天要看，但需要時在這裡</p></div></div>
+                  <div class="app-col">
+                    <div class="tile">
+                      <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg></span>
+                      <span class="tile-txt"><b>我的班</b><span>向日葵班 · 25 位小朋友</span></span>
+                    </div>
+                    <div class="tile">
+                      <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg></span>
+                      <span class="tile-txt"><b>公告</b><span>發布給你帶的班級</span></span>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>今天</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>點名</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">三件事都做完時，磚塊會全部消失，只剩下「今天都做完了」與三行「✓」。</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. 點名 ============ -->
+  <section class="showcase flip">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 02 ／ 點名</p>
+      <h3>25 個孩子，九成的工作在一下就結束</h3>
+      <p class="lead">
+        每個孩子四顆一樣大的按鈕，看起來很「完整」，實際上是逼老師把同一個決定做 25 次 ——
+        因為九成的答案都是「到校」。這裡改成：一顆按鈕把剩下的人全部標到校，之後只處理例外。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>打開就是今天這一班</strong><p>班級與日期預設好，要換才動；換日期收進底部面板 —— 那是例外，不該每天佔一個欄位的位置。</p></div></li>
+        <li><span class="n">2</span><div><strong>進度與「已存檔」一直在最上面</strong><p>這是老師重複點名的根因：點下去只有顏色變，老師不確定有沒有存進去，就再點一次。</p></div></li>
+        <li><span class="n">3</span><div><strong>一顆主要按鈕收掉九成</strong><p>「剩下 4 人全部標『到校』」。已經點過的人不會被蓋掉。</p></div></li>
+        <li><span class="n">4</span><div><strong>還沒點的排在上面且份量重</strong><p>到校是主要選擇（大顆、實色），請假／缺席／遲到是次要的小按鈕。</p></div></li>
+        <li><span class="n">5</span><div><strong>點完的收進可展開的一段</strong><p>這一頁的價值在於它會變短。要改的時候才展開，並提供「改成…」的一鍵修正。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                <span class="persona-btn">老師 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main">
+              <div class="app-stack tight">
+                <div class="pagehead"><h1>點名</h1></div>
+
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem">
+                  <span class="btn textonly">今天 <svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#i-cal"/></svg></span>
+                </div>
+
+                <div class="prog">
+                  <div class="top"><b>21 / 25</b><span>已點名</span><span class="saved">已存檔</span></div>
+                  <div class="bar"><i style="width:84%"></i></div>
+                </div>
+
+                <a class="btn primary"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>剩下 4 人全部標「到校」</a>
+
+                <section class="app-col">
+                  <p style="font-size:.6875rem;font-weight:600;color:var(--ink-mute)">還沒點名（4）</p>
+
+                  <div class="panel soft" style="padding:.875rem">
+                    <p style="font-size:1.125rem;font-weight:700;color:var(--ink);margin-bottom:.625rem">李子謙</p>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                      <span class="chip on" style="flex:1;justify-content:center">到校</span>
+                      <span class="chip sm">請假</span>
+                      <span class="chip sm">缺席</span>
+                      <span class="chip sm">遲到</span>
+                    </div>
+                  </div>
+
+                  <div class="panel soft" style="padding:.875rem">
+                    <p style="font-size:1.125rem;font-weight:700;color:var(--ink);margin-bottom:.625rem">陳芯語</p>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                      <span class="chip on" style="flex:1;justify-content:center">到校</span>
+                      <span class="chip sm">請假</span>
+                      <span class="chip sm">缺席</span>
+                      <span class="chip sm">遲到</span>
+                    </div>
+                  </div>
+
+                  <div class="panel soft" style="padding:.875rem">
+                    <p style="font-size:1.125rem;font-weight:700;color:var(--ink);margin-bottom:.625rem">黃品妍</p>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                      <span class="chip on" style="flex:1;justify-content:center">到校</span>
+                      <span class="chip sm">請假</span>
+                      <span class="chip sm">缺席</span>
+                      <span class="chip sm">遲到</span>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="panel soft" style="padding:0">
+                  <div style="display:flex;align-items:center;gap:.5rem;min-height:2.75rem;padding:.75rem 1rem;font-size:.875rem;font-weight:700;color:var(--ink-soft)">
+                    已完成（21）
+                    <svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem;margin-left:auto;transform:rotate(90deg)"><use href="#i-chev"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>今天</a>
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>點名</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">園長與行政進到同一頁時看到的是一樣的介面（可先選班級）—— 老師請假或代課時，園務端可以直接補點名。</p>
+    </div>
+  </section>
+
+  <!-- ============ 3. 聯絡簿 ============ -->
+  <section class="showcase">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 03 ／ 今天的聯絡簿</p>
+      <h3>直欄模式：一次一件事，全班一起</h3>
+      <p class="lead">
+        逐生逐欄填一整班，大約要點 175 次 —— 那是聯絡簿電子化最常失敗的地方，老師寧可寫紙本。
+        直欄模式把它翻過來：一次只處理一個欄位（午餐、午睡、心情…），預設全班正常、只點例外，
+        整班大約 25 次點擊。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>請假與缺席的孩子自動排除</strong><p>老師不必為他們花任何時間；他們收在下面「今天不需記錄」那一段。</p></div></li>
+        <li><span class="n">2</span><div><strong>「到校」一下同時完成點名</strong><p>點一下記下到校時間，出缺勤也一併標好 —— 同一件事不做兩次。</p></div></li>
+        <li><span class="n">3</span><div><strong>健康需注意主動浮出來</strong><p>體溫偏高或有症狀的孩子，系統會提醒老師「記得進去看一下」，而不是等老師自己翻。</p></div></li>
+        <li><span class="n">4</span><div><strong>「全班先填『吃完』」</strong><p>已經點過的不會被蓋掉。之後只要點跟大家不一樣的那幾個孩子。</p></div></li>
+        <li><span class="n">5</span><div><strong>放學前一次送出全班</strong><p>送出後家長才看得到。系統自動判斷誰需要即時 LINE 通知（體溫偏高／有症狀），老師只要回答要或不要。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                <span class="persona-btn">老師 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main">
+              <div class="app-stack tight">
+                <div class="pagehead"><h1>今天的聯絡簿</h1></div>
+
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem">
+                  <span class="btn textonly">今天 <svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#i-cal"/></svg></span>
+                </div>
+
+                <div class="prog">
+                  <div class="top"><b>13 / 23</b><span>已記錄</span><span class="saved">已存檔</span></div>
+                  <div class="bar"><i style="width:57%"></i></div>
+                </div>
+                <p style="margin-top:-.5rem;font-size:.6875rem;color:var(--ink-mute)">今天有 2 位請假或未到校，不需要記錄</p>
+
+                <div style="border-radius:var(--radius-md);border:1px solid var(--note-edge);background:var(--note-wash);padding:.75rem 1rem;font-size:.875rem;font-weight:700;color:var(--note-text)">
+                  今天有 1 位健康需要注意，記得進去看一下
+                </div>
+
+                <section class="panel">
+                  <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.5rem">
+                    <h4>到校</h4>
+                    <span style="font-size:.6875rem;color:var(--ink-soft)">點一下＝同時完成點名</span>
+                  </div>
+                  <ul>
+                    <li class="li"><b>王小恩</b><span class="badge t-good">08:02</span></li>
+                    <li class="li"><b>范小星</b><span class="badge t-good">08:12</span></li>
+                    <li class="li"><b>李子謙</b>
+                      <span class="chip on" style="min-height:2.5rem">到校</span>
+                      <span class="chip sm">遲到</span>
+                    </li>
+                  </ul>
+                </section>
+
+                <section class="panel">
+                  <div class="chips" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:.25rem;margin-bottom:.75rem">
+                    <span class="chip brand">午餐</span>
+                    <span class="chip">點心</span>
+                    <span class="chip">午睡</span>
+                    <span class="chip">如廁</span>
+                    <span class="chip">心情</span>
+                    <span class="chip">接送</span>
+                  </div>
+                  <p style="font-size:.6875rem;color:var(--ink-soft);margin-bottom:.5rem">午餐：13 / 23 位已填</p>
+                  <a class="btn primary"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>全班先填「吃完」</a>
+                  <p style="margin-top:.5rem;font-size:.6875rem;color:var(--ink-mute)">已經點過的不會被蓋掉。</p>
+
+                  <ul style="margin-top:.75rem">
+                    <li style="border-top:1px solid var(--line);padding:.625rem 0">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="flex:1;font-weight:500;color:var(--ink)">王小恩</span>
+                        <span style="width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);display:grid;place-items:center"><svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#i-chev"/></svg></span>
+                      </div>
+                      <div class="chips" style="margin-top:.5rem">
+                        <span class="chip on">吃完</span><span class="chip">大部分</span><span class="chip">一半</span><span class="chip">少許</span><span class="chip">沒吃</span>
+                      </div>
+                    </li>
+                    <li style="border-top:1px solid var(--line);padding:.625rem 0">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="flex:1;font-weight:500;color:var(--ink)">范小星</span>
+                        <span style="width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);display:grid;place-items:center"><svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#i-chev"/></svg></span>
+                      </div>
+                      <div class="chips" style="margin-top:.5rem">
+                        <span class="chip on">吃完</span><span class="chip">大部分</span><span class="chip">一半</span><span class="chip">少許</span><span class="chip">沒吃</span>
+                      </div>
+                    </li>
+                    <li style="border-top:1px solid var(--line);padding:.625rem 0">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="flex:1;font-weight:500;color:var(--ink)">陳芯語</span>
+                        <span style="width:2.25rem;height:2.25rem;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);display:grid;place-items:center"><svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#i-chev"/></svg></span>
+                      </div>
+                      <div class="chips" style="margin-top:.5rem">
+                        <span class="chip">吃完</span><span class="chip on">大部分</span><span class="chip">一半</span><span class="chip">少許</span><span class="chip">沒吃</span>
+                      </div>
+                    </li>
+                  </ul>
+                </section>
+
+                <section class="panel">
+                  <div style="display:flex;align-items:center;gap:.75rem">
+                    <svg class="ic" viewBox="0 0 24 24" style="width:1.25rem;height:1.25rem;color:var(--brand-primary)"><use href="#i-check"/></svg>
+                    <div style="flex:1">
+                      <p style="font-size:.875rem;font-weight:700;color:var(--ink)">13 位待送出</p>
+                      <p style="font-size:.75rem;color:var(--ink-soft)">已送出 0 位</p>
+                    </div>
+                  </div>
+                  <div style="margin-top:.75rem;border-radius:var(--radius-md);border:1px solid var(--note-edge);background:var(--note-wash);padding:.75rem">
+                    <p style="font-size:.875rem;font-weight:700;color:var(--note-text)">1 位今日健康需注意，要立刻用 LINE 通知家長嗎？</p>
+                    <p style="margin-top:.5rem;font-size:.875rem;color:var(--note-text)">☑ <b>陳芯語</b> <span style="font-size:.75rem">37.8°C、咳嗽</span></p>
+                    <p style="margin-top:.5rem;font-size:.6875rem;color:var(--note-text)">未勾選者與其餘學生只會收到 App 內通知。</p>
+                  </div>
+                  <div style="margin-top:.75rem"><a class="btn primary">送出全班聯絡簿</a></div>
+                </section>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>今天</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>點名</a>
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">要單獨處理某個孩子（健康紀錄、寫給家長的留言）時，點右邊的箭頭進入那個孩子的聯絡簿 —— 兩種模式並存。</p>
+    </div>
+  </section>
+
+  <!-- ============ 4. 請假審核 + 我的班 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">畫面 04 ／ 另外兩頁</p>
+        <h2>審核只有等你決定的事；<br />名單只是拿來找人的。</h2>
+      </div>
+      <p class="lead">
+        審核頁做完會空掉，那是它該有的樣子。名單頁刻意不放任何按鈕 ——
+        老師來這一頁是為了找某個孩子，整列就是通往他的入口。
+      </p>
+    </div>
+
+    <div class="trio two">
+      <div class="trio-item">
+        <span class="tag">請假審核</span>
+        <h3>不准，一定要寫一句原因</h3>
+        <p>家長收到「已駁回」卻不知道為什麼，只會再打一次電話問老師，兩邊都沒省到事。所以「不准」會要求填理由，而「准假」不強迫寫 —— 核准本身就是完整的答案。</p>
+        <div class="device mini">
+          <div class="device-screen">
+            <div class="device-notch"></div>
+            <div class="app">
+              <header class="app-header">
+                <div class="app-header-in">
+                  <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                  <span class="persona-btn">老師 ▾</span>
+                  <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+                </div>
+              </header>
+              <div class="app-main no-tabs">
+                <div class="app-stack tight">
+                  <div class="pagehead"><h1>請假審核</h1></div>
+                  <span class="btn secondary auto">代家長請假</span>
+
+                  <ul class="app-col" style="gap:.75rem">
+                    <li class="panel">
+                      <div style="display:flex;align-items:center;gap:.75rem">
+                        <span class="av" style="width:2.25rem;height:2.25rem;border-radius:999px;background:var(--brand-wash);color:var(--brand-primary);display:grid;place-items:center;font-size:.875rem;font-weight:700">范</span>
+                        <div style="min-width:0;flex:1">
+                          <p style="font-size:1.125rem;font-weight:700;color:var(--ink)">范小星</p>
+                          <p style="font-size:.6875rem;color:var(--ink-soft);font-variant-numeric:tabular-nums">2026-08-21</p>
+                        </div>
+                        <span class="badge t-wait">等你決定</span>
+                      </div>
+                      <p style="margin-top:.75rem;border-radius:var(--radius-md);background:var(--surface-sunk);padding:.625rem .75rem;font-size:.875rem;line-height:1.7;color:var(--ink)">家中有事，需要帶回南部老家一天。</p>
+                      <div style="margin-top:.75rem;display:flex;gap:.5rem">
+                        <a class="btn primary">准假</a>
+                        <a class="btn danger auto">不准</a>
+                      </div>
+                    </li>
+                  </ul>
+
+                  <div style="margin-top:.5rem;padding:1.25rem;border-radius:var(--radius-tile);border:1px solid var(--line-strong);background:var(--surface)">
+                    <p style="font-size:.6875rem;font-weight:600;letter-spacing:.1em;color:var(--ink-mute)">按下「不准」會滑出</p>
+                    <p style="margin-top:.5rem;font-family:var(--serif);font-size:1.125rem;font-weight:700;color:var(--ink)">不准 范小星 的請假</p>
+                    <p style="margin-top:.75rem;font-size:.6875rem;font-weight:600;color:var(--ink-soft)">為什麼</p>
+                    <div style="margin-top:.375rem;border-radius:var(--radius-md);border:1px solid var(--line-strong);background:var(--surface);padding:.625rem .875rem;min-height:4.5rem;font-size:.875rem;color:var(--ink-mute)">例如：這天有期末成果發表，請再確認一次</div>
+                    <p style="margin-top:.375rem;font-size:.6875rem;color:var(--ink-mute)">這句話家長會直接看到</p>
+                    <div style="margin-top:.75rem"><a class="btn danger">確定不准，並通知家長</a></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trio-item">
+        <span class="tag">我的班</span>
+        <h3>一份名單，右邊是今天的狀態</h3>
+        <p>誰請假了、誰的聯絡簿還沒寫，一眼掃完。點任何一列直接進到那個孩子的聯絡簿與親師對話。</p>
+        <div class="device mini">
+          <div class="device-screen">
+            <div class="device-notch"></div>
+            <div class="app">
+              <header class="app-header">
+                <div class="app-header-in">
+                  <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                  <span class="persona-btn">老師 ▾</span>
+                  <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+                </div>
+              </header>
+              <div class="app-main no-tabs">
+                <div class="app-stack tight">
+                  <div class="pagehead">
+                    <span class="back"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                    <h1>我的班</h1>
+                  </div>
+                  <ul>
+                    <li class="row">
+                      <span class="av">王</span>
+                      <span class="txt"><b>王小恩</b><span>今天的聯絡簿已經寫了</span></span>
+                      <span class="badge t-good">出席</span>
+                    </li>
+                    <li class="row">
+                      <span class="av">范</span>
+                      <span class="txt"><b>范小星</b><span>今天的聯絡簿已經寫了</span></span>
+                      <span class="badge t-good">出席</span>
+                    </li>
+                    <li class="row">
+                      <span class="av">陳</span>
+                      <span class="txt"><b>陳芯語</b><span>今天的聯絡簿還沒寫</span></span>
+                      <span class="badge t-note">遲到</span>
+                    </li>
+                    <li class="row">
+                      <span class="av">林</span>
+                      <span class="txt"><b>林宥翔</b><span>今天的聯絡簿還沒寫</span></span>
+                      <span class="badge t-wait">請假</span>
+                    </li>
+                    <li class="row">
+                      <span class="av">黃</span>
+                      <span class="txt"><b>黃品妍</b><span>今天的聯絡簿還沒寫</span></span>
+                      <span class="badge t-neutral">還沒點名</span>
+                    </li>
+                    <li class="row">
+                      <span class="av">李</span>
+                      <span class="txt"><b>李子謙</b><span>今天的聯絡簿還沒寫</span></span>
+                      <span class="badge t-neutral">還沒點名</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 邊界 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">邊界</p>
+        <h2>老師刻意做不到的事</h2>
+      </div>
+      <p class="lead">
+        這些限制不是為了防老師，是為了讓責任清楚、也讓老師不必承擔不屬於他的後果。
+        每一條都在後端強制，不是把按鈕藏起來而已。
+      </p>
+    </div>
+
+    <div class="cards c3">
+      <div class="card">
+        <p class="kicker">公告</p>
+        <h3>只能發自己的班級</h3>
+        <p>全校公告屬於園所層級。導師的形狀是「我這一班」——即使他同時兼行政，切到老師身分時也發不了全校公告。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">LINE 群發</p>
+        <h3>老師不能群發</h3>
+        <p>理由不是層級而是後果：群發會產生推播費用，且送出後無法收回。這個能力只給園長與行政。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">資料範圍</p>
+        <h3>只看得到自己帶的班</h3>
+        <p>學生、出缺勤、聯絡簿、請假一律限縮在被指派的班級。跨班的孩子連在搜尋結果裡都不會出現。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">聯絡簿</p>
+        <h3>只能填寫近七天</h3>
+        <p>避免事後改寫已經交付給家長的紀錄。家長端則可以回溯查閱全部歷史。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">園所設定</p>
+        <h3>沒有後台入口</h3>
+        <p>園名、代表色、功能開關、班級與人員、權限與綁定碼，老師端完全看不到。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">稽核</p>
+        <h3>看不到稽核紀錄</h3>
+        <p>誰在什麼時候改了什麼，只有園長（與受限的行政）看得到。但老師自己的每一次操作都會被記下來。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="pull">
+      「首頁的價值在於它會變短，不在於它很完整。」
+      <span>—— 導師端每一頁的排版規則。做完的事會消失，剩下的才是今天真正要做的。</span>
+    </p>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>Sproutin · 班導師端　|　畫面為產品實際版型，示範資料</p>
+    <a class="nx" href="admin.html">下一頁：園長與行政 →</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

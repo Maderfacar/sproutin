@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>功能與藍圖 — Sproutin</title>
+<meta name="description" content="Sproutin 完整功能總表、六種身分的權限對照、資料安全與隔離、產品藍圖與導入流程。" />
+<link rel="stylesheet" href="dm.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><defs>
+<g id="i-home"><path d="M4 11 12 4l8 7"/><path d="M6 10v9.6h12V10"/></g>
+<g id="i-book"><path d="M12 6.4C10.4 5 7.9 4.5 4.5 5v13.2C7.9 17.7 10.4 18.2 12 19.6 13.6 18.2 16.1 17.7 19.5 18.2V5C16.1 4.5 13.6 5 12 6.4Z"/><path d="M12 6.4v13.2"/></g>
+<g id="i-bell"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></g>
+<g id="i-user"><circle cx="12" cy="8.5" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></g>
+<g id="i-doc"><path d="M7 3.6h6l5 5V19.4A1.6 1.6 0 0 1 16.4 21H7.6A1.6 1.6 0 0 1 6 19.4V5.2A1.6 1.6 0 0 1 7 3.6Z"/><path d="M13 3.6V9h5"/><path d="M9 13.5h6M9 16.5h4"/></g>
+<g id="i-cal"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.2v3.4M16 3.2v3.4"/></g>
+<g id="i-chat"><path d="M4.5 6.6A2 2 0 0 1 6.5 4.6h11a2 2 0 0 1 2 2v6.8a2 2 0 0 1-2 2H9l-4.5 3.4Z"/></g>
+<g id="i-mega"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.2a4 4 0 0 1 0 5.6"/></g>
+<g id="i-shield"><path d="M12 3.5 5 6v5.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-2.5Z"/><path d="M9 12l2 2 4-4"/></g>
+<g id="i-bus"><rect x="4" y="5" width="16" height="12" rx="2.5"/><path d="M4 12h16M8 17v2M16 17v2"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1" fill="currentColor" stroke="none"/></g>
+<g id="i-wallet"><rect x="3.5" y="6.4" width="17" height="12.2" rx="2.6"/><path d="M15 12.5h4.5"/></g>
+<g id="i-cam"><path d="M4 8.6h3l1.4-2.1h7.2L18 8.6h2a1.6 1.6 0 0 1 1.6 1.6v7.6A1.6 1.6 0 0 1 20 19.4H4a1.6 1.6 0 0 1-1.6-1.6v-7.6A1.6 1.6 0 0 1 4 8.6Z"/><circle cx="12" cy="13.6" r="3.1"/></g>
+<g id="i-check"><path d="M5 12.6l4.4 4.4L19 7.4"/></g>
+<g id="i-chev"><path d="M9 6l6 6-6 6"/></g>
+<g id="i-send"><path d="M4.5 11.5 20 4.5l-7 15-2.3-6.2-6.2-1.8Z"/><path d="M10.7 13.3 20 4.5"/></g>
+<g id="i-heart"><path d="M12 19.5S4.5 15 4.5 9.9A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.5 1.9c0 5.1-7.5 9.6-7.5 9.6Z"/></g>
+<g id="i-cog"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.4M12 18.4v2.4M20.8 12h-2.4M5.6 12H3.2M18.2 5.8l-1.7 1.7M7.5 16.5l-1.7 1.7M18.2 18.2l-1.7-1.7M7.5 7.5 5.8 5.8"/></g>
+<g id="i-image"><rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.8-4.6 3.4 3.2 2.6-2.3 4.2 3.9"/></g>
+<g id="i-sparkle"><path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2L12 3.5Z"/><path d="M18.5 4v3M20 5.5h-3"/></g>
+</defs></svg>
+
+<div class="wrap">
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="mark" href="index.html">
+      <span class="mark-glyph"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sparkle"/></svg></span>
+      <span class="mark-name">Sproutin</span>
+      <span class="mark-sub">園所簡介</span>
+    </a>
+    <nav class="nav">
+      <a href="index.html"><i>01</i>總覽</a>
+      <a href="parent.html"><i>02</i>家長看到什麼</a>
+      <a href="teacher.html"><i>03</i>老師看到什麼</a>
+      <a href="admin.html"><i>04</i>園長與行政</a>
+      <a href="platform.html" aria-current="page"><i>05</i>功能與藍圖</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">05 — 功能、權限、資安與藍圖</p>
+        <h1>已經做完的，<br />與<em>接下來</em>的。</h1>
+        <p class="lead">
+          這一頁把話說清楚：哪些功能現在就能用、哪些還在規劃中、誰能做什麼、資料放在哪裡、出事的時候查得到什麼。
+          規劃中的功能在 App 裡不是點不下去的死角 —— 每一個都有一頁預告，園所也可以選擇不顯示。
+        </p>
+      </div>
+      <div class="hero-note">
+        <p><strong>前端</strong>　LINE LIFF（家長／老師）+ 瀏覽器後台（園務）</p>
+        <p><strong>登入</strong>　LINE 登入，不另設帳號密碼</p>
+        <p><strong>資料</strong>　每所園一套獨立資料庫</p>
+        <p><strong>留痕</strong>　稽核紀錄在資料庫層強制唯讀</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 功能總表 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">01 — 功能總表</p>
+        <h2>現在就能用的功能</h2>
+      </div>
+      <p class="lead">
+        以下皆為已完成並可實際操作的功能。每一項在手機與電腦上都做得到（隨車老師點名是手機專屬，因為那是在車上的事）。
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:32%">功能</th>
+            <th class="c">家長</th>
+            <th class="c">老師</th>
+            <th class="c">園長 / 行政</th>
+            <th style="width:30%">說明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feat">每日聯絡簿 <span class="pill live">已上線</span></td>
+            <td class="c yes">看</td><td class="c yes">填 · 送出</td><td class="c yes">全園</td>
+            <td>到校時間、午餐、點心、午睡、如廁、心情、接送、健康與老師留言。老師用直欄模式一次填完全班。</td>
+          </tr>
+          <tr>
+            <td class="feat">親師訊息 <span class="pill live">已上線</span></td>
+            <td class="c yes">收發</td><td class="c yes">收發</td><td class="c yes">查閱</td>
+            <td>掛在孩子身上而不是 LINE 帳號上。多位家長看到同一串，老師不必回覆三次。</td>
+          </tr>
+          <tr>
+            <td class="feat">出缺勤 <span class="pill live">已上線</span></td>
+            <td class="c yes">查自己小孩</td><td class="c yes">點名（自班）</td><td class="c yes">全園</td>
+            <td>一鍵標記全班到校，例外個別處理。請假核准後自動連動，不需要人工改第二次。</td>
+          </tr>
+          <tr>
+            <td class="feat">請假（含狀態機） <span class="pill live">已上線</span></td>
+            <td class="c yes">申請 · 取消</td><td class="c yes">審核（自班）</td><td class="c yes">全校審核</td>
+            <td>待審核／已核准／已駁回／已取消。駁回必須寫原因。是否需要審核由園所設定。</td>
+          </tr>
+          <tr>
+            <td class="feat">公告 <span class="pill live">已上線</span></td>
+            <td class="c yes">看</td><td class="c part">只能發班級</td><td class="c yes">全校 · 班級</td>
+            <td>全校與班級兩種範圍，發布後同時進入家長的訊息中心。</td>
+          </tr>
+          <tr>
+            <td class="feat">訊息中心（站內） <span class="pill live">已上線</span></td>
+            <td class="c yes">收</td><td class="c yes">收</td><td class="c yes">收</td>
+            <td>公告、老師留言、請假結果集中在一個收件匣。未讀整列加厚，一眼看得出哪幾則是新的。</td>
+          </tr>
+          <tr>
+            <td class="feat">LINE 推播通知 <span class="pill live">已上線</span></td>
+            <td class="c yes">收</td><td class="c yes">收</td><td class="c yes">收</td>
+            <td>重要事件自動推到 LINE 對話，點開直接回到 App 對應頁面。</td>
+          </tr>
+          <tr>
+            <td class="feat">LINE 群發訊息 <span class="pill live">已上線</span></td>
+            <td class="c yes">收</td><td class="c no">—</td><td class="c yes">發</td>
+            <td>三種版型（活動／繳費提醒／一般），可放圖與按鈕。兩段式送出，先確認人數再送。</td>
+          </tr>
+          <tr>
+            <td class="feat">娃娃車 <span class="pill live">已上線</span></td>
+            <td class="c yes">看今日狀態</td><td class="c yes">上下車點名</td><td class="c yes">路線與名單設定</td>
+            <td>路線、接送點順序、固定名單、指派隨車老師。家長看得到上下車紀錄與時間（非 GPS 即時位置）。</td>
+          </tr>
+          <tr>
+            <td class="feat">學生與班級管理 <span class="pill live">已上線</span></td>
+            <td class="c no">—</td><td class="c part">看自班</td><td class="c yes">新增 · 換班 · 狀態</td>
+            <td>學生整合視圖：一個孩子的家長、出缺勤、聯絡簿、娃娃車接送點在同一頁。</td>
+          </tr>
+          <tr>
+            <td class="feat">人員與綁定碼 <span class="pill live">已上線</span></td>
+            <td class="c no">—</td><td class="c no">—</td><td class="c yes">發碼 · 解綁</td>
+            <td>一次性、有期限的綁定碼。後台一眼看出誰還沒綁定 LINE。</td>
+          </tr>
+          <tr>
+            <td class="feat">權限設定 <span class="pill live">已上線</span></td>
+            <td class="c no">—</td><td class="c no">—</td><td class="c yes">增減身分</td>
+            <td>六種身分可自由組合。「園長」身分只有園長能給或收回。</td>
+          </tr>
+          <tr>
+            <td class="feat">園所外觀與功能開關 <span class="pill live">已上線</span></td>
+            <td class="c no">—</td><td class="c no">—</td><td class="c yes">全部</td>
+            <td>園名、代表色、園徽、封面、家長首頁的功能卡片與順序、請假是否需要審核。</td>
+          </tr>
+          <tr>
+            <td class="feat">LINE 圖文選單設計 <span class="pill live">已上線</span></td>
+            <td class="c no">—</td><td class="c no">—</td><td class="c yes">設計 · 套用</td>
+            <td>兩／四／六格模板，三種對象各一份（家長、教職員、尚未綁定者）。手機上也能改。</td>
+          </tr>
+          <tr>
+            <td class="feat">稽核紀錄 <span class="pill live">已上線</span></td>
+            <td class="c no">—</td><td class="c no">—</td><td class="c yes">查詢</td>
+            <td>誰／何時／對什麼／做了什麼／結果。含被拒絕的操作。資料庫層強制唯讀。</td>
+          </tr>
+          <tr>
+            <td class="feat">無障礙與字級 <span class="pill live">已上線</span></td>
+            <td class="c yes">可放大字級</td><td class="c yes">—</td><td class="c yes">—</td>
+            <td>全站文字對比通過 WCAG AA；家長可在「我的」把字級放大，頁面等比放大不會跑版。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption" style="max-width:44rem">「部分」代表有範圍限制（例如老師只能發自己班級的公告、只看得到自己帶的班）。所有限制皆在後端強制執行。</p>
+  </section>
+
+  <!-- ============ 身分 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">02 — 六種身分</p>
+        <h2>一個人可以同時有好幾種</h2>
+      </div>
+      <p class="lead">
+        園長兼帶班、老師的小孩也在園裡、行政偶爾跟車 —— 這些都是常態。
+        系統允許一人多身分，但介面一次只給一種，切換鈕永遠在頁首同一個位置。
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:14%">身分</th>
+            <th style="width:20%">看得到的範圍</th>
+            <th style="width:33%">做得到</th>
+            <th style="width:33%">做不到</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feat">園長</td>
+            <td>全園</td>
+            <td>所有園務設定、群發、權限、稽核、代為點名與填聯絡簿</td>
+            <td>審核請假需要行政或導師身分（可自行加給自己）</td>
+          </tr>
+          <tr>
+            <td class="feat">行政</td>
+            <td>全園</td>
+            <td>與園長幾乎相同：學生、班級、人員、綁定碼、群發、外觀、審核請假</td>
+            <td>不能授予或移除「園長」身分；稽核查詢受限</td>
+          </tr>
+          <tr>
+            <td class="feat">老師（班導）</td>
+            <td>自己帶的班</td>
+            <td>點名、聯絡簿、審自班請假、發班級公告、與家長對話</td>
+            <td>全校公告、群發、園所設定、稽核、其他班的任何資料</td>
+          </tr>
+          <tr>
+            <td class="feat">隨車老師</td>
+            <td>自己負責的那條路線</td>
+            <td>該路線的上下車點名</td>
+            <td>其他路線；班級與學生管理；園所設定</td>
+          </tr>
+          <tr>
+            <td class="feat">家長</td>
+            <td>自己監護的孩子</td>
+            <td>請假與取消、回覆老師、查閱自己孩子的所有紀錄</td>
+            <td>班級名單、其他孩子的資料、任何園務設定；不能自行修改接送點</td>
+          </tr>
+          <tr>
+            <td class="feat">監護人</td>
+            <td>同家長</td>
+            <td>同家長（爺爺奶奶、其他法定監護人）</td>
+            <td>同家長</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cards c3" style="margin-top:2rem">
+      <div class="card">
+        <p class="kicker">兩層檢查</p>
+        <h3>「你是誰」與「這筆是不是你的」</h3>
+        <p>第一層檢查身分（例如只有老師能點名），第二層檢查資料列（這個孩子是不是你班上的）。兩層都要過，而且都在後端 —— 前端傳來的身分一律不採信。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">防呆</p>
+        <h3>不會有沒人能管理的園所</h3>
+        <p>最後一位園長的身分不可被移除；每個帳號至少保留一種身分（要離職請停用帳號，不是清空身分）。移除身分會一併解除附帶關聯，不留幽靈權限。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">身分切換</p>
+        <h3>切下去，整個世界都換</h3>
+        <p>頁籤、首頁、能發的公告範圍全部跟著換。園長切成家長之後，後台入口整組消失 —— 他還是園長，但那是另一個世界，要用就切回去。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 資安 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">03 — 資料與安全</p>
+        <h2>幼兒資料的保管方式</h2>
+      </div>
+      <p class="lead">
+        園所交出去的是孩子的健康、作息與家長的聯絡關係。這一段講的是這些資料放在哪、誰碰得到、以及萬一有爭議時查得到什麼。
+      </p>
+    </div>
+
+    <div class="cards c2">
+      <div class="card">
+        <p class="kicker">隔離</p>
+        <h3>每所園一套獨立資料庫</h3>
+        <p>不是在同一張資料表裡用欄位區分園所。不同園所的資料在儲存層就是分開的，不存在「查詢少寫一個條件就看到別家資料」這種可能。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">留痕</p>
+        <h3>稽核紀錄寫進去就改不掉</h3>
+        <p>由資料庫層的機制強制阻擋修改與刪除 —— 即使是擁有資料庫最高權限的連線也一樣。同時記錄「操作當下持有的身分」，事後不會因為角色變動而失真。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">登入</p>
+        <h3>沒有另一組帳號密碼</h3>
+        <p>老師與家長都用 LINE 登入，園所後台也是。少一組密碼就少一個外洩管道，也少掉「老師忘記密碼」這種每學期都會發生的事。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">進入方式</p>
+        <h3>綁定碼是唯一的入口</h3>
+        <p>用 LINE 登入只代表「這是一支 LINE 帳號」，還不是任何身分。要拿到身分必須輸入園所發出的一次性綁定碼；碼有期限、用過即失效，發碼權只在園長與行政手上。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">聯絡簿</p>
+        <h3>送出前家長看不到，送出後老師改不了太久</h3>
+        <p>老師填寫中的紀錄家長看不到；已送出的紀錄老師只能在近七天內修改，避免事後改寫已經交付的內容。家長端則可回溯查閱全部歷史。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">群發</p>
+        <h3>只能建立與查詢，不能修改刪除</h3>
+        <p>已經送到家長手機上的訊息，改掉紀錄只會讓帳不實。每一則永久保留送給誰、幾人收到、幾人因未綁定被略過。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 藍圖 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">04 — 產品藍圖</p>
+        <h2>接下來會有的功能</h2>
+      </div>
+      <p class="lead">
+        以下五項尚未完工。它們在 App 裡不是灰掉的死角 —— 每一個都有一頁預告，
+        說明這個功能會長什麼樣、家長端與園所端各自會得到什麼。園所也可以在後台選擇先不顯示。
+      </p>
+    </div>
+
+    <div class="cards c2">
+      <div class="card">
+        <p class="kicker"><span class="pill soon">規劃中</span></p>
+        <h3>收費 / 繳費</h3>
+        <p>月費、代辦費、活動費的帳單與繳費狀態，園所與家長各自看得清清楚楚。</p>
+        <ul>
+          <li>家長：每期帳單明細、繳費期限提醒、歷史紀錄與收據查詢</li>
+          <li>園所：批次產生帳單、未繳一眼看出、減免退費分期都留紀錄</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="kicker"><span class="pill soon">規劃中</span></p>
+        <h3>學習 / 成長紀錄</h3>
+        <p>孩子在園所的作品、活動照片與發展觀察，累積成一本可以帶走的成長歷程。</p>
+        <ul>
+          <li>家長：活動照片與作品集、老師的發展觀察、學期末可匯出</li>
+          <li>園所：老師隨手拍隨手記、對應發展指標、招生最有說服力的成果</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="kicker"><span class="pill soon">規劃中</span></p>
+        <h3>表單 / 文件中心</h3>
+        <p>同意書、報名表、通知單不再靠紙本往返，線上發、線上簽、線上收。</p>
+        <ul>
+          <li>家長：待簽文件一次看完、手機上直接完成、隨時回頭查看</li>
+          <li>園所：一鍵發送全校或指定班級、即時看到誰簽了誰還沒簽</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="kicker"><span class="pill soon">規劃中</span></p>
+        <h3>行事曆</h3>
+        <p>園所活動、假期、親師會與繳費期限，全部落在同一張行事曆上。</p>
+        <ul>
+          <li>家長：本月活動一目了然、活動前自動提醒、可加入手機行事曆</li>
+          <li>園所：全校／分班行事曆分開管理、與公告及報名表單串接</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="kicker"><span class="pill soon">規劃中</span></p>
+        <h3>幼兒健康</h3>
+        <p>過敏原、慢性狀況與當日用藥委託，園所照顧孩子時看得到該看的資訊。</p>
+        <ul>
+          <li>家長：填寫過敏原與注意事項、線上提交用藥委託、給藥後收到回報</li>
+          <li>園所：帶班老師一眼看到該班過敏、用藥委託有紀錄與簽收、成長曲線</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--brand-wash);border-color:var(--brand)">
+        <p class="kicker">關於藍圖</p>
+        <h3>不會為了趕功能而破壞架構</h3>
+        <p>
+          這五項的資料邊界與擴充點在系統設計時就已經預留 —— 加進來時是新增一個模組，
+          不是把現有的東西打掉重做。這也是為什麼娃娃車能在不動出缺勤與請假的情況下接上去：
+          請假一被核准，娃娃車的名單自己就跟著變了。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 導入 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">05 — 導入</p>
+        <h2>園所要準備什麼</h2>
+      </div>
+      <p class="lead">
+        導入的重點不在系統安裝，而在「把人放進系統」。以下是實際的順序。
+      </p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="t">步驟 1</div>
+        <div>
+          <h4>建立園所的 LINE 官方帳號</h4>
+          <p>如果園所已經有官方帳號可以直接沿用。Sproutin 會以它作為家長與老師的唯一入口，並設定圖文選單。</p>
+        </div>
+        <div class="who"><b>園所準備</b>　官方帳號的管理權限。</div>
+      </div>
+      <div class="flow-step">
+        <div class="t">步驟 2</div>
+        <div>
+          <h4>設定園所識別與功能開關</h4>
+          <p>園名、代表色、園徽、封面圖；決定家長首頁要顯示哪些功能、請假需不需要審核、有沒有娃娃車。</p>
+        </div>
+        <div class="who"><b>園所準備</b>　園徽與一張封面照片（沒有也可以，系統會用品牌色產生）。</div>
+      </div>
+      <div class="flow-step">
+        <div class="t">步驟 3</div>
+        <div>
+          <h4>匯入班級與學生名冊</h4>
+          <p>建立班級、指派導師，再把孩子放進班級。學生資料只維護這一次，之後所有紀錄都掛在他身上。</p>
+        </div>
+        <div class="who"><b>園所準備</b>　現有的班級與學生名冊。</div>
+      </div>
+      <div class="flow-step">
+        <div class="t">步驟 4</div>
+        <div>
+          <h4>建立教職員帳號並發綁定碼</h4>
+          <p>老師、行政、隨車老師各自拿到一組一次性綁定碼，用 LINE 掃進來就完成。後台一眼看得出誰還沒綁。</p>
+        </div>
+        <div class="who"><b>園所準備</b>　教職員名單與各自的身分。</div>
+      </div>
+      <div class="flow-step">
+        <div class="t">步驟 5</div>
+        <div>
+          <h4>發給家長綁定碼</h4>
+          <p>一個孩子可以綁多位家長。家長加官方帳號好友 → 輸入碼 → 完成，全程不到一分鐘、不需要下載任何東西。</p>
+        </div>
+        <div class="who"><b>園所準備</b>　把碼隨開學通知一起發下去即可。</div>
+      </div>
+      <div class="flow-step">
+        <div class="t">步驟 6</div>
+        <div>
+          <h4>先跑一個班</h4>
+          <p>建議先讓一個班的導師實際用一週的點名與聯絡簿，把園所自己的用語與流程調好，再推到全園。</p>
+        </div>
+        <div class="who"><b>園所準備</b>　一位願意先試的導師。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="pull">
+      「『MVP 不做』不等於『未來不做』——<br />不得因為某個功能不在第一版，就設計出阻礙它未來加入的架構。」
+      <span>—— 這套系統從第一行程式碼開始就寫在規格裡的一條護欄。</span>
+    </p>
+  </section>
+
+  <section class="section">
+    <div class="section-head single">
+      <div>
+        <p class="eyebrow">回到目錄</p>
+        <h2>再看一次每一種身分</h2>
+      </div>
+    </div>
+    <div class="cards c3">
+      <a class="card card-link" href="parent.html">
+        <p class="kicker">02</p>
+        <h3>家長看到什麼</h3>
+        <p>今天、聯絡簿、請假、娃娃車、公告與通知。</p>
+        <p class="go">前往 <svg class="ic" viewBox="0 0 24 24" style="width:.9rem;height:.9rem"><use href="#i-chev"/></svg></p>
+      </a>
+      <a class="card card-link" href="teacher.html">
+        <p class="kicker">03</p>
+        <h3>老師看到什麼</h3>
+        <p>待辦首頁、點名、聯絡簿直欄模式、請假審核、班級名單。</p>
+        <p class="go">前往 <svg class="ic" viewBox="0 0 24 24" style="width:.9rem;height:.9rem"><use href="#i-chev"/></svg></p>
+      </a>
+      <a class="card card-link" href="admin.html">
+        <p class="kicker">04</p>
+        <h3>園長與行政</h3>
+        <p>全園總覽、桌面後台、群發、外觀與圖文選單、人員權限與稽核。</p>
+        <p class="go">前往 <svg class="ic" viewBox="0 0 24 24" style="width:.9rem;height:.9rem"><use href="#i-chev"/></svg></p>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>Sproutin · 功能與藍圖　|　資料為示範內容，功能狀態以實際版本為準</p>
+    <a class="nx" href="index.html">回到總覽 →</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

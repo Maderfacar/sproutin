@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>家長看到什麼 — Sproutin</title>
+<meta name="description" content="家長在 LINE 裡看到的每一頁：今天的狀態、聯絡簿與親師對話、請假、娃娃車、公告與通知。" />
+<link rel="stylesheet" href="dm.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><defs>
+<g id="i-home"><path d="M4 11 12 4l8 7"/><path d="M6 10v9.6h12V10"/></g>
+<g id="i-book"><path d="M12 6.4C10.4 5 7.9 4.5 4.5 5v13.2C7.9 17.7 10.4 18.2 12 19.6 13.6 18.2 16.1 17.7 19.5 18.2V5C16.1 4.5 13.6 5 12 6.4Z"/><path d="M12 6.4v13.2"/></g>
+<g id="i-bell"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></g>
+<g id="i-user"><circle cx="12" cy="8.5" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></g>
+<g id="i-doc"><path d="M7 3.6h6l5 5V19.4A1.6 1.6 0 0 1 16.4 21H7.6A1.6 1.6 0 0 1 6 19.4V5.2A1.6 1.6 0 0 1 7 3.6Z"/><path d="M13 3.6V9h5"/><path d="M9 13.5h6M9 16.5h4"/></g>
+<g id="i-cal"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.2v3.4M16 3.2v3.4"/></g>
+<g id="i-chat"><path d="M4.5 6.6A2 2 0 0 1 6.5 4.6h11a2 2 0 0 1 2 2v6.8a2 2 0 0 1-2 2H9l-4.5 3.4Z"/></g>
+<g id="i-mega"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.2a4 4 0 0 1 0 5.6"/></g>
+<g id="i-shield"><path d="M12 3.5 5 6v5.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-2.5Z"/><path d="M9 12l2 2 4-4"/></g>
+<g id="i-bus"><rect x="4" y="5" width="16" height="12" rx="2.5"/><path d="M4 12h16M8 17v2M16 17v2"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1" fill="currentColor" stroke="none"/></g>
+<g id="i-wallet"><rect x="3.5" y="6.4" width="17" height="12.2" rx="2.6"/><path d="M15 12.5h4.5"/></g>
+<g id="i-cam"><path d="M4 8.6h3l1.4-2.1h7.2L18 8.6h2a1.6 1.6 0 0 1 1.6 1.6v7.6A1.6 1.6 0 0 1 20 19.4H4a1.6 1.6 0 0 1-1.6-1.6v-7.6A1.6 1.6 0 0 1 4 8.6Z"/><circle cx="12" cy="13.6" r="3.1"/></g>
+<g id="i-check"><path d="M5 12.6l4.4 4.4L19 7.4"/></g>
+<g id="i-chev"><path d="M9 6l6 6-6 6"/></g>
+<g id="i-send"><path d="M4.5 11.5 20 4.5l-7 15-2.3-6.2-6.2-1.8Z"/><path d="M10.7 13.3 20 4.5"/></g>
+<g id="i-heart"><path d="M12 19.5S4.5 15 4.5 9.9A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.5 1.9c0 5.1-7.5 9.6-7.5 9.6Z"/></g>
+<g id="i-cog"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.4M12 18.4v2.4M20.8 12h-2.4M5.6 12H3.2M18.2 5.8l-1.7 1.7M7.5 16.5l-1.7 1.7M18.2 18.2l-1.7-1.7M7.5 7.5 5.8 5.8"/></g>
+<g id="i-image"><rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.8-4.6 3.4 3.2 2.6-2.3 4.2 3.9"/></g>
+<g id="i-sparkle"><path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2L12 3.5Z"/><path d="M18.5 4v3M20 5.5h-3"/></g>
+</defs></svg>
+
+<div class="wrap">
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="mark" href="index.html">
+      <span class="mark-glyph"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sparkle"/></svg></span>
+      <span class="mark-name">Sproutin</span>
+      <span class="mark-sub">園所簡介</span>
+    </a>
+    <nav class="nav">
+      <a href="index.html"><i>01</i>總覽</a>
+      <a href="parent.html" aria-current="page"><i>02</i>家長看到什麼</a>
+      <a href="teacher.html"><i>03</i>老師看到什麼</a>
+      <a href="admin.html"><i>04</i>園長與行政</a>
+      <a href="platform.html"><i>05</i>功能與藍圖</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">02 — 家長端</p>
+        <h1>打開就是答案，<br />不是<em>功能表</em>。</h1>
+        <p class="lead">
+          家長打開 App 想知道的是「我小孩今天怎麼樣」，不是一排叫做「出缺勤」「聯絡簿」「通知中心」的分類。
+          分類是資料庫的說法，不是爸媽腦中的問題 —— 名字對不上，就得先猜、點進去、發現不對再退出來。
+          所以家長端只有五個地方，而且第一頁直接把答案講完。
+        </p>
+      </div>
+      <div class="hero-note">
+        <p><strong>入口</strong>　LINE 官方帳號的選單，零安裝、零註冊</p>
+        <p><strong>底部四格</strong>　今天 · 聯絡簿 · 請假 · 我的</p>
+        <p><strong>能做的事</strong>　請假、回覆老師、查紀錄</p>
+        <p><strong>看得到的範圍</strong>　只有自己的孩子</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 1. 今天 ============ -->
+  <section class="showcase">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 01 ／ 今天</p>
+      <h3>一頁只回答一個問題</h3>
+      <p class="lead">
+        封面是園所自己的照片，往上鑽到頁首後面 —— 打開的第一眼是「這是我孩子的學校」。
+        接著是今天的答案：一張整片有顏色的狀態卡，遠遠看顏色就知道結果，走近才需要讀字。
+        再下面才是老師寫的、以及家長唯一真的會「做」的那件事。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>身分鈕永遠在同一個位置</strong><p>只有一人多重身分（例如老師的小孩也在園裡）才看得到。純家長看不到這顆鈕 —— 給他一顆按了只有一個選項的鈕，等於暗示他漏掉了什麼。</p></div></li>
+        <li><span class="n">2</span><div><strong>今天的答案，一頁只有一張</strong><p>用家長會講的話：「已到校」「今天請假」「今天沒到校」，不是 PRESENT / LEAVE / ABSENT。到校時間以老師實際填的為準，沒填就不編一個時間出來。</p></div></li>
+        <li><span class="n">3</span><div><strong>老師今天寫的，直接攤在首頁</strong><p>沒寫就整塊不出現 —— 空的卡片只會讓人以為壞掉。點一下進到完整聯絡簿並可直接回覆。</p></div></li>
+        <li><span class="n">4</span><div><strong>整頁只有一顆主要按鈕</strong><p>家長真正會「做」的事只有請假。其餘都是查閱，不該長得跟它一樣重。</p></div></li>
+        <li><span class="n">5</span><div><strong>其餘入口收在最下面</strong><p>娃娃車、公告各一行；不是每天要看但需要時找得到的（出缺勤查詢、健康、收費…）收進「其他」。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header on-hero">
+              <div class="app-header-in">
+                <div class="app-brand">
+                  <span class="app-logo">晴</span>
+                  <span class="app-brandname">晴光幼兒園</span>
+                </div>
+                <span class="persona-btn">家長 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main has-hero">
+              <div class="app-stack">
+                <section class="app-hero">
+                  <div class="app-hero-media">
+                    <div class="app-hero-scrim"></div>
+                    <div class="app-hero-text">
+                      <p class="app-hero-date">2026年 8月 20日 · 週四</p>
+                      <p class="app-hero-title">午安，張媽媽</p>
+                      <p class="app-hero-sub">范小星 的家長</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="state t-good">
+                  <p class="eyeb">范小星 · 今天</p>
+                  <p class="head">已到校</p>
+                  <p class="det">早上 08:12 進教室</p>
+                </section>
+
+                <div class="panel">
+                  <p style="font-size:.6875rem;font-weight:600;color:var(--ink-mute)">老師今天寫的</p>
+                  <p style="margin-top:.5rem;font-size:1rem;line-height:1.7;color:var(--ink)">今天主動幫忙收玩具，午睡起來精神很好。下午練習了新的手指謠，唱得很開心。</p>
+                  <p style="margin-top:.75rem;font-size:.6875rem;font-weight:700;color:var(--brand-primary);display:flex;align-items:center;gap:.25rem">看完整聯絡簿、回覆老師 <svg class="ic" viewBox="0 0 24 24" style="width:.75rem;height:.75rem"><use href="#i-chev"/></svg></p>
+                </div>
+
+                <a class="btn primary"><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg>我要幫孩子請假</a>
+
+                <div class="tile">
+                  <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bus"/></svg></span>
+                  <span class="tile-txt"><b>娃娃車</b><span>下午 16:10 從學校出發</span></span>
+                </div>
+
+                <div class="tile">
+                  <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg></span>
+                  <span class="tile-txt"><b>近期腸病毒提醒</b><span>全校公告 · 8月19日</span></span>
+                </div>
+
+                <section>
+                  <div class="sh review"><div><h3>其他</h3><p>不是每天要看，但需要時在這裡</p></div></div>
+                  <div class="app-col">
+                    <div class="tile">
+                      <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-cal"/></svg></span>
+                      <span class="tile-txt"><b>出缺勤</b><span>查看每日出席狀況</span></span>
+                    </div>
+                    <div class="tile">
+                      <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-heart"/></svg></span>
+                      <span class="tile-txt"><b>幼兒健康</b><span>即將推出</span></span>
+                    </div>
+                    <div class="tile">
+                      <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-wallet"/></svg></span>
+                      <span class="tile-txt"><b>收費繳費</b><span>即將推出</span></span>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>今天</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg>請假</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">可以直接在上面的畫面裡上下捲動。「即將推出」的卡片點進去是功能預告頁，園所可在後台自行開關要不要顯示。</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. 聯絡簿 ============ -->
+  <section class="showcase flip">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 02 ／ 聯絡簿</p>
+      <h3>上半部是那一天，下半部是一直在的對話</h3>
+      <p class="lead">
+        電子聯絡簿最常見的錯誤，是把親師對話也按日期切開 —— 切碎之後前後看不懂。
+        這裡分成兩段：上半部翻日期看那一天的狀態，下半部的對話是連續的，怎麼翻日期都不會被切斷。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>近七天一點就到</strong><p>下面那顆小點代表那天有紀錄。假日沒有點，一眼就分得出來。再往前用左右箭頭翻。</p></div></li>
+        <li><span class="n">2</span><div><strong>那一天的答案仍然是最大的字</strong><p>家長翻到某一天，第一件想知道的事就是「那天有沒有來、過得如何」。</p></div></li>
+        <li><span class="n">3</span><div><strong>當日紀錄：午餐、點心、午睡、如廁、心情、接送</strong><p>由老師在班級直欄模式一次填完。家長只看得到老師「已送出」的版本，不會看到填到一半的半成品。</p></div></li>
+        <li><span class="n">4</span><div><strong>健康只在有事時才出現</strong><p>體溫與症狀有東西可講才顯示。每天印一行「無異狀」只會變成雜訊，真的有事時反而看不見。</p></div></li>
+        <li><span class="n">5</span><div><strong>跟老師說話</strong><p>訊息掛在「這個孩子」上，多位家長（爸爸、媽媽、爺爺）看到的是同一串，老師不必分別回覆三次。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand">
+                  <span class="app-logo">晴</span>
+                  <span class="app-brandname">晴光幼兒園</span>
+                </div>
+                <span class="persona-btn">家長 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main">
+              <div class="app-stack tight">
+                <div class="pagehead"><h1>聯絡簿</h1></div>
+
+                <section class="strip">
+                  <span class="arrow prev"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                  <div class="days">
+                    <span class="day">五<b>14</b><i class="dot"></i></span>
+                    <span class="day">六<b>15</b><i></i></span>
+                    <span class="day">日<b>16</b><i></i></span>
+                    <span class="day">一<b>17</b><i class="dot"></i></span>
+                    <span class="day">二<b>18</b><i class="dot"></i></span>
+                    <span class="day">三<b>19</b><i class="dot"></i></span>
+                    <span class="day on">四<b>20</b><i class="dot"></i></span>
+                  </div>
+                  <span class="arrow"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                </section>
+
+                <section class="state t-good">
+                  <p class="eyeb">8月20日 · 週四</p>
+                  <p class="head">有來上學</p>
+                  <p class="det">早上 08:12 進教室</p>
+                  <div class="body">
+                    <dl class="dl">
+                      <div><dt>午餐</dt><dd>吃完</dd></div>
+                      <div><dt>點心</dt><dd>吃完</dd></div>
+                      <div><dt>午睡</dt><dd>睡得好</dd></div>
+                      <div><dt>如廁</dt><dd>正常</dd></div>
+                      <div><dt>心情</dt><dd>開心</dd></div>
+                      <div><dt>接送</dt><dd>校車</dd></div>
+                    </dl>
+                    <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--hairline)">
+                      <p style="font-size:.6875rem;font-weight:600;opacity:.7">老師今天寫的</p>
+                      <p style="margin-top:.375rem;font-size:1rem;line-height:1.7">今天主動幫忙收玩具，午睡起來精神很好。下午練習了新的手指謠，唱得很開心。</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <div class="sh review"><div><h3>跟老師說話</h3><p>這裡的對話不分日期，前後看得懂</p></div></div>
+                  <div class="thread">
+                    <div class="daysep"><i></i>8月19日<i></i></div>
+                    <div class="msg">
+                      <div class="sender"><i>林</i><span>林老師 · 向日葵班</span></div>
+                      <div class="bub them">小星今天有一點點咳嗽，我們有多讓他喝水，精神都很好，先跟您說一聲。</div>
+                      <div class="meta">15:42</div>
+                    </div>
+                    <div class="msg mine">
+                      <div class="bub me">謝謝老師！昨天晚上有吹到風，我今天帶他去看一下醫生。</div>
+                      <div class="meta">18:05</div>
+                    </div>
+                    <div class="daysep"><i></i>今天<i></i></div>
+                    <div class="msg">
+                      <div class="sender"><i>林</i><span>林老師 · 向日葵班</span></div>
+                      <div class="bub them">今天完全沒有咳了，中午也睡得很好，請放心。</div>
+                      <div class="meta">15:20</div>
+                    </div>
+                  </div>
+                  <div class="sendbar" style="margin-top:.875rem">
+                    <input value="" placeholder="輸入訊息…" readonly />
+                    <span class="go"><svg class="ic" viewBox="0 0 24 24"><use href="#i-send"/></svg></span>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>今天</a>
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg>請假</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">兩個以上的孩子時，名字會直接攤開成一排讓家長點選 —— 全站不使用下拉選單，長輩點下拉很吃力，而且點開之前看不到有哪些選項。</p>
+    </div>
+  </section>
+
+  <!-- ============ 3. 請假 ============ -->
+  <section class="showcase">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 03 ／ 請假</p>
+      <h3>一顆按鈕 + 一份紀錄，沒有第三樣東西</h3>
+      <p class="lead">
+        家長進這一頁，十次有八次是來看「上次那筆准了沒」，而不是要新增一筆。
+        所以結果在上面、表單收進底部面板 —— 要申請時才滑上來，不用先捲過一整份欄位。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>送出的當下就看得到</strong><p>網路還沒回來時那一列是「送出中…」，不會假裝已經成功、也不能誤按取消。</p></div></li>
+        <li><span class="n">2</span><div><strong>待審核 / 已核准 / 已駁回 / 已取消</strong><p>四種狀態各有固定顏色，全園一致，不隨園所品牌色改變 —— 狀態講的是事實，不是身分。</p></div></li>
+        <li><span class="n">3</span><div><strong>被駁回一定看得到原因</strong><p>老師按「不准」時系統強制要寫一句話，那句話直接顯示給家長。否則家長只會再打一次電話問。</p></div></li>
+        <li><span class="n">4</span><div><strong>准了之後，出缺勤自己跟著改</strong><p>當天的出缺勤自動標為請假、娃娃車今日名單自動移除，老師不必再去別的地方改一次。</p></div></li>
+        <li><span class="n">5</span><div><strong>要不要審核由園所決定</strong><p>後台可設定「請假需要審核」；關掉之後家長送出即生效，適合作風不同的園所。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand">
+                  <span class="app-logo">晴</span>
+                  <span class="app-brandname">晴光幼兒園</span>
+                </div>
+                <span class="persona-btn">家長 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main">
+              <div class="app-stack tight">
+                <div class="pagehead"><h1>請假</h1></div>
+
+                <a class="btn primary"><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg>幫 范小星 請假</a>
+
+                <section>
+                  <div class="sh review"><div><h3>請假紀錄</h3><p>送出後在這裡看結果：等老師看、已核准、或被駁回</p></div></div>
+                  <ul class="app-col" style="gap:.75rem">
+                    <li class="panel soft">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="font-family:var(--serif);font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)">2026-08-21</span>
+                        <span style="margin-left:auto"><span class="badge t-wait">待審核</span></span>
+                      </div>
+                      <p style="margin-top:.375rem;font-size:.875rem;color:var(--ink-soft)">家中有事，需要帶回南部老家一天。</p>
+                      <div style="margin-top:.75rem"><span class="btn secondary auto">取消這筆請假</span></div>
+                    </li>
+                    <li class="panel soft">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="font-family:var(--serif);font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)">2026-08-11 ～ 2026-08-12</span>
+                        <span style="margin-left:auto"><span class="badge t-good">已核准</span></span>
+                      </div>
+                      <p style="margin-top:.375rem;font-size:.875rem;color:var(--ink-soft)">感冒發燒，先在家休息。</p>
+                    </li>
+                    <li class="panel soft">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="font-family:var(--serif);font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)">2026-07-30</span>
+                        <span style="margin-left:auto"><span class="badge t-stop">已駁回</span></span>
+                      </div>
+                      <p style="margin-top:.375rem;font-size:.875rem;color:var(--ink-soft)">想帶去參加親戚的婚禮。</p>
+                      <p style="margin-top:.25rem;font-size:.875rem;color:var(--ink-soft)">老師的話：這天有期末成果發表，請再確認一次。</p>
+                    </li>
+                    <li class="panel soft">
+                      <div style="display:flex;align-items:center;gap:.5rem">
+                        <span style="font-family:var(--serif);font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)">2026-07-14</span>
+                        <span style="margin-left:auto"><span class="badge t-neutral">已取消</span></span>
+                      </div>
+                      <p style="margin-top:.375rem;font-size:.875rem;color:var(--ink-soft)">後來還是去上學了。</p>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>今天</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a>
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg>請假</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">申請表單（日期區間、假別、原因）收在底部滑出的面板裡；已核准的請假在開始日之前仍可由家長自行取消。</p>
+    </div>
+  </section>
+
+  <!-- ============ 4. 娃娃車 ============ -->
+  <section class="showcase flip">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 04 ／ 娃娃車</p>
+      <h3>老實說我們知道什麼，不假裝是即時追蹤</h3>
+      <p class="lead">
+        這一頁刻意不做地圖、不做「車開到哪」。沒有車機 GPS，做一個看起來像即時定位、其實不是的東西，
+        只會在真正出事的那一天害到人。這裡顯示的是隨車老師實際點下的紀錄 —— 上車了、下車了、幾點。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>永遠先看「接下來那一趟」</strong><p>中午之前上學那段在最上面，中午之後放學那段自動換到最上面。已經發生的那趟收成安靜的一塊。</p></div></li>
+        <li><span class="n">2</span><div><strong>兩個步驟就是全部</strong><p>在家門口上車（含接送點名稱）、抵達園所下車。放學則是在園所上車、送到家門口。</p></div></li>
+        <li><span class="n">3</span><div><strong>接送點由園所安排</strong><p>家長不能自己改接送點 —— 那會讓整條路線的順序亂掉。要換點請聯絡園所。</p></div></li>
+        <li><span class="n">4</span><div><strong>請假會自動連動</strong><p>請假核准後，今天的乘車名單自動移除，隨車老師的清單上不會再出現這個孩子。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand">
+                  <span class="app-logo">晴</span>
+                  <span class="app-brandname">晴光幼兒園</span>
+                </div>
+                <span class="persona-btn">家長 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main no-tabs">
+              <div class="app-stack tight">
+                <div class="pagehead">
+                  <span class="back"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                  <h1>娃娃車</h1>
+                </div>
+
+                <p style="font-size:.6875rem;font-weight:600;color:var(--ink-mute)">A 線 · 中山路</p>
+
+                <section class="state t-wait">
+                  <p class="eyeb">放學 · 16:10 出發</p>
+                  <p class="head">還沒上車</p>
+                  <div class="body">
+                    <ul class="steps">
+                      <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg><span>在園所上車</span><em>等待中</em></li>
+                      <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg><span>送到家門口</span><em>等待中</em></li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section class="panel soft" style="color:var(--ink-soft)">
+                  <p style="font-size:.6875rem;font-weight:600;color:var(--ink-mute)">上學 · 07:40 出發</p>
+                  <p style="margin-top:.125rem;font-family:var(--serif);font-size:1.25rem;font-weight:700;color:var(--ink)">已下車 08:05</p>
+                  <ul class="steps">
+                    <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg><span>在家門口上車（中山路口）</span><em>07:48</em></li>
+                    <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg><span>抵達園所下車</span><em>08:05</em></li>
+                  </ul>
+                </section>
+
+                <p style="display:flex;gap:.5rem;font-size:.6875rem;line-height:1.7;color:var(--ink-soft)">
+                  <svg class="ic" viewBox="0 0 24 24" style="width:1rem;height:1rem;flex:none;margin-top:.15rem"><use href="#i-shield"/></svg>
+                  接送點由園所安排，需要變更請聯絡園所。這裡顯示的是隨車老師實際點下的紀錄，不是即時車輛位置。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">娃娃車是可由園所開關的功能。沒有娃娃車的園所在後台關掉之後，家長端與老師端所有相關入口都會消失。</p>
+    </div>
+  </section>
+
+  <!-- ============ 5. 公告與訊息中心 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">畫面 05 ／ 其餘兩頁</p>
+        <h2>公告是佈告欄，<br />訊息中心是收件匣。</h2>
+      </div>
+      <p class="lead">
+        兩者刻意分開：公告會留著給人回頭找，訊息中心只回答「今天有什麼新的事」。
+        出缺勤與行事曆不收進訊息中心 —— 它們是查得到的紀錄，當成訊息推會天天洗版。
+      </p>
+    </div>
+
+    <div class="trio two">
+      <div class="trio-item">
+        <span class="tag">公告</span>
+        <h3>日期在標題上面</h3>
+        <p>家長打開公告第一個要判斷的是「這則是不是新的、我看過沒」，那應該先講。全校與班級用不同顏色的標籤分。</p>
+        <div class="device mini">
+          <div class="device-screen">
+            <div class="device-notch"></div>
+            <div class="app">
+              <header class="app-header">
+                <div class="app-header-in">
+                  <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                  <span class="persona-btn">家長 ▾</span>
+                  <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+                </div>
+              </header>
+              <div class="app-main no-tabs">
+                <div class="app-stack tight">
+                  <div class="pagehead">
+                    <span class="back"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                    <h1>公告</h1>
+                  </div>
+                  <div class="sh review"><div><h3>公告</h3><p>園所與班級發布的消息</p></div></div>
+                  <ul class="app-col" style="gap:.75rem">
+                    <li class="annc">
+                      <div class="hd"><time>8月19日</time><span style="margin-left:auto"><span class="badge t-brand">全校</span></span></div>
+                      <h4>近期腸病毒提醒</h4>
+                      <p>近期腸病毒進入流行期，請家長協助留意孩子的體溫與精神狀況，並加強洗手。若有發燒或口腔潰瘍，請先在家休息並告知園所。</p>
+                    </li>
+                    <li class="annc">
+                      <div class="hd"><time>8月18日</time><span style="margin-left:auto"><span class="badge t-neutral">班級</span></span></div>
+                      <h4>向日葵班本週活動</h4>
+                      <p>本週五戶外教學，請幫孩子準備水壺與帽子，並穿著方便活動的鞋子。</p>
+                    </li>
+                    <li class="annc">
+                      <div class="hd"><time>8月17日</time><span style="margin-left:auto"><span class="badge t-brand">全校</span></span></div>
+                      <h4>畢業團體照拍攝時間調整</h4>
+                      <p>原訂本週四的團體照，因攝影師檔期調整為下週二上午九點。請當天讓孩子穿著園服到校。</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trio-item">
+        <span class="tag">訊息中心</span>
+        <h3>未讀的那一則整列都看得出來</h3>
+        <p>收件匣的價值在於「哪幾則是新的」一眼掃得出來，不是右邊一個小圓點。點一則就標為已讀，並跳到它原本那一頁。</p>
+        <div class="device mini">
+          <div class="device-screen">
+            <div class="device-notch"></div>
+            <div class="app">
+              <header class="app-header">
+                <div class="app-header-in">
+                  <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                  <span class="persona-btn">家長 ▾</span>
+                  <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+                </div>
+              </header>
+              <div class="app-main no-tabs">
+                <div class="app-stack tight">
+                  <div class="pagehead">
+                    <span class="back"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                    <h1>訊息中心</h1>
+                  </div>
+                  <div><span class="badge solid s-stop">2 則未讀</span></div>
+                  <ul class="app-col">
+                    <li class="noti unread">
+                      <span class="ic-box t-brand"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chat"/></svg></span>
+                      <span class="tx"><b>收到新訊息</b><span>林老師 · 向日葵班 · 20 分鐘前</span></span>
+                      <span class="dot"></span>
+                    </li>
+                    <li class="noti unread">
+                      <span class="ic-box t-brand"><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg></span>
+                      <span class="tx"><b>有新公告</b><span>近期腸病毒提醒 · 昨天</span></span>
+                      <span class="dot"></span>
+                    </li>
+                    <li class="noti">
+                      <span class="ic-box t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg></span>
+                      <span class="tx"><b>請假已核准</b><span>范小星 8/11–8/12 · 8月10日</span></span>
+                    </li>
+                    <li class="noti">
+                      <span class="ic-box t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+                      <span class="tx"><b>聯絡簿已送出</b><span>8月19日 · 8月19日</span></span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="caption" style="max-width:44rem">
+      重要事件（請假結果、老師留言、新公告）同時會以 LINE 推播送到家長的對話視窗，
+      點開直接回到 App 對應的頁面 —— 家長不需要養成「每天打開來看一下」的習慣。
+    </p>
+  </section>
+
+  <!-- ============ 家長看不到什麼 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">邊界</p>
+        <h2>家長看不到什麼</h2>
+      </div>
+      <p class="lead">
+        這一段跟功能一樣重要。範圍不是靠「畫面上不放入口」達成的 ——
+        每一次取資料時後端都會重新確認「這筆是不是你的」，前端只負責顯示。
+      </p>
+    </div>
+
+    <div class="cards c3">
+      <div class="card">
+        <p class="kicker">資料範圍</p>
+        <h3>只有自己的孩子</h3>
+        <p>看得到的學生、出缺勤、聯絡簿、訊息、乘車紀錄，一律限縮在自己有監護關係的孩子。同班其他孩子的任何資料都不會出現。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">班級與園務</p>
+        <h3>沒有名單、沒有後台</h3>
+        <p>班級名單、其他家長的聯絡方式、園所設定、人員與權限、稽核紀錄，家長端完全不存在 —— 連入口都沒有。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">聯絡簿</p>
+        <h3>只看得到已送出的</h3>
+        <p>老師還在填的當日紀錄，家長看不到。避免家長看到寫到一半的半成品，也讓老師可以放心邊帶班邊記錄。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">多重身分</p>
+        <h3>切成家長，就只是家長</h3>
+        <p>老師的小孩也在園裡時，切到家長身分後，發公告、點名、後台入口整組消失。他確實還是老師，但那是另一個世界。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">修改權限</p>
+        <h3>不能改自己的資料</h3>
+        <p>學生基本資料、班級、接送點都由園所維護。家長能做的是請假、回覆訊息、取消自己送出的請假。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">帳號</p>
+        <h3>靠園所發的綁定碼才進得來</h3>
+        <p>家長用 LINE 登入後，需要園所發出的一次性綁定碼才會和孩子產生關聯。碼有期限、用過即失效，發碼與解綁限園長／行政。</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>Sproutin · 家長端　|　畫面為產品實際版型，示範資料</p>
+    <a class="nx" href="teacher.html">下一頁：老師看到什麼 →</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

@@ -16,6 +16,12 @@ const nextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  // 給業主看的產品簡介（靜態五頁，放在 public/_dm）。
+  // public 下的資料夾**不會**自動對應到 index.html —— `/_dm` 直接進來是 404，
+  // 而那正是我們會貼給人的短網址，所以補一條轉向。
+  async redirects() {
+    return [{ source: '/_dm', destination: '/_dm/index.html', permanent: false }];
+  },
   webpack: (config) => {
     // @sproutin/shared 原始碼採 NodeNext（相對匯入帶 .js 副檔名，指向 .ts 檔）。
     // webpack 預設無法把 './foo.js' 解析回 './foo.ts' → 匯入 shared 的 runtime 值時會 module-not-found。

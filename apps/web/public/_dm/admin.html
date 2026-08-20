@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>園長與行政 — Sproutin</title>
+<meta name="description" content="園務端：手機看全園、電腦做管理、LINE 群發、園所外觀與圖文選單、人員綁定、權限與稽核。" />
+<link rel="stylesheet" href="dm.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><defs>
+<g id="i-home"><path d="M4 11 12 4l8 7"/><path d="M6 10v9.6h12V10"/></g>
+<g id="i-book"><path d="M12 6.4C10.4 5 7.9 4.5 4.5 5v13.2C7.9 17.7 10.4 18.2 12 19.6 13.6 18.2 16.1 17.7 19.5 18.2V5C16.1 4.5 13.6 5 12 6.4Z"/><path d="M12 6.4v13.2"/></g>
+<g id="i-bell"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></g>
+<g id="i-user"><circle cx="12" cy="8.5" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></g>
+<g id="i-doc"><path d="M7 3.6h6l5 5V19.4A1.6 1.6 0 0 1 16.4 21H7.6A1.6 1.6 0 0 1 6 19.4V5.2A1.6 1.6 0 0 1 7 3.6Z"/><path d="M13 3.6V9h5"/><path d="M9 13.5h6M9 16.5h4"/></g>
+<g id="i-cal"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.2v3.4M16 3.2v3.4"/></g>
+<g id="i-chat"><path d="M4.5 6.6A2 2 0 0 1 6.5 4.6h11a2 2 0 0 1 2 2v6.8a2 2 0 0 1-2 2H9l-4.5 3.4Z"/></g>
+<g id="i-mega"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M17.5 9.2a4 4 0 0 1 0 5.6"/></g>
+<g id="i-shield"><path d="M12 3.5 5 6v5.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-2.5Z"/><path d="M9 12l2 2 4-4"/></g>
+<g id="i-bus"><rect x="4" y="5" width="16" height="12" rx="2.5"/><path d="M4 12h16M8 17v2M16 17v2"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1" fill="currentColor" stroke="none"/></g>
+<g id="i-wallet"><rect x="3.5" y="6.4" width="17" height="12.2" rx="2.6"/><path d="M15 12.5h4.5"/></g>
+<g id="i-cam"><path d="M4 8.6h3l1.4-2.1h7.2L18 8.6h2a1.6 1.6 0 0 1 1.6 1.6v7.6A1.6 1.6 0 0 1 20 19.4H4a1.6 1.6 0 0 1-1.6-1.6v-7.6A1.6 1.6 0 0 1 4 8.6Z"/><circle cx="12" cy="13.6" r="3.1"/></g>
+<g id="i-check"><path d="M5 12.6l4.4 4.4L19 7.4"/></g>
+<g id="i-chev"><path d="M9 6l6 6-6 6"/></g>
+<g id="i-send"><path d="M4.5 11.5 20 4.5l-7 15-2.3-6.2-6.2-1.8Z"/><path d="M10.7 13.3 20 4.5"/></g>
+<g id="i-heart"><path d="M12 19.5S4.5 15 4.5 9.9A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.5 1.9c0 5.1-7.5 9.6-7.5 9.6Z"/></g>
+<g id="i-cog"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.4M12 18.4v2.4M20.8 12h-2.4M5.6 12H3.2M18.2 5.8l-1.7 1.7M7.5 16.5l-1.7 1.7M18.2 18.2l-1.7-1.7M7.5 7.5 5.8 5.8"/></g>
+<g id="i-image"><rect x="3.5" y="5" width="17" height="14" rx="2.4"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.8-4.6 3.4 3.2 2.6-2.3 4.2 3.9"/></g>
+<g id="i-sparkle"><path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2L12 3.5Z"/><path d="M18.5 4v3M20 5.5h-3"/></g>
+</defs></svg>
+
+<div class="wrap">
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="mark" href="index.html">
+      <span class="mark-glyph"><svg class="ic" viewBox="0 0 24 24"><use href="#i-sparkle"/></svg></span>
+      <span class="mark-name">Sproutin</span>
+      <span class="mark-sub">園所簡介</span>
+    </a>
+    <nav class="nav">
+      <a href="index.html"><i>01</i>總覽</a>
+      <a href="parent.html"><i>02</i>家長看到什麼</a>
+      <a href="teacher.html"><i>03</i>老師看到什麼</a>
+      <a href="admin.html" aria-current="page"><i>04</i>園長與行政</a>
+      <a href="platform.html"><i>05</i>功能與藍圖</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">04 — 園長 / 行政端</p>
+        <h1>手機看全園，<br />電腦<em>做管理</em>。</h1>
+        <p class="lead">
+          園長的一天是走動的：在教室、在門口、在辦公室。所以「今天全園怎麼樣」必須在手機上一眼看完，
+          而學生名冊、人員權限、群發訊息這種需要打字與比對的事，在電腦上做比較舒服。
+          兩邊是同一套系統、同一份資料、同一組元件 —— <strong>差別只有外框，不是兩套 App</strong>。
+        </p>
+      </div>
+      <div class="hero-note">
+        <p><strong>手機（LINE 內）</strong>　全園今天、需要處理的事、每日操作</p>
+        <p><strong>電腦（瀏覽器）</strong>　名冊、權限、綁定碼、群發、園所外觀</p>
+        <p><strong>行政人員</strong>　與園長相同的操作範圍，唯一例外是不能授予「園長」身分</p>
+        <p><strong>留痕</strong>　誰在什麼時候改了什麼，全部進稽核紀錄</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 1. 手機全園總覽 ============ -->
+  <section class="showcase">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 01 ／ 手機 · 全園今天</p>
+      <h3>先給數字，再給需要你出手的地方</h3>
+      <p class="lead">
+        導師的首頁問「我這一班還有什麼沒做」，園長的首頁問「今天全園怎麼樣、哪裡需要我」——
+        這是兩個不同的問題，所以是兩頁，不是同一頁換個標題。
+        版面順序刻意是：一句話 → 三個數字 → 需要我處理的 → 每天的事 → 各班 → 管理。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>一句話講完全園</strong><p>到校幾位、全園幾位、已點名幾位。有事要處理時整張卡是品牌色，全部處理完會變成綠色。</p></div></li>
+        <li><span class="n">2</span><div><strong>三個數字用狀態色</strong><p>請假、沒到校、未點名班級。數字是 0 時退成灰色，不會用紅色嚇人。</p></div></li>
+        <li><span class="n">3</span><div><strong>「需要你處理」是動態的</strong><p>哪一班還沒點完名、有幾件請假等人決定。全部處理完這一段會換成「今天沒有需要你處理的事」。</p></div></li>
+        <li><span class="n">4</span><div><strong>各班今天，一行一班</strong><p>到校／請假／缺席與完成狀態。點進去直接補那一班的點名 —— 老師請假或代課時用得到。</p></div></li>
+        <li><span class="n">5</span><div><strong>管理放最後</strong><p>園所設定是設好就不太動的東西，天天擺在最上面只是佔位置。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                <span class="persona-btn">園長 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main">
+              <div class="app-stack">
+                <section class="state t-brand">
+                  <p class="eyeb">全園 · 今天</p>
+                  <p class="head">59 位到校</p>
+                  <p class="det">全園 65 位，已點名 61 位</p>
+                </section>
+
+                <div class="stats">
+                  <div class="stat w"><p>請假</p><b>2</b></div>
+                  <div class="stat n"><p>沒到校</p><b>0</b></div>
+                  <div class="stat o"><p>未點名班級</p><b>1</b></div>
+                </div>
+
+                <section>
+                  <div class="sh action"><div><h3>需要你處理</h3></div></div>
+                  <div class="app-col">
+                    <div class="tile">
+                      <span class="tile-ico t-note"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+                      <span class="tile-txt"><b>向日葵班還沒點完名</b><span>21 / 25 位</span></span>
+                      <span class="badge solid s-stop">4</span>
+                    </div>
+                    <div class="tile">
+                      <span class="tile-ico t-wait"><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg></span>
+                      <span class="tile-txt"><b>請假等你決定</b><span>全校送上來的申請</span></span>
+                      <span class="badge solid s-stop">3</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <div class="sh review"><div><h3>每天的事</h3><p>老師請假或代課時你也用得到</p></div></div>
+                  <div class="app-col">
+                    <div class="tile">
+                      <span class="tile-ico t-brand"><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+                      <span class="tile-txt"><b>點名</b><span>選一個班，補今天的出缺勤</span></span>
+                    </div>
+                    <div class="tile">
+                      <span class="tile-ico t-wait"><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg></span>
+                      <span class="tile-txt"><b>聯絡簿</b><span>選一個班，填今天的聯絡簿</span></span>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <div class="sh review"><div><h3>各班今天</h3><p>點進去看那一班的點名</p></div></div>
+                  <ul>
+                    <li class="classrow"><b>向日葵班</b><span class="num">到校 21</span><span class="badge t-note">差 4 位</span></li>
+                    <li class="classrow"><b>鬱金香班</b><span class="num">到校 22</span><span class="badge t-good">已完成</span></li>
+                    <li class="classrow"><b>小樹班</b><span class="num">到校 16 · 請假 2</span><span class="badge t-good">已完成</span></li>
+                  </ul>
+                </section>
+
+                <section>
+                  <div class="sh review"><div><h3>管理</h3><p>設定好就不太需要再動的東西</p></div></div>
+                  <div class="app-col">
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-heart"/></svg></span><span class="tile-txt"><b>學生</b><span>新增、換班、在學狀態</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg></span><span class="tile-txt"><b>班級</b><span>班級與導師指派</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg></span><span class="tile-txt"><b>人員與綁定</b><span>帳號、家長綁定碼</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg></span><span class="tile-txt"><b>權限</b><span>一頁看完誰有什麼身分</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-send"/></svg></span><span class="tile-txt"><b>發送訊息</b><span>送出後不可收回</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-image"/></svg></span><span class="tile-txt"><b>園所外觀</b><span>LINE 選單、園名、顏色、封面</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bus"/></svg></span><span class="tile-txt"><b>娃娃車設定</b><span>路線、接送點、隨車老師</span></span></div>
+                    <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg></span><span class="tile-txt"><b>稽核紀錄</b><span>誰在什麼時候改了什麼</span></span></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <nav class="app-tabs">
+              <a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>總覽</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>名單</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg>訊息</a>
+              <a><svg class="ic" viewBox="0 0 24 24"><use href="#i-cog"/></svg>我的</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <p class="caption">行政人員看到的是同一頁。園長與行政的差別只有一項：只有園長能授予或移除「園長」這個身分。</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. 桌面後台 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">畫面 02 ／ 電腦 · 園務後台</p>
+        <h2>同一套系統的另一種密度</h2>
+      </div>
+      <p class="lead">
+        後台不是「功能比較多的版本」。每一條左側選單在手機上都有對應的頁面，
+        裡面的功能元件完全共用 —— 園長在辦公室改的東西，回到教室用手機也改得動。
+      </p>
+    </div>
+
+    <div class="macframe">
+      <div class="macbar">
+        <span class="macdot"></span><span class="macdot"></span><span class="macdot"></span>
+        <span class="macurl">school.sproutin.app/admin</span>
+      </div>
+      <div class="admin">
+        <aside class="side">
+          <div class="brand">
+            <span class="lg">晴</span>
+            <div><b>晴光幼兒園</b><span>園務後台</span></div>
+          </div>
+          <div class="grp">
+            <p>園務</p>
+            <ul>
+              <li><a class="on"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>總覽</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>人員與綁定</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg>權限設定</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg>發送訊息</a></li>
+            </ul>
+          </div>
+          <div class="grp">
+            <p>設定</p>
+            <ul>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-image"/></svg>園所外觀設計</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-bus"/></svg>娃娃車</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-doc"/></svg>班級</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-heart"/></svg>學生</a></li>
+            </ul>
+          </div>
+          <div class="grp">
+            <p>每日</p>
+            <ul>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-bus"/></svg>娃娃車點名</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-check"/></svg>出缺勤</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-cal"/></svg>請假</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg>公告</a></li>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg>訊息中心</a></li>
+            </ul>
+          </div>
+          <div class="grp">
+            <p>紀錄</p>
+            <ul>
+              <li><a><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg>稽核紀錄</a></li>
+            </ul>
+          </div>
+          <div class="foot">
+            <b>王園長</b>
+            <span>園長 · 行政</span>
+          </div>
+        </aside>
+
+        <div class="body">
+          <div class="stack">
+            <header>
+              <p style="font-size:.6875rem;font-weight:600;color:var(--ink-mute)">園務後台</p>
+              <h1 style="margin-top:.5rem">王園長，午安</h1>
+              <p class="sub">2026 年 8 月 20 日 · 星期四</p>
+            </header>
+
+            <section class="metrics">
+              <div class="metric"><p>待審請假</p><b>3</b></div>
+              <div class="metric"><p>尚未綁定</p><b>4<em>人</em></b></div>
+              <div class="metric"><p>班級</p><b>3<em>班</em></b></div>
+              <div class="metric"><p>在學學生</p><b>65<em>人</em></b></div>
+            </section>
+
+            <section>
+              <div class="sh action"><div><h3>需要你處理</h3></div></div>
+              <div class="col">
+                <div class="tile">
+                  <span class="tile-ico t-note"><svg class="ic" viewBox="0 0 24 24"><use href="#i-cal"/></svg></span>
+                  <span class="tile-txt"><b>3 筆請假等待審核</b></span>
+                </div>
+                <div class="tile">
+                  <span class="tile-ico t-note"><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg></span>
+                  <span class="tile-txt"><b>4 位人員尚未綁定 LINE，本人還無法登入</b></span>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <div class="sh review"><div><h3>常用</h3><p>左側每一條在手機上都有對應的頁面</p></div></div>
+              <div class="grid2">
+                <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg></span><span class="tile-txt"><b>人員與綁定</b><span>新增帳號、指派班級、發綁定碼</span></span></div>
+                <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-shield"/></svg></span><span class="tile-txt"><b>權限設定</b><span>一頁看完誰有什麼身分</span></span></div>
+                <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-heart"/></svg></span><span class="tile-txt"><b>學生管理</b><span>新增學生、調整班級、指派娃娃車接送點</span></span></div>
+                <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg></span><span class="tile-txt"><b>發送訊息</b><span>做一張卡片送到家長的 LINE（送出後不可收回）</span></span></div>
+                <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-image"/></svg></span><span class="tile-txt"><b>園所外觀設計</b><span>LINE 選單、園名、顏色、園徽、封面圖</span></span></div>
+                <div class="tile"><span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bus"/></svg></span><span class="tile-txt"><b>娃娃車</b><span>路線、接送點順序、指派隨車老師</span></span></div>
+              </div>
+            </section>
+
+            <p class="note">
+              「全園今天到幾個、哪一班還沒點完」在手機版的園長首頁 —— 同一套系統、同一份資料，差別只有操作介面。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption" style="max-width:44rem">後台以 LINE 帳號登入，不另外設一組帳號密碼。窄畫面（例如平板）時左側導覽會自動改成上方橫向捲動的一排，不做第二套版型。</p>
+  </section>
+
+  <!-- ============ 3. 發送訊息 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">畫面 03 ／ LINE 群發</p>
+        <h2>送出後收不回來，<br />所以要按兩次。</h2>
+      </div>
+      <p class="lead">
+        LINE 沒有撤回已送出推播的方法 —— 按錯就是全校家長都收到了。
+        所以第一顆按鈕只是「準備送出」，把「會送出幾則」與「無法收回」攤在眼前，第二顆才真的送。
+        這比一個確認對話框好：對話框會被習慣性地按掉。內容一改動就退回第一段，避免看著舊的則數按下確定。
+      </p>
+    </div>
+
+    <div class="showcase showcase-wide" style="border-top:0;padding-top:0">
+      <div class="showcase-stage">
+        <div class="cards c2" style="align-items:start">
+
+          <div>
+            <p class="eyebrow muted">園所端的填寫畫面</p>
+            <div class="macframe">
+              <div class="macbar">
+                <span class="macdot"></span><span class="macdot"></span><span class="macdot"></span>
+                <span class="macurl">school.sproutin.app/admin/messages</span>
+              </div>
+              <div class="admin" style="grid-template-columns:minmax(0,1fr);min-height:0">
+                <div class="body" style="padding:1.75rem">
+                  <div class="stack" style="gap:1.25rem">
+                    <header>
+                      <h1 style="font-size:1.5rem">發送訊息</h1>
+                      <p class="sub">做一張卡片送到家長的 LINE。送出後無法收回。</p>
+                    </header>
+
+                    <div>
+                      <p style="font-size:.6875rem;font-weight:600;color:var(--ink-soft);margin-bottom:.375rem">版型</p>
+                      <div class="seg"><span>活動通知</span><span class="on">繳費提醒</span><span>一般通知</span></div>
+                    </div>
+
+                    <div>
+                      <p style="font-size:.6875rem;font-weight:600;color:var(--ink-soft);margin-bottom:.375rem">送給誰</p>
+                      <div class="seg"><span class="on">全校家長</span><span>指定班級</span><span>教職員</span></div>
+                      <p style="font-size:.6875rem;color:var(--ink-mute);margin-top:.375rem">全園所有家長與監護人。</p>
+                    </div>
+
+                    <div>
+                      <p style="font-size:.6875rem;font-weight:600;color:var(--ink-soft);margin-bottom:.375rem">標題</p>
+                      <div style="border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);padding:.7rem .9rem;font-size:.9rem">9 月份月費繳費提醒</div>
+                    </div>
+
+                    <div class="grid2">
+                      <div>
+                        <p style="font-size:.6875rem;font-weight:600;color:var(--ink-soft);margin-bottom:.375rem">金額（顯示用文字）</p>
+                        <div style="border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);padding:.7rem .9rem;font-size:.9rem">NT$ 8,500</div>
+                      </div>
+                      <div>
+                        <p style="font-size:.6875rem;font-weight:600;color:var(--ink-soft);margin-bottom:.375rem">繳費期限（顯示用文字）</p>
+                        <div style="border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);padding:.7rem .9rem;font-size:.9rem">9 月 10 日前</div>
+                      </div>
+                    </div>
+
+                    <section class="state t-brand">
+                      <p class="eyeb">準備送出</p>
+                      <p class="head">會送出 61 則</p>
+                      <p class="det">另有 4 位家長尚未綁定 LINE，收不到這一則。送出後無法收回。</p>
+                    </section>
+
+                    <a class="btn primary"><svg class="ic" viewBox="0 0 24 24"><use href="#i-send"/></svg>確定送出 61 則</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="caption" style="max-width:none">三種版型：活動通知、繳費提醒、一般通知。金額與期限都是「顯示用文字」——系統不記帳、不自動追繳，繳費提醒就只是提醒。</p>
+          </div>
+
+          <div>
+            <p class="eyebrow muted">家長在 LINE 收到的樣子</p>
+            <div class="device short" style="width:340px">
+              <div class="device-screen" style="height:520px">
+                <div class="device-notch"></div>
+                <div class="app" style="background-image:none;background-color:#8aa5b8">
+                  <div class="app-main no-tabs" style="padding-top:2.5rem">
+                    <div class="app-stack tight">
+                      <div style="display:flex;align-items:center;gap:.5rem;color:#fff;font-size:.8125rem;font-weight:700">
+                        <span style="width:1.75rem;height:1.75rem;border-radius:999px;background:#fff;color:var(--brand-primary);display:grid;place-items:center;font-weight:700">晴</span>
+                        晴光幼兒園
+                      </div>
+                      <div style="max-width:88%">
+                        <div class="linecard">
+                          <div class="pic"></div>
+                          <div class="bd">
+                            <span class="badge t-wait" style="margin-bottom:.4rem">繳費提醒</span>
+                            <b>9 月份月費繳費提醒</b>
+                            <p>9 月份月費與代辦費已結算完成，請於期限前完成繳費。若已繳費請忽略本則訊息。</p>
+                            <div class="kv"><i>金額</i><span>NT$ 8,500</span></div>
+                            <div class="kv"><i>期限</i><span>9 月 10 日前</span></div>
+                          </div>
+                          <div class="act">開啟 App</div>
+                        </div>
+                        <p style="margin-top:.35rem;font-size:.6875rem;color:rgba(255,255,255,.85)">15:52</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="caption" style="max-width:none">卡片可放園所自己的圖片，底部按鈕可以連到 App 的指定頁面（公告、聯絡簿、請假…）或外部網址。</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="cards c3" style="margin-top:2rem">
+      <div class="card">
+        <p class="kicker">送出紀錄</p>
+        <h3>頁面主體是「發過什麼」</h3>
+        <p>編輯器收在底部面板裡，因為群發送出後無法收回 —— 回頭查帳的次數其實比新發一則還多。每一則記錄送給誰、幾個人收到、幾個人因未綁定被略過。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">誰能發</p>
+        <h3>只有園長與行政</h3>
+        <p>老師不能群發。理由不是層級而是後果：會產生 LINE 推播費用，而且收不回來。這一條在後端強制。</p>
+      </div>
+      <div class="card">
+        <p class="kicker">不可竄改</p>
+        <h3>只能建立與查詢</h3>
+        <p>沒有修改與刪除。已經送到家長手機上的訊息，改掉紀錄只會讓帳不實。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. 園所外觀 ============ -->
+  <section class="showcase flip">
+    <div class="showcase-copy">
+      <p class="eyebrow">畫面 04 ／ 園所外觀設計</p>
+      <h3>整個 App 是你們園的，不是我們的</h3>
+      <p class="lead">
+        園名、代表色、園徽、封面圖由園所自己設定，改完整個 App（含家長端）立刻跟著換。
+        家長首頁要出現哪些功能、順序如何，也由園所決定 —— 沒有娃娃車的園所把它關掉，
+        所有相關入口就會從家長端與老師端一起消失。
+      </p>
+      <ol class="notes">
+        <li><span class="n">1</span><div><strong>頁面主體是「家長現在看到的樣子」</strong><p>不是一疊欄位。最上面一張預覽回答「現在長什麼樣」，改完立刻看得到差別。</p></div></li>
+        <li><span class="n">2</span><div><strong>圖片三種來源都留著</strong><p>內建圖庫、自己上傳、貼現成網址。少掉任何一種，就會有園所卡在這一步。</p></div></li>
+        <li><span class="n">3</span><div><strong>LINE 圖文選單也在這裡改</strong><p>停課、颱風這種最需要改選單的時刻，園長往往不在電腦前 —— 所以手機上也要能改。</p></div></li>
+        <li><span class="n">4</span><div><strong>儲存與「套用到 LINE」是兩個動作</strong><p>調版面時會存很多次，但 LINE 建立選單有每小時上限。存好之後主要按鈕才會變成「套用到 LINE」。</p></div></li>
+        <li><span class="n">5</span><div><strong>請假要不要審核，一個開關</strong><p>關掉之後家長送出的請假直接生效，不需要有人按核准。</p></div></li>
+      </ol>
+    </div>
+    <div class="showcase-stage">
+      <div class="device">
+        <div class="device-screen">
+          <div class="device-notch"></div>
+          <div class="app">
+            <header class="app-header">
+              <div class="app-header-in">
+                <div class="app-brand"><span class="app-logo">晴</span><span class="app-brandname">晴光幼兒園</span></div>
+                <span class="persona-btn">園長 ▾</span>
+                <span class="bell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg></span>
+              </div>
+            </header>
+            <div class="app-main no-tabs">
+              <div class="app-stack tight">
+                <div class="pagehead">
+                  <span class="back"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg></span>
+                  <h1>園所外觀</h1>
+                </div>
+
+                <section style="overflow:hidden;border-radius:var(--radius-tile);border:1px solid var(--line-strong);background:var(--surface);box-shadow:0 1px 2px rgba(35,48,42,.05),0 14px 34px -22px rgba(35,48,42,.22)">
+                  <div style="height:7rem;background:linear-gradient(160deg,#2a5f46,#5fa279 60%,#8cc4a2)"></div>
+                  <div style="display:flex;align-items:center;gap:.75rem;padding:0 1rem 1rem">
+                    <span style="margin-top:-1.75rem;width:3.5rem;height:3.5rem;flex:none;border-radius:999px;border:2px solid var(--surface);background:var(--brand-wash);color:var(--brand-primary);display:grid;place-items:center;font-family:var(--serif);font-size:1.25rem;font-weight:700">晴</span>
+                    <div style="min-width:0;flex:1;padding-top:.75rem">
+                      <p style="font-family:var(--serif);font-size:1.25rem;font-weight:700;color:var(--ink)">晴光幼兒園</p>
+                      <p style="font-size:.6875rem;color:var(--ink-mute)">家長打開 App 的第一眼</p>
+                    </div>
+                    <span style="display:flex;gap:.25rem;padding-top:.75rem">
+                      <span style="width:1.5rem;height:1.5rem;border-radius:999px;background:#2f6b4f;border:1px solid var(--hairline)"></span>
+                      <span style="width:1.5rem;height:1.5rem;border-radius:999px;background:#74b48a;border:1px solid var(--hairline)"></span>
+                    </span>
+                  </div>
+                </section>
+
+                <div class="app-col">
+                  <div class="tile">
+                    <span class="tile-ico t-brand"><svg class="ic" viewBox="0 0 24 24"><use href="#i-image"/></svg></span>
+                    <span class="tile-txt"><b>園所識別</b><span>晴光幼兒園 · 名稱、顏色、logo、封面</span></span>
+                  </div>
+                  <div class="tile">
+                    <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg></span>
+                    <span class="tile-txt"><b>功能卡片</b><span>家長首頁目前顯示 9 項功能</span></span>
+                  </div>
+                  <div class="tile">
+                    <span class="tile-ico t-neutral"><svg class="ic" viewBox="0 0 24 24"><use href="#i-chat"/></svg></span>
+                    <span class="tile-txt"><b>LINE 圖文選單</b><span>家長在 LINE 裡最先看到的那排格子</span></span>
+                  </div>
+                </div>
+
+                <section>
+                  <div class="sh review"><div><h3>請假流程</h3><p>決定家長送出的請假要不要有人按核准</p></div></div>
+                  <div class="tile">
+                    <span class="tile-txt" style="padding-left:.25rem"><b style="font-size:1rem">請假需要老師或行政審核</b><span style="white-space:normal;line-height:1.6">關掉之後，家長送出的請假直接生效，不需要有人按核准。</span></span>
+                    <span style="position:relative;width:2.75rem;height:1.5rem;flex:none;border-radius:999px;background:var(--brand-primary)">
+                      <span style="position:absolute;top:.125rem;left:1.375rem;width:1rem;height:1rem;border-radius:999px;background:#fff"></span>
+                    </span>
+                  </div>
+                </section>
+
+                <section>
+                  <div class="sh review"><div><h3>LINE 圖文選單（面板內）</h3><p>模板式：換底圖、選每格連到哪、填字</p></div></div>
+                  <div class="seg" style="margin-bottom:.75rem"><span class="on">家長</span><span>老師與行政</span><span>還沒綁定的人</span></div>
+                  <div class="menugrid six">
+                    <span class="cell sel"><svg class="ic" viewBox="0 0 24 24"><use href="#i-home"/></svg>首頁</span>
+                    <span class="cell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-book"/></svg>聯絡簿</span>
+                    <span class="cell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-cal"/></svg>請假</span>
+                    <span class="cell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-mega"/></svg>公告</span>
+                    <span class="cell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-bell"/></svg>通知</span>
+                    <span class="cell"><svg class="ic" viewBox="0 0 24 24"><use href="#i-user"/></svg>我的</span>
+                  </div>
+                  <div class="chatbar">選單</div>
+                  <div style="margin-top:.75rem"><a class="btn primary">套用到 LINE</a></div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">三種對象各有一份選單：家長、老師與行政、以及「還沒綁定的人」—— 最後一種只給一個入口，把他們帶去綁定。</p>
+    </div>
+  </section>
+
+  <!-- ============ 5. 人員、權限、稽核 ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">畫面 05 ／ 人員 · 權限 · 稽核</p>
+        <h2>誰進得來、誰能做什麼、<br />誰改過什麼。</h2>
+      </div>
+      <p class="lead">
+        這三頁是園所真正的控制權所在。它們的共同前提是：權限判斷一律在後端，
+        前端只負責顯示 —— 就算有人動了手機上的畫面，也拿不到不屬於他的資料。
+      </p>
+    </div>
+
+    <div class="cards c3">
+      <div class="card">
+        <p class="kicker">人員與綁定</p>
+        <h3>發一張碼，讓人進得來</h3>
+        <p>新增老師、行政與家長帳號，指派任教班級或綁定孩子，再發給他一組登入用的綁定碼。</p>
+        <ul>
+          <li>碼有期限、一次性、用過即失效</li>
+          <li>發碼與解綁只有園長與行政能做</li>
+          <li>後台一眼看出誰還沒綁定 LINE（本人還登不進來）</li>
+          <li>一個孩子可以綁多位家長（爸爸、媽媽、爺爺）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="kicker">權限設定</p>
+        <h3>一頁看完誰有什麼身分</h3>
+        <p>六種身分：園長、行政、老師、隨車老師、家長、監護人。一個人可以同時有多個。</p>
+        <ul>
+          <li>「園長」這個身分只有園長能給或收回</li>
+          <li>最後一位園長不可被移除</li>
+          <li>每人至少保留一個身分（要離職請停用帳號）</li>
+          <li>移除身分會一併解除附帶的關聯，不留幽靈權限</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="kicker">稽核紀錄</p>
+        <h3>誰在什麼時候改了什麼</h3>
+        <p>重要操作全部留痕：學生、家長、訊息、權限、請假、綁定碼。可依資源類型、操作者、日期區間查詢。</p>
+        <ul>
+          <li>記錄「操作當下的身分」（園長兼帶班會寫成「園長 · 老師」）</li>
+            <li>被拒絕的操作也會被記下來，不是只記成功的</li>
+          <li>資料庫層強制唯讀，寫進去之後連系統管理者都改不掉</li>
+          <li>只有園長（與受限的行政）看得到</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tablewrap" style="margin-top:2rem">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>稽核紀錄（示意）</th>
+            <th>操作者</th>
+            <th>對象</th>
+            <th class="c">結果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="feat">核准請假<small>2026-08-20 07:35:12</small></td><td>林老師（老師）</td><td>Leave · 范小星 8/21</td><td class="c"><span class="badge t-good">成功</span></td></tr>
+          <tr><td class="feat">送出全班聯絡簿<small>2026-08-19 16:41:03</small></td><td>林老師（老師）</td><td>CommunicationBook · 向日葵班</td><td class="c"><span class="badge t-good">成功</span></td></tr>
+          <tr><td class="feat">查詢學生資料<small>2026-08-19 10:22:58</small></td><td>黃老師（老師）</td><td>Student · 小樹班學生</td><td class="c"><span class="badge t-stop">拒絕</span></td></tr>
+          <tr><td class="feat">發送群發訊息<small>2026-08-18 09:03:44</small></td><td>陳行政（行政）</td><td>PushCampaign · 全校家長</td><td class="c"><span class="badge t-good">成功</span></td></tr>
+          <tr><td class="feat">授予身分：老師<small>2026-08-17 14:12:07</small></td><td>王園長（園長）</td><td>UserRole · 黃老師</td><td class="c"><span class="badge t-good">成功</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption" style="max-width:44rem">被拒絕的操作（例如老師想看別班的孩子）同樣會留下紀錄 —— 只記成功的稽核，在真正需要查的時候會什麼都查不到。</p>
+  </section>
+
+  <section class="section">
+    <p class="pull">
+      「送出後沒有辦法收回。按最後一顆按鈕前會先讓你確認人數。」
+      <span>—— 群發頁面上的原文。介面該在人手指停在按鈕上的那一刻提醒他，不是寫在頁面最上面然後被捲掉。</span>
+    </p>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>Sproutin · 園長與行政端　|　畫面為產品實際版型，示範資料</p>
+    <a class="nx" href="platform.html">下一頁：功能與藍圖 →</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

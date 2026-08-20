@@ -1,0 +1,5 @@
+# build-pdf.mjs 的產物。原始碼是 apps/web/public/_dm 的五頁 + dm.css，
+# 這裡的東西隨時可以用 `node docs/dm/build-pdf.mjs` 重新生出來，不進版控。
+dm-print.html
+dm-measure.html
+*.pdf
