@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>名片 — 陳識翔 · Sproutin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ==========================================================================
+   名片 —— 90 × 54 mm（台灣標準尺寸），含 3 mm 出血 → 版面 96 × 60 mm。
+   視覺與產品／DM 同一套「清葉」：米白紙、森綠、襯線標題。
+   名片與簡介長得像同一件事，遞出去之後對方掃進 DM 才不會覺得換了一家公司。
+
+   ⚠ 尺寸一律用 mm，不要改成 px。這份檔案會直接被印刷廠拿去輸出。
+   ========================================================================== */
+:root {
+  --brand: #2f6b4f;
+  --brand-deep: #24543f;
+  --brand-2: #74b48a;
+  --paper: #f4f2ea;
+  --surface: #fbfaf4;
+  --ink: #23302a;
+  --ink-soft: #59605b;
+  --ink-mute: #6b7069;
+  --line: #ddddcd;
+
+  --serif: 'Noto Serif TC', 'Iowan Old Style', 'Palatino Linotype', 'Songti TC', Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Noto Sans TC',
+    'Microsoft JhengHei', system-ui, sans-serif;
+
+  /* 出血 3mm。內容一律離「裁切線」再 4mm，所以離版面邊緣 7mm。 */
+  --bleed: 3mm;
+  --safe: 7mm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #e7e5db;
+  font-family: var(--sans);
+  color: var(--ink);
+  padding: 3rem 2rem 5rem;
+}
+
+/* ---------- 給人看的說明（列印時整組拿掉） ---------- */
+.ui { max-width: 60rem; margin: 0 auto 2.5rem; }
+.ui h1 { font-family: var(--serif); font-size: 1.6rem; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+.ui p { margin: 0.35rem 0; font-size: 0.875rem; color: #4a5750; line-height: 1.8; }
+.ui code { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 0.05rem 0.35rem; font-size: 0.8125rem; }
+.ui .row { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1rem; font-size: 0.8125rem; color: #4a5750; }
+.ui .row b { display: block; color: var(--ink); font-size: 0.6875rem; letter-spacing: 0.14em; margin-bottom: 0.2rem; }
+
+.stage { max-width: 60rem; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem; align-items: flex-start; }
+.plate { position: relative; }
+.plate > figcaption {
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  color: #4a5750;
+  margin-bottom: 0.6rem;
+}
+/* 螢幕上放大兩倍才看得清楚細節；列印時回到 1。 */
+.zoom { zoom: 2; }
+.shadow { box-shadow: 0 1.5mm 6mm rgba(20, 28, 24, 0.28); }
+
+/* 裁切線示意：只在螢幕上畫，讓人看得出成品邊界在哪。 */
+.trim {
+  position: absolute;
+  inset: var(--bleed);
+  border: 1px dashed rgba(220, 60, 60, 0.55);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ==========================================================================
+   名片本體
+   ========================================================================== */
+.face {
+  width: 96mm;
+  height: 60mm;
+  position: relative;
+  overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.face .inner {
+  position: absolute;
+  inset: var(--safe);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 正面 ---------- */
+.front {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(28mm 20mm at 96% -4%, rgba(47, 107, 79, 0.16), transparent 70%),
+    linear-gradient(180deg, #f6f4ec, #eeebe0);
+}
+/* 右側一道品牌色邊。**必須跨出裁切線做到出血**：只做到裁切線的話，
+   裁刀往外偏一點就會在色帶外側留一條白邊 —— 那正是出血存在的理由。
+   成品上看到的寬度是 1.6mm（裁切線內那一段）。 */
+.front::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: calc(var(--bleed) + 1.6mm);
+  background: linear-gradient(180deg, var(--brand), var(--brand-2));
+}
+
+.mark { display: flex; align-items: center; gap: 2.2mm; }
+.mark .glyph {
+  width: 6.4mm;
+  height: 6.4mm;
+  border: 0.35mm solid var(--brand);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--brand);
+}
+.mark .glyph svg { width: 3.4mm; height: 3.4mm; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mark .word { font-family: var(--serif); font-size: 4.2mm; font-weight: 700; letter-spacing: -0.01em; }
+
+.who { margin-top: auto; }
+.who .name {
+  font-family: var(--serif);
+  font-size: 8.4mm;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  margin: 0;
+}
+/* 職稱：園所還沒定，先留著不印。要用的話把 hidden 拿掉並填字。 */
+.who .role[hidden] { display: none; }
+.who .role {
+  margin: 1.2mm 0 0;
+  font-size: 2.7mm;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+
+.rule { height: 0.3mm; background: var(--brand); width: 12mm; margin: 3.4mm 0; }
+
+.contact { display: flex; align-items: baseline; gap: 2.4mm; }
+.contact .label { font-size: 2.4mm; letter-spacing: 0.18em; color: var(--ink-mute); }
+.contact .tel {
+  font-family: var(--serif);
+  font-size: 5mm;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+.tagline {
+  margin: 3.2mm 0 0;
+  font-size: 2.6mm;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 背面 ---------- */
+.back {
+  background-color: var(--brand);
+  background-image: linear-gradient(150deg, var(--brand-deep) 0%, var(--brand) 52%, #4f8f6c 100%);
+  color: #fff;
+}
+.back .inner { flex-direction: row; align-items: center; gap: 5.5mm; }
+
+.qr-tile {
+  width: 29mm;
+  height: 29mm;
+  flex: none;
+  background: #fff;
+  border-radius: 2mm;
+  display: grid;
+  place-items: center;
+}
+/* SVG 本身已含 4 個模組的靜區，白底磚再往外多留一圈 —— 靜區不足是掃不到的頭號原因。 */
+.qr-tile svg { width: 25.5mm; height: 25.5mm; display: block; }
+
+.pitch { min-width: 0; }
+.pitch h2 {
+  font-family: var(--serif);
+  font-size: 4.6mm;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+.pitch ul { list-style: none; margin: 2.6mm 0 0; padding: 0; }
+.pitch li {
+  font-size: 2.6mm;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.86);
+  padding-left: 3mm;
+  position: relative;
+}
+.pitch li::before { content: '—'; position: absolute; left: 0; color: rgba(255, 255, 255, 0.55); }
+.pitch .url {
+  margin: 3.2mm 0 0;
+  font-size: 2.2mm;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.62);
+  word-break: break-all;
+}
+.pitch .sign {
+  margin: 2.4mm 0 0;
+  font-family: var(--serif);
+  font-size: 3mm;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   列印：一面一頁，滿版無邊界。輸出即為印刷廠可用的檔案。
+   ========================================================================== */
+@page { size: 96mm 60mm; margin: 0; }
+
+@media print {
+  body { background: #fff; padding: 0; }
+  .ui, .trim, .plate > figcaption { display: none !important; }
+  .stage { display: block; gap: 0; max-width: none; margin: 0; }
+  .zoom { zoom: 1; }
+  .shadow { box-shadow: none; }
+  .plate { break-after: page; page-break-after: always; }
+  .plate:last-child { break-after: auto; page-break-after: auto; }
+  *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="ui">
+  <h1>名片：陳識翔 · Sproutin</h1>
+  <p>成品 <b>90 × 54 mm</b>（台灣標準尺寸），版面 96 × 60 mm，四邊各含 <b>3 mm 出血</b>。紅色虛線是裁切線，只在螢幕上顯示。</p>
+  <p>下方預覽為兩倍放大；列印時自動回到實際尺寸，一面一頁。輸出 PDF：<code>node docs/card/build-card.mjs</code></p>
+  <div class="row">
+    <div><b>正面</b>姓名 · 電話 · 產品一句話</div>
+    <div><b>背面</b>QR 進產品介紹（已用獨立解碼器驗證）</div>
+    <div><b>QR 內容</b>https://sproutin-kb91-theta.vercel.app/_dm</div>
+    <div><b>容錯等級</b>Q（25%）· 33 模組 · 25.5 mm</div>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- ============ 正面 ============ -->
+  <figure class="plate" style="margin:0">
+    <figcaption>正面 FRONT　96 × 60 mm（含出血）</figcaption>
+    <div class="zoom">
+      <div class="face front shadow">
+        <div class="trim"></div>
+        <div class="inner">
+
+          <div class="mark">
+            <span class="glyph">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5L10.1 13 4.5 11l5.6-2L12 3.5Z"/>
+                <path d="M18.5 4v3M20 5.5h-3"/>
+              </svg>
+            </span>
+            <span class="word">Sproutin</span>
+          </div>
+
+          <div class="who">
+            <p class="name">陳識翔</p>
+            <!-- 要印職稱就把 hidden 拿掉，填上實際頭銜 -->
+            <p class="role" hidden>創辦人</p>
+
+            <div class="rule"></div>
+
+            <div class="contact">
+              <span class="label">TEL</span>
+              <span class="tel">0938-652-927</span>
+            </div>
+
+            <p class="tagline">幼兒園校務管理與家長溝通平台<br />家長不必再裝一個 App，打開 LINE 就是你的園所</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ============ 背面 ============ -->
+  <figure class="plate" style="margin:0">
+    <figcaption>背面 BACK　96 × 60 mm（含出血）</figcaption>
+    <div class="zoom">
+      <div class="face back shadow">
+        <div class="trim"></div>
+        <div class="inner">
+
+          <!-- QR 直接內嵌，不用 <img src="qr.svg">：這份檔案會被寄來寄去，
+               只要有人單獨搬走 card.html，外部圖就會變成一個破圖，而那一面
+               唯一的作用就是那張 QR。內容由 build-card.mjs 換掉這兩個標記之間的東西。 -->
+          <div class="qr-tile">
+            <!-- QR:START -->
+            <svg role="img" aria-label="掃描前往 Sproutin 產品介紹" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h41v41H0z"/><path stroke="#000000" d="M4 4.5h7m1 0h1m1 0h1m2 0h2m2 0h4m2 0h1m2 0h7M4 5.5h1m5 0h1m1 0h1m1 0h1m3 0h1m3 0h4m1 0h2m1 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h4m2 0h2m1 0h2m1 0h1m1 0h1m3 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h2m2 0h2m2 0h5m1 0h3m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h4m1 0h1m1 0h4m1 0h1m2 0h1m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m2 0h1m1 0h1m3 0h10m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h1m2 0h2m1 0h1m1 0h4m1 0h1m1 0h1M5 12.5h2m1 0h1m1 0h2m4 0h4m1 0h1m3 0h1m4 0h1m1 0h5M5 13.5h1m5 0h2m4 0h2m1 0h3m2 0h1m2 0h4m4 0h1M4 14.5h1m2 0h4m1 0h5m1 0h3m1 0h1m3 0h1m3 0h2m2 0h3M4 15.5h2m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m2 0h3m1 0h1m2 0h3m1 0h1M4 16.5h1m2 0h2m1 0h1m1 0h1m1 0h3m1 0h3m1 0h10m1 0h1m1 0h2M6 17.5h3m7 0h1m3 0h1m1 0h3m3 0h3m5 0h1M4 18.5h7m1 0h3m1 0h1m3 0h5m1 0h1m1 0h2m1 0h2m1 0h3M4 19.5h1m1 0h2m3 0h1m2 0h1m1 0h2m1 0h1m2 0h1m1 0h3m1 0h1m1 0h1m4 0h1M5 20.5h3m1 0h2m3 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h4M6 21.5h4m1 0h1m2 0h3m1 0h1m1 0h1m1 0h1m5 0h1m1 0h2m3 0h2M4 22.5h2m1 0h2m1 0h2m1 0h1m4 0h3m3 0h2m2 0h1m1 0h1m3 0h3M4 23.5h4m1 0h1m4 0h1m1 0h1m2 0h4m2 0h2m3 0h3m2 0h1M7 24.5h1m1 0h3m3 0h1m2 0h1m5 0h1m3 0h3m2 0h1M8 25.5h2m1 0h2m1 0h3m2 0h3m1 0h1m2 0h1m2 0h2m2 0h1m1 0h2M4 26.5h1m2 0h1m2 0h1m2 0h2m1 0h1m1 0h1m2 0h1m3 0h1m2 0h1m1 0h1m2 0h4M5 27.5h1m1 0h2m3 0h1m3 0h2m1 0h2m1 0h4m1 0h2m1 0h1m2 0h1m1 0h2M4 28.5h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h2m2 0h10M12 29.5h2m1 0h1m2 0h2m1 0h2m1 0h1m3 0h1m3 0h2m1 0h2M4 30.5h7m1 0h2m1 0h4m3 0h1m2 0h1m1 0h2m1 0h1m1 0h1m1 0h3M4 31.5h1m5 0h1m2 0h2m1 0h2m1 0h2m1 0h1m2 0h2m1 0h1m3 0h1m2 0h1M4 32.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h3m1 0h5m2 0h6m1 0h2M4 33.5h1m1 0h3m1 0h1m3 0h1m1 0h1m1 0h1m1 0h2m2 0h1m2 0h1m4 0h1m1 0h3M4 34.5h1m1 0h3m1 0h1m1 0h1m1 0h2m4 0h2m2 0h1m3 0h2m2 0h1m3 0h1M4 35.5h1m5 0h1m1 0h2m3 0h2m3 0h7m3 0h1m2 0h1M4 36.5h7m3 0h1m1 0h1m1 0h5m1 0h2m1 0h4m1 0h2m1 0h2"/></svg>
+            <!-- QR:END -->
+          </div>
+
+          <div class="pitch">
+            <h2>掃這裡，看產品介紹</h2>
+            <ul>
+              <li>家長端、老師端、園長端各自長什麼樣</li>
+              <li>點名、聯絡簿、請假、娃娃車、群發</li>
+              <li>已上線功能、權限對照與導入流程</li>
+            </ul>
+            <p class="url">sproutin-kb91-theta.vercel.app/_dm</p>
+            <p class="sign">Sproutin</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </figure>
+
+</div>
+
+</body>
+</html>
