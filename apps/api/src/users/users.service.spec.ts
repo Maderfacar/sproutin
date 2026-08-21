@@ -3,13 +3,16 @@ import { UsersService, UserActor } from './users.service';
 import { AuditService } from '../core/audit/audit.service';
 import type { AuthUser } from '@sproutin/shared';
 
-// 人員帳號：建立（含角色）、停用規則（不刪除、最後一位園長不可停用）、稽核不存姓名。
+// 人員帳號：建立（含角色）、停用規則（最後一位園長不可停用）、刪除規則（只能刪已停用的、
+// 不能刪自己、最後一位園長不可刪、要清乾淨五張有外鍵的表）、稽核不存姓名。
 
 type TxMock = {
-  user: { create: jest.Mock; update: jest.Mock };
+  user: { create: jest.Mock; update: jest.Mock; delete: jest.Mock };
   userRole: { create: jest.Mock; deleteMany: jest.Mock };
   teacherAssignment: { deleteMany: jest.Mock };
   guardianship: { deleteMany: jest.Mock };
+  lineIdentity: { deleteMany: jest.Mock };
+  bindingCode: { deleteMany: jest.Mock };
   auditLog: { create: jest.Mock };
 };
 type PrismaMock = {
@@ -35,10 +38,13 @@ function makePrisma(): PrismaMock {
     user: {
       create: jest.fn(async ({ data }) => ({ id: 'u-new', displayName: data.displayName })),
       update: jest.fn(async () => ({})),
+      delete: jest.fn(async () => ({})),
     },
     userRole: { create: jest.fn(async () => ({})), deleteMany: jest.fn(async () => ({ count: 1 })) },
     teacherAssignment: { deleteMany: jest.fn(async () => ({ count: 1 })) },
     guardianship: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    lineIdentity: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    bindingCode: { deleteMany: jest.fn(async () => ({ count: 0 })) },
     auditLog: { create: jest.fn(async () => ({})) },
   };
   return {
@@ -321,5 +327,93 @@ describe('UsersService.revokeRole', () => {
     expect(prisma.tx.userRole.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'u-1', role: 'TEACHER' },
     });
+  });
+});
+
+
+// 刪除帳號（Human Owner 2026-08-20 於正式營運前開放）。這個動作無法復原，
+// 所以每一道防呆都要有測試釘著 —— 少掉任何一道，出事的時候都沒有退路。
+describe('UsersService.remove', () => {
+  const disabled = () => userRow({ status: 'INACTIVE' });
+
+  it('已停用的帳號 → 先清五張有外鍵的表，再刪帳號', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(disabled());
+
+    await makeService(prisma).remove(owner, 'u-1');
+
+    // 這五張表有外鍵指向 User，沒清乾淨資料庫會直接擋下刪除。
+    expect(prisma.tx.lineIdentity.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(prisma.tx.bindingCode.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(prisma.tx.guardianship.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(prisma.tx.teacherAssignment.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(prisma.tx.userRole.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u-1' } });
+    expect(prisma.tx.user.delete).toHaveBeenCalledWith({ where: { id: 'u-1' } });
+  });
+
+  it('稽核記角色與解除的關聯數量，但不記姓名', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(disabled());
+
+    await makeService(prisma).remove(owner, 'u-1');
+
+    const entry = prisma.tx.auditLog.create.mock.calls[0][0].data;
+    expect(entry.action).toBe('user.delete');
+    expect(entry.metadata).toMatchObject({ roles: ['TEACHER'], removedTeaching: 1 });
+    expect(JSON.stringify(entry.metadata)).not.toContain('林老師');
+  });
+
+  it('還在職的帳號不可刪 —— 要刪先停用（防手滑）', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(userRow({ status: 'ACTIVE' }));
+
+    await expect(makeService(prisma).remove(owner, 'u-1')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(prisma.tx.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('不能刪自己', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(userRow({ id: 'u-owner', status: 'INACTIVE' }));
+
+    await expect(makeService(prisma).remove(owner, 'u-owner')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(prisma.tx.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('最後一位園長不可刪（刪掉連重新啟用的退路都沒有）', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(
+      userRow({ status: 'INACTIVE', roles: [{ role: 'OWNER', scopeType: 'SCHOOL', scopeId: null }] }),
+    );
+    prisma.userRole.findFirst.mockResolvedValue({ id: 'ur-1' });
+    prisma.user.count.mockResolvedValue(0); // 沒有其他在職園長
+
+    await expect(makeService(prisma).remove(owner, 'u-1')).rejects.toThrow(
+      'last_owner_cannot_be_deleted',
+    );
+    expect(prisma.tx.user.delete).not.toHaveBeenCalled();
+  });
+
+  it('還有其他在職園長 → 刪得掉', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(
+      userRow({ status: 'INACTIVE', roles: [{ role: 'OWNER', scopeType: 'SCHOOL', scopeId: null }] }),
+    );
+    prisma.userRole.findFirst.mockResolvedValue({ id: 'ur-1' });
+    prisma.user.count.mockResolvedValue(2);
+
+    await makeService(prisma).remove(owner, 'u-1');
+    expect(prisma.tx.user.delete).toHaveBeenCalled();
+  });
+
+  it('不存在的帳號 → 404', async () => {
+    const prisma = makePrisma();
+    prisma.user.findUnique.mockResolvedValue(null);
+    await expect(makeService(prisma).remove(owner, 'nope')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

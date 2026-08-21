@@ -11,6 +11,7 @@ import type { UserView } from '../../lib/types';
 
 const calls = vi.hoisted(() => ({
   update: vi.fn(),
+  deletePerson: vi.fn(),
   removeGuardianship: vi.fn(),
   revokeRole: vi.fn(),
 }));
@@ -41,6 +42,7 @@ vi.mock('../../lib/session', () => ({
 
 vi.mock('./hooks', () => ({
   useUpdatePerson: mutationWith(calls.update),
+  useDeletePerson: mutationWith(calls.deletePerson),
   useAddGuardianship: idleMutation,
   useRemoveGuardianship: mutationWith(calls.removeGuardianship),
   useAddTeacherAssignment: idleMutation,
@@ -72,8 +74,20 @@ function renderEditor(): void {
   render(<PersonEditor person={person} classes={[]} students={[]} onClose={() => {}} />);
 }
 
+function renderDisabled(onClose: () => void = () => {}): void {
+  render(
+    <PersonEditor
+      person={{ ...person, status: 'INACTIVE' }}
+      classes={[]}
+      students={[]}
+      onClose={onClose}
+    />,
+  );
+}
+
 beforeEach(() => {
   calls.update.mockReset();
+  calls.deletePerson.mockReset();
   calls.removeGuardianship.mockReset();
   calls.revokeRole.mockReset();
 });
@@ -135,5 +149,42 @@ describe('人員編輯面板的破壞性動作', () => {
     );
     expect(screen.queryByRole('button', { name: '排入一個班級' })).toBeNull();
     expect(screen.getByText(/不能再指派身分、班級或綁定小孩/)).toBeTruthy();
+  });
+});
+
+
+// 刪除帳號（Human Owner 2026-08-20 於正式營運前開放）。與停用刻意不是同一顆按鈕：
+// 一個救得回來，一個救不回來。
+describe('人員編輯面板的刪除帳號', () => {
+  it('帳號還在啟用中 → 根本不給刪除的入口（要刪先停用）', () => {
+    renderEditor();
+    expect(screen.queryByRole('button', { name: '刪除帳號' })).toBeNull();
+  });
+
+  it('帳號已停用 → 出現刪除入口，但先問一次並說明會失去什麼', () => {
+    renderDisabled();
+    fireEvent.click(screen.getByRole('button', { name: '刪除帳號' }));
+
+    expect(calls.deletePerson).not.toHaveBeenCalled();
+    expect(screen.getByText(/這個動作無法復原/)).toBeTruthy();
+    // 「歷史紀錄留著但查不到是誰」是刪除真正的代價，按下去之前一定要講。
+    expect(screen.getByText(/那些紀錄上會查不到是誰/)).toBeTruthy();
+    expect(screen.getByText(/只是暫時不用的話，停用就夠了/)).toBeTruthy();
+  });
+
+  it('在面板裡按下確定才真的刪除，並關閉編輯面板', () => {
+    const onClose = vi.fn();
+    calls.deletePerson.mockImplementation(
+      (_vars: unknown, opts?: { onSuccess?: () => void }) => opts?.onSuccess?.(),
+    );
+
+    renderDisabled(onClose);
+    fireEvent.click(screen.getByRole('button', { name: '刪除帳號' }));
+    fireEvent.click(screen.getByRole('button', { name: '確定永久刪除' }));
+
+    expect(calls.deletePerson).toHaveBeenCalledTimes(1);
+    expect(calls.deletePerson.mock.calls[0]![0]).toMatchObject({ id: 'p1' });
+    // 刪掉之後那個人已經不在名單裡了，編輯面板還開著會停在一個不存在的人身上。
+    expect(onClose).toHaveBeenCalled();
   });
 });

@@ -39,7 +39,8 @@ const updateUserSchema = z
   .strict();
 
 // 人員帳號端點（docs/07 §4e）。授權：OWNER/ADMIN（園務管理）。
-// 帳號無刪除 —— 停用即不能登入（AuthService 於 login 與 /me 兩處擋）。
+// 停用＝不能登入（AuthService 於 login 與 /me 兩處擋）；刪除＝連帳號一起移除，
+// 且**只能刪已停用的帳號**（Human Owner 2026-08-20 於正式營運前開放，見 users.service）。
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
@@ -77,6 +78,15 @@ export class UsersController {
       throw new BadRequestException('invalid_input');
     }
     return this.users.update(req.user!, id, parsed.data);
+  }
+
+  // DELETE /users/:id — 刪除帳號（無法復原）。
+  // 只能刪已停用的帳號、不能刪自己、最後一位園長不可刪 —— 三道防呆都在 service。
+  @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
+  @HttpCode(204)
+  async remove(@Req() req: AuthedRequest, @Param('id') id: string): Promise<void> {
+    return this.users.remove(req.user!, id);
   }
 
   // POST /users/:id/roles — 增加身分（docs/07 §4e）。

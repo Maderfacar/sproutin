@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AnnouncementsService, AnnouncementActor } from './announcements.service';
 import { AuditService } from '../core/audit/audit.service';
 import type { AuthUser } from '@sproutin/shared';
@@ -7,7 +7,7 @@ import type { AuthUser } from '@sproutin/shared';
 // + 可見範圍過濾。mocked Prisma。
 
 type TxMock = {
-  announcement: { create: jest.Mock };
+  announcement: { create: jest.Mock; update: jest.Mock; delete: jest.Mock };
   outboxEvent: { create: jest.Mock };
   auditLog: { create: jest.Mock };
 };
@@ -15,7 +15,7 @@ type PrismaMock = {
   school: { findFirst: jest.Mock };
   teacherAssignment: { findFirst: jest.Mock; findMany: jest.Mock };
   guardianship: { findMany: jest.Mock };
-  announcement: { findMany: jest.Mock };
+  announcement: { findMany: jest.Mock; findUnique: jest.Mock };
   $transaction: jest.Mock;
 };
 
@@ -32,18 +32,33 @@ function makeTx(): TxMock {
         createdBy: data.createdBy,
         createdAt: new Date('2026-08-15T00:00:00.000Z'),
       })),
+      update: jest.fn(async ({ where, data }) => ({ ...annRow({ id: where.id }), ...data })),
+      delete: jest.fn(async () => ({})),
     },
     outboxEvent: { create: jest.fn(async () => ({})) },
     auditLog: { create: jest.fn(async () => ({})) },
   };
 }
 
+// 既有的一則公告（預設是導師 u-teacher 發的班級公告）。
+const annRow = (over: Partial<Record<string, unknown>> = {}) => ({
+  id: 'ann-1',
+  schoolId: 'school-1',
+  classId: 'class-sun',
+  scope: 'CLASS',
+  title: '向日葵班本週活動',
+  body: '本週五戶外教學。',
+  createdBy: 'u-teacher',
+  createdAt: new Date('2026-08-15T00:00:00.000Z'),
+  ...over,
+});
+
 function makePrisma(tx: TxMock): PrismaMock {
   return {
     school: { findFirst: jest.fn(async () => ({ id: 'school-1' })) },
     teacherAssignment: { findFirst: jest.fn(async () => ({ id: 'ta-1' })), findMany: jest.fn(async () => []) },
     guardianship: { findMany: jest.fn(async () => []) },
-    announcement: { findMany: jest.fn(async () => []) },
+    announcement: { findMany: jest.fn(async () => []), findUnique: jest.fn(async () => annRow()) },
     $transaction: jest.fn(async (cb: (t: TxMock) => Promise<unknown>) => cb(tx)),
   };
 }
@@ -128,6 +143,116 @@ describe('AnnouncementsService.listForUser', () => {
     await makeService(prisma).listForUser(parent);
     expect(prisma.announcement.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { OR: [{ scope: 'SCHOOL' }, { classId: { in: ['class-sun'] } }] } }),
+    );
+  });
+});
+
+
+// 編輯與刪除（Human Owner 2026-08-20 定案：站內要能刪、能改；
+// 誰能動＝園長、行政、發布的人自己）。
+describe('AnnouncementsService.update', () => {
+  it('發布的人自己 → 改得動標題與內文，且**不重新推播**', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+
+    await makeService(prisma).update(teacher, 'ann-1', { title: '改過的標題' });
+
+    expect(tx.announcement.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'ann-1' }, data: { title: '改過的標題' } }),
+    );
+    // 改一個錯字不該讓全班家長的手機再響一次。
+    expect(tx.outboxEvent.create).not.toHaveBeenCalled();
+  });
+
+  it('園長 → 改得動別人發的', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+    await makeService(prisma).update(owner, 'ann-1', { body: '改內文' });
+    expect(tx.announcement.update).toHaveBeenCalled();
+  });
+
+  it('不是發布者的老師 → 403（能發班級公告不代表能動同事那一則）', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+    const other: AnnouncementActor = { id: 'u-other-teacher', roles: [role('TEACHER', 'class-sun')] };
+
+    await expect(makeService(prisma).update(other, 'ann-1', { title: 'x' })).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(tx.announcement.update).not.toHaveBeenCalled();
+  });
+
+  it('家長 → 403', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+    await expect(makeService(prisma).update(parent, 'ann-1', { title: 'x' })).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('什麼都沒改 → 400', async () => {
+    const prisma = makePrisma(makeTx());
+    await expect(makeService(prisma).update(owner, 'ann-1', {})).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('不存在 → 404', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.announcement.findUnique.mockResolvedValue(null);
+    await expect(makeService(prisma).update(owner, 'nope', { title: 'x' })).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('稽核只記改了哪些欄位，不記標題內文（可能帶孩子的名字）', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+    await makeService(prisma).update(owner, 'ann-1', { title: '恭喜范小星得獎' });
+
+    const entry = tx.auditLog.create.mock.calls[0][0].data;
+    expect(entry.action).toBe('announcement.update');
+    expect(entry.metadata).toEqual({ fields: ['title'] });
+    expect(JSON.stringify(entry.metadata)).not.toContain('范小星');
+  });
+});
+
+describe('AnnouncementsService.remove', () => {
+  it('發布的人自己 → 刪得掉，並記稽核', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+
+    await makeService(prisma).remove(teacher, 'ann-1');
+
+    expect(tx.announcement.delete).toHaveBeenCalledWith({ where: { id: 'ann-1' } });
+    const entry = tx.auditLog.create.mock.calls[0][0].data;
+    expect(entry.action).toBe('announcement.delete');
+    expect(entry.metadata).toEqual({ scope: 'CLASS', classId: 'class-sun' });
+  });
+
+  it('園長 → 刪得掉別人發的', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+    await makeService(prisma).remove(owner, 'ann-1');
+    expect(tx.announcement.delete).toHaveBeenCalled();
+  });
+
+  it('不是發布者的老師 → 403', async () => {
+    const tx = makeTx();
+    const prisma = makePrisma(tx);
+    const other: AnnouncementActor = { id: 'u-other-teacher', roles: [role('TEACHER', 'class-sun')] };
+
+    await expect(makeService(prisma).remove(other, 'ann-1')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(tx.announcement.delete).not.toHaveBeenCalled();
+  });
+
+  it('不存在 → 404', async () => {
+    const prisma = makePrisma(makeTx());
+    prisma.announcement.findUnique.mockResolvedValue(null);
+    await expect(makeService(prisma).remove(owner, 'nope')).rejects.toBeInstanceOf(
+      NotFoundException,
     );
   });
 });

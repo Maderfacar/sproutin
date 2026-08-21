@@ -186,6 +186,58 @@ export class UsersService {
   // POST /users/:id/roles — 增加一個身分。
   // 為什麼需要：建錯了要能改；老師自己的小孩也在園裡（同時是老師與家長）是幼兒園常態；
   // 升任行政、園長交接也都靠這裡。資料模型本就支援多角色，先前只是沒有寫入端點。
+  // DELETE /users/:id — 真的把帳號刪掉。
+  //
+  // 原本是「只停用不刪除」（見檔案開頭）。Human Owner 2026-08-20 決定在正式營運前開放刪除：
+  // 測試階段會產生一堆用不到的帳號，全部留著只會讓人員清單越來越難讀。
+  //
+  // **這個動作無法復原，所以有三道防呆：**
+  //   ① 只能刪**已停用**的帳號 —— 要刪一個人得先停用他。手滑點到在職老師的機率因此接近零。
+  //   ② 不能刪自己。
+  //   ③ 最後一位園長不可刪（與停用同一條規則，理由也一樣：園所會沒有人能管理，而且刪掉之後
+  //      連「重新啟用」這條退路都沒有了）。
+  //
+  // 有外鍵的五張表要先清乾淨，否則資料庫會擋下這筆刪除。
+  // **其餘紀錄不會跟著消失**：請假、訊息、公告、聯絡簿留言、稽核紀錄存的是 userId 字串
+  // 而不是外鍵，刪掉之後那些紀錄還在，只是查不到名字 —— 那正是當初決定不刪除的理由，
+  // 現在是在測試階段刻意接受這個代價。正式營運前要再評估一次（見 docs/project/07）。
+  async remove(actor: UserActor, id: string): Promise<void> {
+    const target = await this.getById(id); // 不存在 → 404
+
+    if (id === actor.id) {
+      throw new BadRequestException('cannot_delete_self');
+    }
+    if (target.status !== 'INACTIVE') {
+      throw new ConflictException('user_must_be_disabled_first');
+    }
+    await this.assertNotLastActiveOwner(id, 'last_owner_cannot_be_deleted');
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.lineIdentity.deleteMany({ where: { userId: id } });
+      await tx.bindingCode.deleteMany({ where: { userId: id } });
+      await tx.guardianship.deleteMany({ where: { userId: id } });
+      await tx.teacherAssignment.deleteMany({ where: { userId: id } });
+      await tx.userRole.deleteMany({ where: { userId: id } });
+      await tx.user.delete({ where: { id } });
+      await this.audit.record(tx, {
+        actorUserId: actor.id,
+        actorRole: this.actorRole(actor),
+        action: 'user.delete',
+        resourceType: 'User',
+        resourceId: id,
+        result: 'SUCCESS',
+        // 姓名屬 PII，不進稽核（同 user.create）。留角色與解除的關聯數量：
+        // 日後在稽核裡看到這個 id，至少知道他是什麼身分、身上掛過幾個孩子與班級。
+        metadata: {
+          roles: target.roles.map((r) => r.role),
+          removedGuardianships: target.guardianOf.length,
+          removedTeaching: target.teaching.length,
+          hadLineLinked: target.hasLineLinked,
+        },
+      });
+    });
+  }
+
   async grantRole(actor: UserActor, id: string, role: Role): Promise<UserView> {
     const target = await this.getById(id);
 
@@ -281,7 +333,12 @@ export class UsersService {
     }
   }
 
-  private async assertNotLastActiveOwner(id: string): Promise<void> {
+  // 停用與刪除共用。錯誤碼由呼叫端給 —— 使用者看到的是「不能停用」還是「不能刪除」，
+  // 那是兩句不同的話。
+  private async assertNotLastActiveOwner(
+    id: string,
+    code = 'last_owner_cannot_be_disabled',
+  ): Promise<void> {
     const isOwner = await this.prisma.userRole.findFirst({
       where: { userId: id, role: 'OWNER' },
       select: { id: true },
@@ -293,7 +350,7 @@ export class UsersService {
       where: { id: { not: id }, status: 'ACTIVE', roles: { some: { role: 'OWNER' } } },
     });
     if (otherActiveOwners === 0) {
-      throw new BadRequestException('last_owner_cannot_be_disabled');
+      throw new BadRequestException(code);
     }
   }
 

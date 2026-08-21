@@ -31,6 +31,7 @@ vi.mock('./hooks', () => ({
   usePeople: () => ({ data: state.people, isLoading: false, isError: false, error: null }),
   useCreatePerson: idleMutation,
   useUpdatePerson: idleMutation,
+  useDeletePerson: idleMutation,
   useAddGuardianship: idleMutation,
   useRemoveGuardianship: idleMutation,
   useAddTeacherAssignment: idleMutation,

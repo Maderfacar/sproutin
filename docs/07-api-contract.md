@@ -32,6 +32,7 @@ POST /auth/line/login
 | **GET/POST** | **`/binding-codes`** | 綁定碼：列出有效 / 簽發 | OWNER/ADMIN | ✔ |
 | **DELETE** | **`/binding-codes/:id`** | 作廢綁定碼 | OWNER/ADMIN | ✔ |
 | **DELETE** | **`/users/:id/line`** | 解除 LINE 綁定（帳號不刪除） | OWNER/ADMIN | ✔ |
+| **DELETE** | **`/users/:id`** | 刪除帳號（**限已停用**、不能刪自己、最後一位園長不可刪） | OWNER/ADMIN | ✔ |
 | **POST** | **`/users/:id/roles`** | 增加身分（OWNER 身分限園長操作） | OWNER/ADMIN | ✔ |
 | **DELETE** | **`/users/:id/roles/:role`** | 移除身分 + 附帶關聯 | OWNER/ADMIN | ✔ |
 | GET | `/me` | 目前使用者 + 角色 | auth | – |
@@ -62,6 +63,8 @@ POST /auth/line/login
 | **POST** | **`/communication-book/publish`** | 一鍵送出全班 → `CommunicationBookPublished` | ADMIN/TEACHER | ✔ |
 | GET | `/announcements` | 公告清單 | Roles | – |
 | POST | `/announcements` | 發公告 → `AnnouncementPublished` | OWNER/ADMIN/TEACHER | ✔ |
+| **PATCH** | **`/announcements/:id`** | 改標題／內文（scope、classId 不可改；**不重發通知**） | 園長／行政／發布者本人 | ✔ |
+| **DELETE** | **`/announcements/:id`** | 站內刪除（已送出的 LINE 推播收不回來） | 園長／行政／發布者本人 | ✔ |
 | **GET** | **`/notifications[?unread=true][&relation=GUARDIAN]`** | 站內通知（一向只回本人的）；`relation=GUARDIAN` **只回跟我監護的小孩有關的**（家長身分）：帶 studentId 的必須是我的小孩、班級公告只留我小孩那一班、與特定孩子無關的系統通知留著。只縮小不放寬 | auth(自己) | – |
 | GET | `/audit-logs?resourceType=&resourceId=` | 稽核查詢（唯讀） | OWNER(/ADMIN 受限) | – |
 | **GET** | **`/push-campaigns/recipients`** | 送出前算「這次會送出幾則」 | OWNER/ADMIN | – |
@@ -144,9 +147,17 @@ PATCH  /students/:id   { name?, classId?, status? } → StudentView（未知欄�
 ## 4e. 人員帳號與關聯（Phase 9 階段2 刀3）
 
 ```text
+# 帳號刪除（2026-08-20 開放，正式營運前）：
+#   ① 只能刪 status=INACTIVE 的帳號 —— 要刪先停用（防手滑）
+#   ② 不能刪自己
+#   ③ 最後一位園長不可刪（園所會沒有人能管理，且刪掉連重新啟用的退路都沒有）
+#   刪除時一併清掉五張有外鍵的表：LineIdentity / BindingCode / Guardianship /
+#   TeacherAssignment / UserRole。**其餘紀錄（請假、訊息、公告、聯絡簿、稽核）不動**，
+#   它們存的是 userId 字串而非外鍵 —— 紀錄留著，但上面查不到名字。
 GET    /users?role=                              → UserView[]（含角色、綁定小孩、任教班級、是否已綁 LINE）
 POST   /users            { displayName, role }   → UserView（建立帳號 + 一個角色）
-PATCH  /users/:id        { displayName?, status? } → UserView（**無 DELETE**）
+PATCH  /users/:id        { displayName?, status? } → UserView
+DELETE /users/:id                                → 204（刪除帳號；三道防呆見下）
 POST   /users/:id/roles  { role }                → UserView（增加身分；階段3 ②b）
 DELETE /users/:id/roles/:role                    → UserView（移除身分 + 附帶關聯）
 

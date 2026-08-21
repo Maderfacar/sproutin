@@ -23,6 +23,12 @@ vi.mock('../classes/hooks', () => ({
     isError: false,
   }),
 }));
+const idleMutation = vi.hoisted(() => () => ({
+  mutate: () => {},
+  isPending: false,
+  isError: false,
+  error: null,
+}));
 vi.mock('./hooks', () => ({
   useCreateAnnouncement: () => ({
     mutate: (b: unknown) => state.created.push(b),
@@ -30,6 +36,9 @@ vi.mock('./hooks', () => ({
     isError: false,
     error: null,
   }),
+  useUpdateAnnouncement: idleMutation,
+  useDeleteAnnouncement: idleMutation,
+  announcementErrorMessage: (_e: unknown, fallback: string) => fallback,
 }));
 
 describe('公告頁', () => {

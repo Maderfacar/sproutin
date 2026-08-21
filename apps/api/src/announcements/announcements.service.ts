@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { AuthUser } from '@sproutin/shared';
 import type { AnnouncementScope, Prisma } from '@sproutin/db';
 import { PrismaService } from '../core/prisma/prisma.service';
@@ -17,6 +22,14 @@ export interface PublishAnnouncementInput {
   classId?: string;
   title: string;
   body: string;
+}
+
+// 編輯只開放標題與內文，**scope 與 classId 刻意不可改**：
+// 改了範圍等於變成另一則公告 —— 已經送出的站內通知與 LINE 推播指向的是舊的對象，
+// 改完之後「現在誰看得到」與「當初誰收到過」會對不起來。要換對象請刪掉重發。
+export interface UpdateAnnouncementInput {
+  title?: string;
+  body?: string;
 }
 
 export interface AnnouncementView {
@@ -103,6 +116,97 @@ export class AnnouncementsService {
 
       return announcement;
     });
+  }
+
+  // PATCH /announcements/:id — 改標題與內文。
+  //
+  // **不重新發送通知**（Human Owner 2026-08-20 定案：先不管 LINE 能不能撤回）。
+  // 因此不寫 OutboxEvent —— 家長不會因為老師改了一個錯字就再被推播一次。
+  async update(
+    actor: AnnouncementActor,
+    id: string,
+    input: UpdateAnnouncementInput,
+  ): Promise<AnnouncementView> {
+    const existing = await this.getOrThrow(id);
+    this.assertMayManage(actor, existing);
+
+    const data: UpdateAnnouncementInput = {};
+    if (input.title !== undefined) data.title = input.title;
+    if (input.body !== undefined) data.body = input.body;
+    const changedFields = Object.keys(data);
+    if (changedFields.length === 0) {
+      throw new BadRequestException('no_changes');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.announcement.update({
+        where: { id },
+        data,
+        select: ANNOUNCEMENT_VIEW,
+      });
+      await this.audit.record(tx, {
+        actorUserId: actor.id,
+        actorRole: this.actorRole(actor),
+        action: 'announcement.update',
+        resourceType: 'Announcement',
+        resourceId: id,
+        result: 'SUCCESS',
+        // 只記改了哪些欄位。**標題與內文不進稽核**：公告內容常常帶著孩子的名字
+        // （「恭喜○○○得獎」），而稽核紀錄在資料庫層是刪不掉的。
+        metadata: { fields: changedFields },
+      });
+      return updated;
+    });
+  }
+
+  // DELETE /announcements/:id — 站內刪除。
+  //
+  // 真的刪掉，不是標記隱藏。已經送出的站內通知會留著（notifications 那一側查不到標題時
+  // 會退回分類名稱，不會靜靜消失），LINE 推播則收不回來 —— 這是刪除做得到與做不到的邊界。
+  async remove(actor: AnnouncementActor, id: string): Promise<void> {
+    const existing = await this.getOrThrow(id);
+    this.assertMayManage(actor, existing);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.announcement.delete({ where: { id } });
+      await this.audit.record(tx, {
+        actorUserId: actor.id,
+        actorRole: this.actorRole(actor),
+        action: 'announcement.delete',
+        resourceType: 'Announcement',
+        resourceId: id,
+        result: 'SUCCESS',
+        metadata: { scope: existing.scope, classId: existing.classId },
+      });
+    });
+  }
+
+  private async getOrThrow(id: string): Promise<AnnouncementView> {
+    const found = await this.prisma.announcement.findUnique({
+      where: { id },
+      select: ANNOUNCEMENT_VIEW,
+    });
+    if (!found) {
+      throw new NotFoundException('announcement_not_found');
+    }
+    return found;
+  }
+
+  // 誰能動一則已經發出去的公告：**園長、行政、以及發布的人自己**
+  //（Human Owner 2026-08-20 定案）。
+  //
+  // 刻意不是用「發布權限」來判斷，那是另一件事：
+  //   · 導師調班之後，仍然改得動自己以前發過的那幾則 —— 那是他寫的東西。
+  //   · 反過來，能發班級公告不代表能刪掉同事發的那一則。
+  private assertMayManage(actor: AnnouncementActor, announcement: AnnouncementView): void {
+    const roleNames = new Set(actor.roles.map((r) => r.role));
+    if (roleNames.has('OWNER') || roleNames.has('ADMIN')) {
+      return;
+    }
+    if (announcement.createdBy === actor.id) {
+      return;
+    }
+    throw new ForbiddenException('not_announcement_owner');
   }
 
   // GET /announcements — 依使用者可見範圍：全校公告 + 自己相關班級的班級公告。

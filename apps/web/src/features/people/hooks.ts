@@ -43,6 +43,12 @@ export function useUpdatePerson() {
   );
 }
 
+// 刪除帳號。**只能刪已停用的**（後端擋，見 users.service）——
+// 這個動作無法復原，所以走的是與停用不同的一顆按鈕、不同的確認面板。
+export function useDeletePerson() {
+  return usePeopleMutation<{ id: string }>(({ id }) => apiSend<void>(`/api/users/${id}`, 'DELETE'));
+}
+
 export function useAddGuardianship() {
   return usePeopleMutation<{ userId: string; studentId: string; relation: GuardianRelation }>((body) =>
     apiSend<{ id: string }>('/api/guardianships', 'POST', body),
@@ -148,6 +154,12 @@ export function peopleErrorMessage(error: unknown, fallback: string): string {
   switch (code) {
     case 'last_owner_cannot_be_disabled':
       return '這是最後一位在職園長，停用後就沒有人能管理園所了。請先指派另一位園長。';
+    case 'last_owner_cannot_be_deleted':
+      return '這是最後一位園長，刪掉之後就沒有人能管理園所、也救不回來了。請先指派另一位園長。';
+    case 'user_must_be_disabled_first':
+      return '這個帳號還在啟用中。要刪除請先停用它 —— 這是為了避免手滑刪掉在職的人。';
+    case 'cannot_delete_self':
+      return '不能刪除自己的帳號。';
     case 'guardianship_exists':
       return '這位家長已經綁定過這個小孩了。';
     case 'assignment_exists':

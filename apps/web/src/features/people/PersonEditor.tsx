@@ -24,6 +24,7 @@ import {
   useRemoveGuardianship,
   useRemoveTeacherAssignment,
   useUpdatePerson,
+  useDeletePerson,
 } from './hooks';
 
 interface PersonEditorProps {
@@ -59,6 +60,7 @@ export function PersonEditor({ person, classes, students, onClose }: PersonEdito
   const [assignOpen, setAssignOpen] = useState(false);
 
   const updatePerson = useUpdatePerson();
+  const deletePerson = useDeletePerson();
   const addGuardianship = useAddGuardianship();
   const removeGuardianship = useRemoveGuardianship();
   const addAssignment = useAddTeacherAssignment();
@@ -66,6 +68,7 @@ export function PersonEditor({ person, classes, students, onClose }: PersonEdito
 
   const error =
     updatePerson.error ??
+    deletePerson.error ??
     addGuardianship.error ??
     removeGuardianship.error ??
     addAssignment.error ??
@@ -177,6 +180,39 @@ export function PersonEditor({ person, classes, students, onClose }: PersonEdito
         <div className="rounded-md2 border border-note-edge bg-note-wash px-4 py-3 text-sm leading-relaxed text-note-text">
           這個帳號目前停用中，不能再指派身分、班級或綁定小孩。
           既有的關聯仍然解除得掉；要新增請先按上面的「重新啟用」。
+        </div>
+      )}
+
+      {/* 永久刪除。**只在帳號已停用時才出現** —— 要刪一個人得先停用他，
+          手滑點到在職老師的機率因此接近零（後端也擋，這裡不是唯一一道）。
+          刪除與停用刻意不是同一顆按鈕：一個救得回來，一個救不回來。 */}
+      {!isActive && (
+        <div className="flex items-center gap-3 border-t border-line pt-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold text-ink">永久刪除這個帳號</p>
+            <p className="mt-0.5 text-2xs leading-relaxed text-ink-soft">
+              帳號、身分、班級與監護關聯、LINE 綁定全部移除，無法復原。
+              他過去建立的請假、訊息與公告會留著，但上面會查不到名字。
+            </p>
+          </div>
+          <Button
+            variant="danger"
+            block={false}
+            disabled={deletePerson.isPending}
+            onClick={() =>
+              setAsk({
+                title: `刪除 ${person.displayName}？`,
+                body:
+                  '這個動作無法復原：帳號、身分、任教班級、監護的小孩與 LINE 綁定都會一起移除。' +
+                  '他過去送出的請假、訊息、公告與稽核紀錄仍然留著，但那些紀錄上會查不到是誰。' +
+                  '只是暫時不用的話，停用就夠了。',
+                label: '確定永久刪除',
+                run: () => deletePerson.mutate({ id: person.id }, { onSuccess: onClose }),
+              })
+            }
+          >
+            刪除帳號
+          </Button>
         </div>
       )}
 
