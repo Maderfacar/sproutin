@@ -54,6 +54,13 @@ Technical Debt:
 - ~~**CI 未建置 Docker image**~~ → ✅ RESOLVED（Phase 7 Step 3）：CI 新增 `docker-build` job（同一 Dockerfile.api，push:false）。待 CI 綠驗證。
 - ~~**AuditLog append-only 尚未於 DB 權限層強制**~~ → ✅ **RESOLVED（Phase 7 Step 6 決策 A，migration 0002）**：以 trigger 擋 `AuditLog` UPDATE/DELETE/TRUNCATE（即使 owner 連線也擋）。append-only 已在 DB 層強制。**未來 hardening（非必要）**：least-privilege app role 分離（防 superuser 層級，需新 secret + 換連線，ADR-003 破壞性變更）→ Phase 8+ 正式營運/合規前評估。
 
+- **帳號硬刪除（2026-08-20 開放，正式營運前要再評估）**：原本「只停用不刪除」是刻意的
+  —— 刪掉會讓那個人建立的請假／訊息／公告／稽核失去歸屬。測試階段 Human Owner 決定開放
+  `DELETE /users/:id`（只能刪已停用的、不能刪自己、最後一位園長不可刪）。
+  **代價已知並刻意接受**：那五張有外鍵的表會被清掉，但請假、訊息、公告、聯絡簿、稽核裡存的
+  是 userId 字串，紀錄會留著卻查不到名字。正式營運（有真實家長資料）前要重新決定：
+  維持硬刪除、改成「封存」、或只在無任何歷史紀錄時才允許刪除。
+
 Architecture Questions:
 - **AQ-1 / AQ-2 — DECIDED（2026-08-14, ADR-006）**：架構不變，僅定部署位置 → Vercel: Web ｜ Render: API + Worker ｜ Managed Redis（Render Key Value）｜ Managed PostgreSQL。
 - 目前無待決 Architecture Question（None open）。
